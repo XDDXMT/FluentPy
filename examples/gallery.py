@@ -27,6 +27,8 @@ from fluentpy import (  # noqa: E402
     LineEdit,
     MaskedDialog,
     NavigationView,
+    NoteEvent,
+    NoteTimeline,
     OutlinedButton,
     PasswordLineEdit,
     Pivot,
@@ -896,7 +898,13 @@ def make_icons_page() -> QtWidgets.QWidget:
     return page
 
 
-def make_gallery_header(title: str, subtitle: str) -> QtWidgets.QWidget:
+def make_gallery_header(
+    title: str,
+    subtitle: str,
+    *,
+    docs_url: str | None = None,
+    source_url: str | None = None,
+) -> QtWidgets.QWidget:
     header = QtWidgets.QWidget()
     layout = QtWidgets.QVBoxLayout(header)
     layout.setContentsMargins(0, 0, 0, 0)
@@ -918,6 +926,10 @@ def make_gallery_header(title: str, subtitle: str) -> QtWidgets.QWidget:
     docs.setIcon(fluent_icon(FluentIcon.DOCUMENT_SAVE))
     source = Button("源代码")
     source.setIcon(fluent_icon(FluentIcon.ICONS))
+    if docs_url is not None:
+        docs.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(docs_url)))
+    if source_url is not None:
+        source.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(source_url)))
     action_row.addWidget(docs)
     action_row.addWidget(source)
     action_row.addStretch(1)
@@ -928,9 +940,18 @@ def make_gallery_header(title: str, subtitle: str) -> QtWidgets.QWidget:
     return header
 
 
-def make_labeled_panel(title: str, widget: QtWidgets.QWidget, stretch: int = 1) -> QtWidgets.QWidget:
+def make_labeled_panel(
+    title: str,
+    widget: QtWidgets.QWidget,
+    stretch: int = 1,
+    *,
+    source_url: str | None = None,
+) -> QtWidgets.QWidget:
     panel = ExamplePanel(title, "源码")
     panel.preview_layout.addWidget(widget, stretch)
+    if source_url is not None:
+        source_button = panel.source.findChild(QtWidgets.QAbstractButton)
+        source_button.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(source_url)))
     return make_example_block(title, panel)
 
 
@@ -1203,6 +1224,115 @@ def make_dialogs_page(parent_window: QtWidgets.QWidget) -> QtWidgets.QWidget:
     return page
 
 
+def make_views_page() -> QtWidgets.QWidget:
+    page = QtWidgets.QScrollArea()
+    setup_gallery_scroll_area(page)
+    content = QtWidgets.QWidget()
+    content.setObjectName("galleryPage")
+    layout = QtWidgets.QVBoxLayout(content)
+    layout.setContentsMargins(36, 28, 36, 28)
+    layout.setSpacing(22)
+    layout.addWidget(make_gallery_header(
+        "视图",
+        "fluentpy.NoteTimeline",
+        docs_url="https://github.com/XDDXMT/FluentPy/blob/main/docs/note-timeline.md",
+        source_url="https://github.com/XDDXMT/FluentPy/blob/main/src/fluentpy/widgets/note_timeline.py",
+    ))
+
+    description = QtWidgets.QLabel("以时间和音高显示音符分布。下方的进度演示只移动游标，不播放声音。")
+    description.setObjectName("muted")
+    description.setWordWrap(True)
+    layout.addWidget(description)
+
+    preview = QtWidgets.QWidget()
+    preview_layout = QtWidgets.QVBoxLayout(preview)
+    preview_layout.setContentsMargins(0, 0, 0, 0)
+    preview_layout.setSpacing(14)
+    timeline = NoteTimeline()
+    timeline.setMinimumHeight(100)
+    timeline.set_empty_text("选择单轨或双轨短句以显示音符")
+    preview_layout.addWidget(timeline)
+
+    source = ComboBox()
+    source.addItems(["单轨短句", "双轨短句", "空状态"])
+    start = AccentButton("演示进度")
+    reset = Button("回到开头")
+    controls = QtWidgets.QHBoxLayout()
+    controls.setSpacing(10)
+    controls.addWidget(source)
+    controls.addWidget(start)
+    controls.addWidget(reset)
+    controls.addStretch(1)
+    preview_layout.addLayout(controls)
+    progress = QtWidgets.QLabel()
+    progress.setObjectName("muted")
+    preview_layout.addWidget(progress)
+
+    timer = QtCore.QTimer(page)
+    timer.setInterval(30)
+    elapsed = QtCore.QElapsedTimer()
+    start_position = 0.0
+
+    def update_progress(_seconds: float = 0.0) -> None:
+        progress.setText(f"{timeline.position():.1f} / {timeline.duration():.1f} 秒")
+
+    def stop() -> None:
+        timer.stop()
+        start.setText("演示进度")
+
+    def load_notes(index: int) -> None:
+        stop()
+        if index == 2:
+            timeline.clear()
+        else:
+            pitches = (60, 64, 67, 65, 62, 64, 69, 67, 64, 62, 60, 64, 62, 60)
+            notes = [NoteEvent(i * 0.5, 0.35, pitch) for i, pitch in enumerate(pitches)]
+            if index == 1:
+                notes.extend(
+                    NoteEvent(i * 1.0, 0.75, pitch, track=1)
+                    for i, pitch in enumerate((48, 55, 50, 57, 52, 55, 48))
+                )
+            timeline.set_notes(notes, duration=7.5)
+        start.setEnabled(bool(timeline.notes()))
+        update_progress()
+
+    def toggle_progress() -> None:
+        nonlocal start_position
+        if timer.isActive():
+            stop()
+            return
+        if timeline.position() >= timeline.duration():
+            timeline.set_position(0.0)
+        start_position = timeline.position()
+        elapsed.start()
+        timer.start()
+        start.setText("暂停演示")
+
+    def advance() -> None:
+        timeline.set_position(start_position + elapsed.elapsed() / 1000)
+        if timeline.position() >= timeline.duration():
+            stop()
+
+    def reset_position() -> None:
+        stop()
+        timeline.set_position(0.0)
+
+    timer.timeout.connect(advance)
+    source.currentIndexChanged.connect(load_notes)
+    timeline.positionChanged.connect(update_progress)
+    start.clicked.connect(toggle_progress)
+    reset.clicked.connect(reset_position)
+    load_notes(0)
+    layout.addWidget(make_labeled_panel(
+        "音符时间轴",
+        preview,
+        source_url="https://github.com/XDDXMT/FluentPy/blob/main/examples/note_timeline.py",
+    ))
+    layout.addStretch(1)
+    page.setWidget(content)
+    return page
+
+
 def create_gallery_window(mode: str = "dark") -> FluentWindow:
     theme.set_mode(mode)
     window = FluentWindow("FluentPy 组件库")
@@ -1435,7 +1565,7 @@ def create_gallery_window(mode: str = "dark") -> FluentWindow:
         "text",
     )
     navigation.add_sub_interface(
-        make_placeholder_page("视图", "fluentpy.components.view"),
+        make_views_page(),
         fluent_icon(FluentIcon.TABLE),
         "视图",
         "view",

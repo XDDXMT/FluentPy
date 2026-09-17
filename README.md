@@ -53,6 +53,7 @@ sys.exit(app.exec())
 | 输入 | 文本、密码、搜索、多行文本、复选框、单选按钮、下拉框、数值输入 |
 | 导航 | NavigationView、侧栏、面包屑、Pivot、分段控件、TabBar |
 | 状态 | ToggleSwitch、Slider、ProgressBar、Toast |
+| 音乐视图 | NoteTimeline 音符时间轴：单轨／多轨概览、进度游标、音域和轨道配色 |
 | 窗口与容器 | FluentWindow、Card、ExamplePanel、对话框与滚动条 |
 | 主题与资源 | 浅色／深色主题、强调色、动画、105 个 Microsoft Fluent System Icons |
 
@@ -81,6 +82,25 @@ window.show()
 ```
 
 `set_route_visible()` 控制入口显隐，`is_route_visible()` 查询状态。隐藏当前入口时会转到可见页面，重新显示后保留原来的页面对象与顺序。
+
+## 音符时间轴
+
+`NoteTimeline` 将时间、音高和时值显示为紧凑的横向音符概览，支持多轨配色与进度游标，跟随浅色／深色主题。它由 FluentMelody 的音符预览提取为独立控件，文件解析和播放由应用负责。
+
+```python
+from fluentpy import NoteEvent, NoteTimeline
+
+# 在已有 QApplication 环境中创建控件。
+timeline = NoteTimeline()
+timeline.set_notes([
+    NoteEvent(start=0.0, duration=0.4, pitch=60),
+    NoteEvent(start=0.5, duration=0.4, pitch=64),
+    NoteEvent(start=1.0, duration=0.8, pitch=67),
+], duration=2.0)
+timeline.set_position(0.5)
+```
+
+时间单位为秒，音高使用 MIDI 整数。运行 `python examples/note_timeline.py` 可查看单轨、多轨、空状态和静音进度演示；Gallery 的「视图」页也已接入。详见 [NoteTimeline 文档](docs/note-timeline.md) 与 [独立示例](examples/note_timeline.py)。
 
 ## 实际应用
 
