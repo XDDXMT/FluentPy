@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+.idea/
+.vscode/
+*.log
+*.tmp
+*.exe
+*.dll
+*.pyd
+*.zip
+.env
+.env.*
+*.pem
+*.key
+
+# Local third-party reference application; not part of FluentPy.
+/PyQt-Fluent-Widgets-Gallery/
