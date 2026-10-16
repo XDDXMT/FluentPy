@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..theme import theme
+from ..theme.fonts import ui_font
 
 
 class CheckBox(QtWidgets.QAbstractButton):
@@ -9,6 +10,7 @@ class CheckBox(QtWidgets.QAbstractButton):
 
     def __init__(self, text: str = "", parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setText(text)
         self.setCheckable(True)
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)

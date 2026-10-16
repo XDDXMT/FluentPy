@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from ..qt import QtCore, QtGui, QtWidgets
 from ..theme import theme
+from ..theme.fonts import ui_font
 
 
 class RadioButton(QtWidgets.QAbstractButton):
     def __init__(self, text: str = "", parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setText(text)
         self.setObjectName("fluentRadioButton")
         self.setCheckable(True)

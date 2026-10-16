@@ -1,0 +1,398 @@
+{
+  "schema": 1,
+  "dataset": {
+    "lines": 50000,
+    "unicode_scalars": 1345457,
+    "utf8_bytes": 1355457,
+    "utf16_units": 1346707,
+    "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+    "records": 6249
+  },
+  "environment": {
+    "python": "3.13.1",
+    "qt": "6.11.1",
+    "qt_api": "PySide6",
+    "platform_plugin": "windows",
+    "os": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+  },
+  "backend_available": true,
+  "repeat": 3,
+  "summary": {
+    "legacy": {
+      "lexer_ms": 127.20640000043204,
+      "load_ready_ms": 292.59909999927913,
+      "set_text_ms": 283.6375999995653,
+      "events_ms": 6.412599999748636,
+      "first_frame_ms": 2.0290000011300435,
+      "rehighlight_ms": 463.0345999994461,
+      "edit_ms": 3.6713999998028157,
+      "scroll_ms": 104.15380000085861
+    },
+    "python": {
+      "lexer_ms": 123.88149999969755,
+      "load_ready_ms": 295.2237999998033,
+      "set_text_ms": 285.8771000010165,
+      "events_ms": 7.208299999547307,
+      "first_frame_ms": 2.138399999239482,
+      "rehighlight_ms": 468.0224999992788,
+      "edit_ms": 3.3593000007385854,
+      "scroll_ms": 100.23840000030759
+    },
+    "native": {
+      "lexer_ms": 10.734399998909794,
+      "load_ready_ms": 180.11870000009367,
+      "set_text_ms": 172.15369999939867,
+      "events_ms": 6.402400000297348,
+      "first_frame_ms": 2.098699998896336,
+      "rehighlight_ms": 349.9784000014188,
+      "edit_ms": 3.5664999995788094,
+      "scroll_ms": 107.79899999943154
+    }
+  },
+  "samples": {
+    "legacy": [
+      {
+        "backend": "legacy",
+        "actual_backend": "legacy",
+        "dataset": {
+          "lines": 50000,
+          "unicode_scalars": 1345457,
+          "utf8_bytes": 1355457,
+          "utf16_units": 1346707,
+          "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+          "records": 6249
+        },
+        "lexer_ms": 127.20640000043204,
+        "set_text_ms": 286.72720000031404,
+        "events_ms": 6.412599999748636,
+        "first_frame_ms": 1.9429000003583496,
+        "load_ready_ms": 295.082700000421,
+        "rehighlight_ms": 459.70330000091053,
+        "edit_ms": 3.6713999998028157,
+        "scroll_ms": 106.02920000019367,
+        "preserved_exact_text": true,
+        "complete_highlighting": true,
+        "formatted_tokens": 74997,
+        "block_count": 50000,
+        "environment": {
+          "python": "3.13.1",
+          "qt": "6.11.1",
+          "qt_api": "PySide6",
+          "platform_plugin": "windows",
+          "os": "Windows-11-10.0.26200-SP0",
+          "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+        },
+        "line_edit": {
+          "default_max_length": 32767,
+          "default_preserved_exact_text": false,
+          "default_utf16_units": 32767,
+          "preserved_exact_text": true,
+          "full_load_ready_ms": 1171.310399999129,
+          "engine": "Qt QLineEdit; no JSON lexer"
+        }
+      },
+      {
+        "backend": "legacy",
+        "actual_backend": "legacy",
+        "dataset": {
+          "lines": 50000,
+          "unicode_scalars": 1345457,
+          "utf8_bytes": 1355457,
+          "utf16_units": 1346707,
+          "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+          "records": 6249
+        },
+        "lexer_ms": 128.1660999993619,
+        "set_text_ms": 283.6375999995653,
+        "events_ms": 6.90279999980703,
+        "first_frame_ms": 2.058699999906821,
+        "load_ready_ms": 292.59909999927913,
+        "rehighlight_ms": 463.76020000025164,
+        "edit_ms": 3.697299998748349,
+        "scroll_ms": 104.15380000085861,
+        "preserved_exact_text": true,
+        "complete_highlighting": true,
+        "formatted_tokens": 74997,
+        "block_count": 50000,
+        "environment": {
+          "python": "3.13.1",
+          "qt": "6.11.1",
+          "qt_api": "PySide6",
+          "platform_plugin": "windows",
+          "os": "Windows-11-10.0.26200-SP0",
+          "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+        },
+        "line_edit": {
+          "default_max_length": 32767,
+          "default_preserved_exact_text": false,
+          "default_utf16_units": 32767,
+          "preserved_exact_text": true,
+          "full_load_ready_ms": 1145.3779999992548,
+          "engine": "Qt QLineEdit; no JSON lexer"
+        }
+      },
+      {
+        "backend": "legacy",
+        "actual_backend": "legacy",
+        "dataset": {
+          "lines": 50000,
+          "unicode_scalars": 1345457,
+          "utf8_bytes": 1355457,
+          "utf16_units": 1346707,
+          "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+          "records": 6249
+        },
+        "lexer_ms": 125.36069999987376,
+        "set_text_ms": 281.8220000008296,
+        "events_ms": 6.0643999986496055,
+        "first_frame_ms": 2.0290000011300435,
+        "load_ready_ms": 289.9154000006092,
+        "rehighlight_ms": 463.0345999994461,
+        "edit_ms": 3.593400000681868,
+        "scroll_ms": 102.8016000000207,
+        "preserved_exact_text": true,
+        "complete_highlighting": true,
+        "formatted_tokens": 74997,
+        "block_count": 50000,
+        "environment": {
+          "python": "3.13.1",
+          "qt": "6.11.1",
+          "qt_api": "PySide6",
+          "platform_plugin": "windows",
+          "os": "Windows-11-10.0.26200-SP0",
+          "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+        },
+        "line_edit": {
+          "default_max_length": 32767,
+          "default_preserved_exact_text": false,
+          "default_utf16_units": 32767,
+          "preserved_exact_text": true,
+          "full_load_ready_ms": 1117.4745000007533,
+          "engine": "Qt QLineEdit; no JSON lexer"
+        }
+      }
+    ],
+    "python": [
+      {
+        "backend": "python",
+        "actual_backend": "python",
+        "dataset": {
+          "lines": 50000,
+          "unicode_scalars": 1345457,
+          "utf8_bytes": 1355457,
+          "utf16_units": 1346707,
+          "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+          "records": 6249
+        },
+        "lexer_ms": 125.00210000143852,
+        "set_text_ms": 285.8771000010165,
+        "events_ms": 7.208299999547307,
+        "first_frame_ms": 2.138399999239482,
+        "load_ready_ms": 295.2237999998033,
+        "rehighlight_ms": 470.1836000003823,
+        "edit_ms": 3.3593000007385854,
+        "scroll_ms": 100.23840000030759,
+        "preserved_exact_text": true,
+        "complete_highlighting": true,
+        "formatted_tokens": 74997,
+        "block_count": 50000,
+        "environment": {
+          "python": "3.13.1",
+          "qt": "6.11.1",
+          "qt_api": "PySide6",
+          "platform_plugin": "windows",
+          "os": "Windows-11-10.0.26200-SP0",
+          "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+        }
+      },
+      {
+        "backend": "python",
+        "actual_backend": "python",
+        "dataset": {
+          "lines": 50000,
+          "unicode_scalars": 1345457,
+          "utf8_bytes": 1355457,
+          "utf16_units": 1346707,
+          "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+          "records": 6249
+        },
+        "lexer_ms": 123.41109999943001,
+        "set_text_ms": 286.6794999990816,
+        "events_ms": 7.873500000641798,
+        "first_frame_ms": 2.1553999995376216,
+        "load_ready_ms": 296.708399999261,
+        "rehighlight_ms": 464.5920000002661,
+        "edit_ms": 3.665700000055949,
+        "scroll_ms": 108.88690000138013,
+        "preserved_exact_text": true,
+        "complete_highlighting": true,
+        "formatted_tokens": 74997,
+        "block_count": 50000,
+        "environment": {
+          "python": "3.13.1",
+          "qt": "6.11.1",
+          "qt_api": "PySide6",
+          "platform_plugin": "windows",
+          "os": "Windows-11-10.0.26200-SP0",
+          "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+        }
+      },
+      {
+        "backend": "python",
+        "actual_backend": "python",
+        "dataset": {
+          "lines": 50000,
+          "unicode_scalars": 1345457,
+          "utf8_bytes": 1355457,
+          "utf16_units": 1346707,
+          "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+          "records": 6249
+        },
+        "lexer_ms": 123.88149999969755,
+        "set_text_ms": 285.7007999991765,
+        "events_ms": 6.439800001317053,
+        "first_frame_ms": 2.1201999988988973,
+        "load_ready_ms": 294.2607999993925,
+        "rehighlight_ms": 468.0224999992788,
+        "edit_ms": 3.2504000009794254,
+        "scroll_ms": 100.05610000007437,
+        "preserved_exact_text": true,
+        "complete_highlighting": true,
+        "formatted_tokens": 74997,
+        "block_count": 50000,
+        "environment": {
+          "python": "3.13.1",
+          "qt": "6.11.1",
+          "qt_api": "PySide6",
+          "platform_plugin": "windows",
+          "os": "Windows-11-10.0.26200-SP0",
+          "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+        }
+      }
+    ],
+    "native": [
+      {
+        "backend": "native",
+        "actual_backend": "native",
+        "dataset": {
+          "lines": 50000,
+          "unicode_scalars": 1345457,
+          "utf8_bytes": 1355457,
+          "utf16_units": 1346707,
+          "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+          "records": 6249
+        },
+        "lexer_ms": 10.734399998909794,
+        "set_text_ms": 172.15369999939867,
+        "events_ms": 5.748999999923399,
+        "first_frame_ms": 1.9615999990492128,
+        "load_ready_ms": 179.86429999837128,
+        "rehighlight_ms": 345.7273999993049,
+        "edit_ms": 3.3593000007385854,
+        "scroll_ms": 105.88199999983772,
+        "preserved_exact_text": true,
+        "complete_highlighting": true,
+        "formatted_tokens": 74997,
+        "block_count": 50000,
+        "environment": {
+          "python": "3.13.1",
+          "qt": "6.11.1",
+          "qt_api": "PySide6",
+          "platform_plugin": "windows",
+          "os": "Windows-11-10.0.26200-SP0",
+          "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+        }
+      },
+      {
+        "backend": "native",
+        "actual_backend": "native",
+        "dataset": {
+          "lines": 50000,
+          "unicode_scalars": 1345457,
+          "utf8_bytes": 1355457,
+          "utf16_units": 1346707,
+          "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+          "records": 6249
+        },
+        "lexer_ms": 10.543099999267724,
+        "set_text_ms": 176.21349999899394,
+        "events_ms": 6.899199999679695,
+        "first_frame_ms": 2.2812000006524613,
+        "load_ready_ms": 185.3938999993261,
+        "rehighlight_ms": 353.27649999999267,
+        "edit_ms": 3.5664999995788094,
+        "scroll_ms": 107.79899999943154,
+        "preserved_exact_text": true,
+        "complete_highlighting": true,
+        "formatted_tokens": 74997,
+        "block_count": 50000,
+        "environment": {
+          "python": "3.13.1",
+          "qt": "6.11.1",
+          "qt_api": "PySide6",
+          "platform_plugin": "windows",
+          "os": "Windows-11-10.0.26200-SP0",
+          "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+        }
+      },
+      {
+        "backend": "native",
+        "actual_backend": "native",
+        "dataset": {
+          "lines": 50000,
+          "unicode_scalars": 1345457,
+          "utf8_bytes": 1355457,
+          "utf16_units": 1346707,
+          "sha256_utf8": "08e21008cd9d96267c940176dde2edbf122f9a7ab64625f6f66d093dc298d018",
+          "records": 6249
+        },
+        "lexer_ms": 10.864300000321236,
+        "set_text_ms": 171.61760000089998,
+        "events_ms": 6.402400000297348,
+        "first_frame_ms": 2.098699998896336,
+        "load_ready_ms": 180.11870000009367,
+        "rehighlight_ms": 349.9784000014188,
+        "edit_ms": 3.7454000012075994,
+        "scroll_ms": 109.29269999905955,
+        "preserved_exact_text": true,
+        "complete_highlighting": true,
+        "formatted_tokens": 74997,
+        "block_count": 50000,
+        "environment": {
+          "python": "3.13.1",
+          "qt": "6.11.1",
+          "qt_api": "PySide6",
+          "platform_plugin": "windows",
+          "os": "Windows-11-10.0.26200-SP0",
+          "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+        }
+      }
+    ]
+  },
+  "source_sha256": {
+    "scripts/benchmark_text.py": "cc8668bce6d4f7ccc94998f35f2d1b35e27dad23059c75a8490403b2842c9887",
+    "src/fluentpy/widgets/code_edit.py": "43d292ff4779c0d2068313f29d9aa52c5f8af80bdd8aa41a542ec273003c998d",
+    "src/fluentpy/backends/text.py": "373e3ba39d3d8b13935fe25a0f4fc59ee1e451af11f73c0c74229dd5606b10a3",
+    "native/text_accel.c": "d1d05bd2dc531803ed0349f3f12dda33d74429750d0fe0c4e64aa6fd271ba1c5"
+  },
+  "line_edit": {
+    "default_max_length": 32767,
+    "default_preserved_exact_text": false,
+    "default_utf16_units": 32767,
+    "preserved_exact_text": true,
+    "full_load_ready_ms": 1145.3779999992548,
+    "engine": "Qt QLineEdit; no JSON lexer"
+  },
+  "method": "Fresh process per sample; rotated mode order; full JSON preserved; all blocks/tokens checked outside timing; lexer uses the same per-line input as Qt; full highlighting and first frame included, not just setPlainText return; edited middle line is scrolled into view before edit timing; scroll_ms is 30 rendered steps.",
+  "speedups": {
+    "lexer_ms": 11.540607766831792,
+    "load_ready_ms": 1.639051358907486,
+    "set_text_ms": 1.6605922498442676,
+    "events_ms": 1.1258746718750048,
+    "first_frame_ms": 1.018916472275229,
+    "rehighlight_ms": 1.3372896727266068,
+    "edit_ms": 0.9419038275999738,
+    "scroll_ms": 0.9298639134021297
+  }
+}

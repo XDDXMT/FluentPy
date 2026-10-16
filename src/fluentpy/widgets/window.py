@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from ..qt import QtCore, QtGui, QtWidgets
 from ..theme import ThemeMode, theme
+from ..theme.fonts import ui_font
 from ..window_effects import apply_system_backdrop
 
 
 class FluentWindow(QtWidgets.QMainWindow):
     def __init__(self, title: str = "FluentPy", parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setWindowTitle(title)
         self.resize(980, 640)
         self._active = True

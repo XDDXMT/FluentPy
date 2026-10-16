@@ -8,7 +8,8 @@ FluentPy may use or adapt resources from third-party open-source projects only w
 - Copyright (c) 2020 Microsoft Corporation.
 - License: MIT; complete text in `licenses/Microsoft-Fluent-System-Icons-LICENSE.txt`.
 - Usage: bundled SVG icons for `IconButton`, examples, and future controls.
-- Bundled files: `src/fluentpy/assets/icons/ic_fluent_*_24_regular.svg` (105 icons).
+- Bundled files: `src/fluentpy/assets/icons/ic_fluent_*_24_regular.svg` (106 icons).
+- Music Note 2: original `assets/Music Note 2/SVG/ic_fluent_music_note_2_24_regular.svg` from the official Microsoft repository, bundled unchanged as `FluentIcon.MUSIC_NOTE_2`. Its pinned source and checksum are recorded in `src/fluentpy/assets/icons/SOURCE.md`.
 
 ## Qt for Python
 

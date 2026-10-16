@@ -16,7 +16,7 @@
 python examples/note_timeline.py
 ```
 
-示例可切换单轨、双轨、空状态和浅色／深色主题，用 `QTimer` 演示游标移动，不会播放声音或发送按键。完整 [Gallery](../examples/gallery.py) 的「视图」页也包含示例。
+示例可切换单轨、双轨、空状态和浅色／深色主题，用 `QTimer` 演示游标移动，不会播放声音或发送按键。新的[示例工作台](../examples/showcase.py)的「音符视图」也包含示例。
 
 ## 基本用法
 

@@ -3,11 +3,13 @@ from __future__ import annotations
 from ..icons import FluentIcon, fluent_icon
 from ..qt import QtCore, QtGui, QtWidgets
 from ..theme import theme
+from ..theme.fonts import ui_font
 
 
 class Card(QtWidgets.QFrame):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setObjectName("fluentCard")
         self._shadow = QtWidgets.QGraphicsDropShadowEffect(self)
         self._shadow.setBlurRadius(22)

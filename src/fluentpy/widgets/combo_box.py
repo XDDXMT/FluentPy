@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..theme import theme
+from ..theme.fonts import ui_font
 from .line_edit import LineEdit
 
 
@@ -11,6 +12,7 @@ class ComboBox(QtWidgets.QWidget):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self._items: list[str] = []
         self._current_index = -1
         self._popup: QtWidgets.QFrame | None = None

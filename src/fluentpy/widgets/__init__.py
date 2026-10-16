@@ -10,6 +10,8 @@ from .button import (
     TextButton,
 )
 from .checkbox import CheckBox
+from .code_edit import CodeEdit
+from .date_picker import DatePicker
 from .combo_box import ComboBox, EditableComboBox
 from .dialog import FramelessDialog, MaskDialog, MaskedDialog, MessageBox
 from .line_edit import DoubleSpinBox, LineEdit, PasswordLineEdit, RichTextEdit, SearchLineEdit, SpinBox, TextEdit
@@ -21,6 +23,8 @@ from .radio_button import RadioButton
 from .scroll_bar import FluentScrollBar
 from .slider import Slider
 from .surface import Card, ExamplePanel
+from .card import CardWidget, SimpleCardWidget, ElevatedCardWidget
+from .header_card import HeaderCardWidget, GroupHeaderCardWidget
 from .toast import Toast
 from .toggle_switch import ToggleSwitch
 from .window import FluentWindow
@@ -31,7 +35,14 @@ __all__ = [
     "Button",
     "BreadcrumbBar",
     "Card",
+    "CardWidget",
+    "SimpleCardWidget",
+    "ElevatedCardWidget",
+    "HeaderCardWidget",
+    "GroupHeaderCardWidget",
     "CheckBox",
+    "CodeEdit",
+    "DatePicker",
     "ComboBox",
     "DoubleSpinBox",
     "EditableComboBox",

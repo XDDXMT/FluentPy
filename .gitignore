@@ -5,7 +5,8 @@ __pycache__/
 .venv/
 venv/
 build/
-dist/
+# The root dist contains packages; sites/fluentpy-docs/dist is the static site source.
+/dist/
 .idea/
 .vscode/
 *.log
@@ -13,6 +14,15 @@ dist/
 *.exe
 *.dll
 *.pyd
+.toolchains/
+.zig-cache/
+zig-out/
+*.obj
+*.o
+*.lib
+*.a
+*.exp
+*.pdb
 *.zip
 .env
 .env.*
@@ -21,3 +31,7 @@ dist/
 
 # Local third-party reference application; not part of FluentPy.
 /PyQt-Fluent-Widgets-Gallery/
+
+# Unused showcase recording contains transition capture artifacts.
+/docs/assets/showcase-light.gif
+/sites/fluentpy-docs/dist/assets/previews/showcase-light.gif

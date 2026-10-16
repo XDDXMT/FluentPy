@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..theme import theme
+from ..theme.fonts import ui_font
 
 
 @dataclass
@@ -18,6 +19,7 @@ class BreadcrumbBar(QtWidgets.QWidget):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self._entries: list[tuple[str, str]] = []
         self._items: list[QtWidgets.QAbstractButton] = []
         self._current = ""
@@ -184,6 +186,7 @@ class Pivot(QtWidgets.QWidget):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None, *, segmented: bool = False) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self._items: list[_RouteItem] = []
         self._current = ""
         self._segmented = segmented
@@ -330,6 +333,7 @@ class SegmentedToolWidget(QtWidgets.QWidget):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self._items: list[_RouteItem] = []
         self._current = ""
         self._layout = QtWidgets.QHBoxLayout(self)
@@ -414,6 +418,7 @@ class TabBar(QtWidgets.QWidget):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self._items: list[_RouteItem] = []
         self._current = ""
         self._layout = QtWidgets.QHBoxLayout(self)
@@ -430,6 +435,8 @@ class TabBar(QtWidgets.QWidget):
         theme.subscribe(self, self._apply_theme)
 
     def add_tab(self, route_key: str, text: str, icon: QtGui.QIcon = QtGui.QIcon()) -> None:
+        if any(item.route_key == route_key for item in self._items):
+            return
         button = _TabButton(route_key, text, icon)
         button.clicked.connect(lambda _checked=False, key=route_key: self.set_current_tab(key))
         button.closeRequested.connect(lambda key=route_key: self._close_tab(key))
@@ -442,7 +449,7 @@ class TabBar(QtWidgets.QWidget):
         self.add_tab(routeKey, text, icon)
 
     def set_current_tab(self, route_key: str) -> None:
-        if route_key == self._current:
+        if route_key == self._current or not any(item.route_key == route_key for item in self._items):
             return
         self._current = route_key
         for item in self._items:
@@ -461,8 +468,13 @@ class TabBar(QtWidgets.QWidget):
             item.widget.deleteLater()
             self._items.remove(item)
             self.tabCloseRequested.emit(index)
-            if self._current == route_key and self._items:
-                self.set_current_tab(self._items[max(0, index - 1)].route_key)
+            if self._current == route_key:
+                if self._items:
+                    replacement = min(len(self._items) - 1, max(0, index - 1))
+                    self.set_current_tab(self._items[replacement].route_key)
+                else:
+                    self._current = ""
+                    self.currentChanged.emit("")
             return
 
     def _apply_theme(self) -> None:

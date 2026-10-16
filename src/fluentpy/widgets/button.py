@@ -3,6 +3,7 @@ from __future__ import annotations
 from ..qt import QtCore, QtGui, QtWidgets
 from ..icons import FluentIcon, fluent_icon
 from ..theme import theme
+from ..theme.fonts import ui_font
 
 
 class Button(QtWidgets.QPushButton):
@@ -189,10 +190,7 @@ class Button(QtWidgets.QPushButton):
         self.update()
 
     def _apply_font(self) -> None:
-        font = self.font()
-        font.setFamily("Segoe UI Variable Text")
-        font.setPointSize(theme.tokens.font_size)
-        self.setFont(font)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
 
     def _paint_rect(self) -> QtCore.QRectF:
         return QtCore.QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)

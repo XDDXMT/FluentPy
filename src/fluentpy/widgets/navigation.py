@@ -282,6 +282,7 @@ class NavigationSidebar(QtWidgets.QFrame):
         self._top_layout.addWidget(separator, 0, QtCore.Qt.AlignmentFlag.AlignTop)
         self._widgets.append(separator)
         separator.setCompacted(not self._expanded)
+        self._sync_item_widths()
 
     def set_current_index(self, index: int, animated: bool = True) -> None:
         if not self.is_item_visible(index) or index == self._current_index:
@@ -375,6 +376,7 @@ class NavigationSidebar(QtWidgets.QFrame):
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
         if hasattr(self, "_indicator"):
+            self._sync_item_widths()
             self._refresh_indicator()
 
     def event(self, event: QtCore.QEvent) -> bool:
@@ -397,6 +399,7 @@ class NavigationSidebar(QtWidgets.QFrame):
         self._item_visibility.append(True)
         self._widgets.append(item)
         layout.addWidget(item, 0, QtCore.Qt.AlignmentFlag.AlignTop)
+        self._sync_item_widths()
         if self._current_index == -1:
             self.set_current_index(index)
         return item
@@ -419,6 +422,7 @@ class NavigationSidebar(QtWidgets.QFrame):
             self._indicator.setGeometry(target)
             return
         self._indicator_animation.stop()
+        self._indicator_animation.setDuration(210)
         self._indicator_animation.setStartValue(self._indicator.geometry())
         self._indicator_animation.setEndValue(target)
         self._indicator_animation.start()
@@ -427,29 +431,75 @@ class NavigationSidebar(QtWidgets.QFrame):
         width = int(value)
         self.setMinimumWidth(width)
         self.setMaximumWidth(width)
+        self._sync_item_widths()
+
+    def _sync_item_widths(self) -> None:
+        # Each row follows the current animated width, including both margins.
+        width = max(40, self.width() - 8)
+        for widget in self._widgets:
+            if widget.width() != width:
+                widget.setFixedWidth(width)
 
     def _sync_widgets(self) -> None:
         compacted = not self._expanded
         for widget in self._widgets:
             if hasattr(widget, "setCompacted"):
                 widget.setCompacted(compacted)  # type: ignore[attr-defined]
+        self._sync_item_widths()
         self._refresh_indicator()
 
     def _refresh_indicator(self) -> None:
-        self._move_indicator(self._current_index, animated=False)
+        animation = self._indicator_animation
+        if not self.is_item_visible(self._current_index):
+            animation.stop()
+            self._indicator.hide()
+            return
+        target = self._indicator_target(self._current_index)
+        self._indicator.show()
+        self._indicator.raise_()
+        if animation.state() != QtCore.QAbstractAnimation.State.Running:
+            self._indicator.setGeometry(target)
+        elif animation.endValue() != target:
+            # Layout requests during expansion must not finish the selection
+            # transition. A moving footer only updates its remaining endpoint.
+            remaining = max(1, animation.duration() - animation.currentTime())
+            start = self._indicator.geometry()
+            animation.stop()
+            animation.setDuration(remaining)
+            animation.setStartValue(start)
+            animation.setEndValue(target)
+            animation.start()
 
 
 class AnimatedStackedWidget(QtWidgets.QStackedWidget):
+    """Fade and slide pages without retaining interrupted transition state.
+
+    Page-owned opacity effects are reused and restored. Other page-owned
+    graphics effects are preserved; those pages use the slide animation alone.
+    Effects belonging to children (for example card shadows) are untouched.
+    """
+
     currentAboutToChange = Signal(int, int)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self._duration = 180
         self._animation: QtCore.QAbstractAnimation | None = None
+        self._transition_widget: QtWidgets.QWidget | None = None
+        self._transition_effect: QtWidgets.QGraphicsOpacityEffect | None = None
+        self._transition_owns_effect = False
+        self._transition_opacity = 1.0
+        self._transition_origin = QtCore.QPoint()
+        self._transition_destroy_connection = None
+        self._transition_serial = 0
         self.setObjectName("animatedStackedWidget")
+        self.currentChanged.connect(self._stack_index_changed)
+        self.widgetRemoved.connect(self._stack_widget_removed)
 
     def setAnimationDuration(self, duration_ms: int) -> None:
         self._duration = max(0, duration_ms)
+        if self._duration == 0:
+            self._clear_transition()
 
     def setCurrentIndex(self, index: int) -> None:  # noqa: N802 - Qt API
         self.setCurrentIndexAnimated(index)
@@ -460,15 +510,15 @@ class AnimatedStackedWidget(QtWidgets.QStackedWidget):
     def setCurrentIndexAnimated(self, index: int) -> None:
         if index < 0 or index >= self.count() or index == self.currentIndex():
             return
+        self._clear_transition()
         old_index = self.currentIndex()
         old_widget = self.currentWidget()
         new_widget = self.widget(index)
+        serial = self._transition_serial
         self.currentAboutToChange.emit(old_index, index)
-
-        if self._animation:
-            self._animation.stop()
-            self._animation.deleteLater()
-            self._animation = None
+        # A signal handler is allowed to navigate again or remove the page.
+        if serial != self._transition_serial or self.widget(index) is not new_widget:
+            return
 
         if self._duration <= 0 or old_widget is None:
             QtWidgets.QStackedWidget.setCurrentIndex(self, index)
@@ -476,19 +526,31 @@ class AnimatedStackedWidget(QtWidgets.QStackedWidget):
 
         direction = 1 if index > old_index else -1
         offset = 22 * direction
-        effect = QtWidgets.QGraphicsOpacityEffect(new_widget)
-        effect.setOpacity(0.0)
-        new_widget.setGraphicsEffect(effect)
+        existing_effect = new_widget.graphicsEffect()
+        effect = None
+        if existing_effect is None:
+            effect = QtWidgets.QGraphicsOpacityEffect(new_widget)
+            self._transition_owns_effect = True
+            self._transition_opacity = 1.0
+            new_widget.setGraphicsEffect(effect)
+        elif isinstance(existing_effect, QtWidgets.QGraphicsOpacityEffect):
+            effect = existing_effect
+            self._transition_opacity = effect.opacity()
+        self._transition_widget = new_widget
+        self._transition_effect = effect
+        self._transition_origin = self.contentsRect().topLeft()
+        self._transition_destroy_connection = new_widget.destroyed.connect(self._transition_page_destroyed)
+        if effect is not None:
+            effect.setOpacity(0.0)
+        QtWidgets.QStackedWidget.setCurrentIndex(self, index)
+        if serial != self._transition_serial or self.currentWidget() is not new_widget:
+            return
+        # QStackedLayout establishes the canonical page geometry on selection.
+        # A hidden page's old pos() may still be an interrupted animation frame.
         end_pos = new_widget.pos()
+        self._transition_origin = QtCore.QPoint(end_pos)
         start_pos = end_pos + QtCore.QPoint(offset, 0)
         new_widget.move(start_pos)
-        QtWidgets.QStackedWidget.setCurrentIndex(self, index)
-
-        opacity = QtCore.QPropertyAnimation(effect, b"opacity", self)
-        opacity.setStartValue(0.0)
-        opacity.setEndValue(1.0)
-        opacity.setDuration(self._duration)
-        opacity.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
 
         slide = QtCore.QPropertyAnimation(new_widget, b"pos", self)
         slide.setStartValue(start_pos)
@@ -497,23 +559,88 @@ class AnimatedStackedWidget(QtWidgets.QStackedWidget):
         slide.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
 
         group = QtCore.QParallelAnimationGroup(self)
-        group.addAnimation(opacity)
+        if effect is not None:
+            opacity = QtCore.QPropertyAnimation(effect, b"opacity", group)
+            opacity.setStartValue(0.0)
+            opacity.setEndValue(self._transition_opacity)
+            opacity.setDuration(self._duration)
+            opacity.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
+            group.addAnimation(opacity)
         group.addAnimation(slide)
-        group.finished.connect(lambda: self._finish_transition(new_widget, effect, group))
+        group.finished.connect(self._finish_transition)
         self._animation = group
         group.start()
 
-    def _finish_transition(
-        self,
-        widget: QtWidgets.QWidget,
-        effect: QtWidgets.QGraphicsOpacityEffect,
-        animation: QtCore.QParallelAnimationGroup,
-    ) -> None:
-        effect.setOpacity(1.0)
-        widget.setGraphicsEffect(None)
-        if self._animation is animation:
-            self._animation = None
-        animation.deleteLater()
+    def removeWidget(self, widget: QtWidgets.QWidget) -> None:  # noqa: N802
+        if widget is self._transition_widget:
+            self._clear_transition()
+        super().removeWidget(widget)
+
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+        # A new layout geometry supersedes the in-flight position endpoints.
+        if hasattr(self, "_animation"):
+            self._clear_transition()
+        super().resizeEvent(event)
+
+    def hideEvent(self, event: QtGui.QHideEvent) -> None:
+        if hasattr(self, "_animation"):
+            self._clear_transition()
+        super().hideEvent(event)
+
+    def _stack_index_changed(self, _index: int) -> None:
+        # NavigationView also supports direct, nonanimated Qt base calls.
+        if self._transition_widget is not None and self.currentWidget() is not self._transition_widget:
+            self._clear_transition()
+
+    def _stack_widget_removed(self, _index: int) -> None:
+        widget = self._transition_widget
+        # Compare identities without dereferencing a page whose C++ destructor
+        # may have caused QStackedLayout to emit widgetRemoved already.
+        if widget is not None and not any(self.widget(i) is widget for i in range(self.count())):
+            self._clear_transition()
+
+    def _transition_page_destroyed(self, *_arguments) -> None:
+        self._transition_widget = None
+        self._transition_effect = None
+        self._clear_transition()
+
+    def _finish_transition(self) -> None:
+        self._clear_transition()
+
+    def _clear_transition(self) -> None:
+        animation = self._animation
+        widget = self._transition_widget
+        effect = self._transition_effect
+        owns_effect = self._transition_owns_effect
+        opacity = self._transition_opacity
+        origin = self._transition_origin
+        connection = self._transition_destroy_connection
+        self._transition_serial += 1
+        self._animation = None
+        self._transition_widget = None
+        self._transition_effect = None
+        self._transition_owns_effect = False
+        self._transition_destroy_connection = None
+        if connection is not None:
+            QtCore.QObject.disconnect(connection)
+        if animation is not None:
+            animation.stop()
+            animation.deleteLater()
+        if widget is not None:
+            try:
+                if effect is not None and widget.graphicsEffect() is effect:
+                    if owns_effect:
+                        widget.setGraphicsEffect(None)
+                    else:
+                        effect.setOpacity(opacity)
+                if widget is self.currentWidget():
+                    self.layout().setGeometry(self.contentsRect())
+                else:
+                    widget.move(origin)
+            except RuntimeError:
+                # A direct page.deleteLater() may remove its C++ QWidget before
+                # the stack's removal signal arrives. No page/effect is retained.
+                pass
 
 
 @dataclass(frozen=True)

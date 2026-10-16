@@ -3,7 +3,7 @@ import io
 import sys
 import unittest
 
-from fluentpy import FluentWindow, Card, LineEdit, Toast, NavigationSidebar, theme
+from fluentpy import FluentWindow, Card, LineEdit, Toast, NavigationSidebar, MaskedDialog, FramelessDialog, theme
 from fluentpy.qt import QtWidgets, QtCore
 
 class LifetimeTests(unittest.TestCase):
@@ -41,6 +41,30 @@ class LifetimeTests(unittest.TestCase):
         sidebar._width_animation.setCurrentTime(150)
         self.assertEqual(sidebar.width(),48)
         sidebar.deleteLater()
+
+    def test_dialogs_disconnect_theme_after_parent_deletion_with_live_wrappers(self):
+        errors = []
+        previous = sys.excepthook
+        original_mode = theme.mode
+        sys.excepthook = lambda _kind, error, _tb: errors.append(error)
+        try:
+            parent = QtWidgets.QWidget()
+            parent.resize(700, 500)
+            # Keep Python wrappers alive after Qt deletes their underlying widgets.
+            dialogs = [MaskedDialog("确认", parent=parent), FramelessDialog("确认", parent=parent)]
+            destroyed = []
+            for dialog in dialogs:
+                dialog.destroyed.connect(lambda *_args: destroyed.append(True))
+            parent.deleteLater()
+            self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
+            self.assertEqual(len(destroyed), 2)
+            for mode in ("dark", "light"):
+                theme.set_mode(mode)
+                self.app.processEvents()
+            self.assertEqual(errors, [])
+        finally:
+            sys.excepthook = previous
+            theme.set_mode(original_mode)
 
 if __name__=='__main__':
     unittest.main()

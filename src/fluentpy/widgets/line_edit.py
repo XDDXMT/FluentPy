@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ..qt import QtCore, QtGui, QtWidgets
 from ..theme import theme
+from ..theme.fonts import ui_font
 
 
 class LineEdit(QtWidgets.QLineEdit):
@@ -13,6 +14,7 @@ class LineEdit(QtWidgets.QLineEdit):
         show_clear_button: bool = True,
     ) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self._show_clear_button = show_clear_button
         self._hover_progress = 0.0
         self._focus_progress = 0.0
@@ -190,6 +192,7 @@ QLineEdit:disabled {{
 class TextEdit(QtWidgets.QTextEdit):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setMinimumHeight(128)
         self.setAcceptRichText(True)
         self._apply_theme()
@@ -385,6 +388,7 @@ class DoubleSpinBox(QtWidgets.QDoubleSpinBox):
 
 
 def _init_spin_box_chrome(widget: QtWidgets.QAbstractSpinBox) -> None:
+    widget.setFont(ui_font(theme.tokens.font_size, widget.font()))
     widget._hover_progress = 0.0  # type: ignore[attr-defined]
     widget._focus_progress = 0.0  # type: ignore[attr-defined]
     widget._press_progress = 0.0  # type: ignore[attr-defined]

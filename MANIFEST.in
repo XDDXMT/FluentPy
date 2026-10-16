@@ -1,0 +1,14 @@
+include LICENSE THIRD_PARTY_NOTICES.md README.md pyproject.toml setup.py
+include UPDATE_LOG.md AGENTS.md
+include .editorconfig .gitattributes
+recursive-include src *.py *.svg
+recursive-include native *.c *.h
+recursive-include scripts *.py *.ps1 *.bat
+recursive-include examples *.py *.bat
+recursive-include tests *.py
+include benchmarks/baseline-original-source.json
+include benchmarks/baseline-original.json
+include benchmarks/text-performance*.json
+recursive-include docs *.md *.png
+recursive-include licenses *.txt
+global-exclude *.pyd *.dll *.so *.pyc *.pyo

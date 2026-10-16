@@ -9,6 +9,7 @@ from numbers import Integral, Real
 
 from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..theme import theme
+from ..theme.fonts import ui_font
 
 
 def _seconds(value: float, name: str, *, negative: bool = False) -> float:
@@ -57,6 +58,7 @@ class NoteTimeline(QtWidgets.QWidget):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self._notes: tuple[NoteEvent, ...] = ()
         self._duration = 0.0
         self._position = 0.0

@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling>=1.32"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluentpy"
@@ -18,7 +18,6 @@ classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Environment :: X11 Applications :: Qt",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -38,11 +37,11 @@ Homepage = "https://github.com/XDDXMT/FluentPy"
 Repository = "https://github.com/XDDXMT/FluentPy"
 Issues = "https://github.com/XDDXMT/FluentPy/issues"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/fluentpy"]
+[tool.setuptools.packages.find]
+where = ["src"]
 
-[tool.hatch.build.targets.sdist]
-include = ["/src", "/examples", "/tests", "/docs", "/licenses", "/LICENSE", "/THIRD_PARTY_NOTICES.md", "/README.md", "/pyproject.toml", "/.editorconfig", "/.gitattributes"]
+[tool.setuptools.package-data]
+fluentpy = ["assets/**/*.svg", "assets/**/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

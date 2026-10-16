@@ -106,6 +106,7 @@ class FluentIcon(str, Enum):
     LAPTOP = "ic_fluent_laptop_24_regular.svg"
     LAYOUT_ROW_THREE = "ic_fluent_layout_row_three_24_regular.svg"
     MONEY = "ic_fluent_money_24_regular.svg"
+    MUSIC_NOTE_2 = "ic_fluent_music_note_2_24_regular.svg"
     NAVIGATION = "ic_fluent_navigation_24_regular.svg"
     OPEN = "ic_fluent_open_24_regular.svg"
     SETTINGS = "ic_fluent_settings_24_regular.svg"
