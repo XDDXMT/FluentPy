@@ -7,6 +7,10 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "date_accel.h"
+#include "drop_accel.h"
+#include "shortcut_accel.h"
+#include "time_accel.h"
+#include "calendar_accel.h"
 
 typedef struct {
     int kind;
@@ -300,7 +304,7 @@ static PyMethodDef methods[] = {
 static struct PyModuleDef module = {
     PyModuleDef_HEAD_INIT,
     "_native",
-    "Native text scanning and Gregorian date arithmetic for FluentPy.",
+    "Native text, calendar, time, file-selection and shortcut policies for FluentPy.",
     -1,
     methods,
     NULL, NULL, NULL, NULL
@@ -314,6 +318,22 @@ PyInit__native(void)
         return NULL;
     }
     if (fluentpy_add_date_methods(result) < 0) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    if (fluentpy_add_drop_methods(result) < 0) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    if (fluentpy_add_shortcut_methods(result) < 0) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    if (fluentpy_add_time_methods(result) < 0) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    if (fluentpy_add_calendar_methods(result) < 0) {
         Py_DECREF(result);
         return NULL;
     }

@@ -4,7 +4,8 @@ import sys
 from pathlib import Path
 
 SITE = Path(__file__).resolve().parent
-ROOT = SITE.parents[1]
+from source_project import source_root
+ROOT = source_root()
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "examples"))
 from code_editor import SAMPLE

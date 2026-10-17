@@ -6,11 +6,12 @@ import json
 import os
 import sys
 from pathlib import Path
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageStat
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 SITE = Path(__file__).resolve().parent
-ROOT = SITE.parents[1]
+from source_project import source_root
+ROOT = source_root()
 sys.path.insert(0, str(ROOT / "src"))
 import fluentpy
 from fluentpy import FluentWindow
@@ -37,12 +38,25 @@ for name, media in animated_previews.items():
             animation.seek(index)
             durations.append(animation.info.get("duration", 0))
             changed |= ImageChops.difference(first, animation.convert("RGB")).getbbox() is not None
+            if name in ("time-picker-motion", "calendar-motion"):
+                assert min(ImageStat.Stat(animation.convert("RGB")).mean) > 180, "Encoded calendar/time animation must not contain a black frame"
         assert all(duration > 0 for duration in durations) and changed, name
         print(f"Validated {name}: {animation.n_frames} GIF frames, {sum(durations)} ms, {expected_size}")
 for name in data["api"]:
     assert hasattr(fluentpy, name), name
 assert {icon["name"] for icon in data["icons"]} == {icon.name for icon in fluentpy.FluentIcon}
 assert len({p["id"] for p in data["pages"]}) == len(data["pages"])
+page_ids = {p["id"] for p in data["pages"]}
+navigation_ids = [identifier for group in data["groups"] for identifier in group["pages"]]
+assert len(navigation_ids) == len(set(navigation_ids)), "Each page must appear in one navigation group"
+assert set(navigation_ids) == page_ids, "Navigation must cover every page"
+catalog = next(p for p in data["pages"] if p["id"] == "components")
+assert catalog.get("catalog"), "The component catalog must be enabled"
+for entry in data["pages"]:
+    for example in entry["sections"]:
+        for link in example.get("links", []):
+            if link.get("page"):
+                assert link["page"] in page_ids, link
 for group in data["groups"]:
     assert all(any(p["id"] == name for p in data["pages"]) for name in group["pages"])
 for page in data["pages"]:
@@ -52,6 +66,12 @@ for page in data["pages"]:
     window = FluentWindow()
     context = {"window": window, "app": app, "QtCore": QtCore, "QtGui": QtGui, "QtWidgets": QtWidgets}
     for section in page["sections"]:
+        if section.get("migration"):
+            directory = SITE / "dist" / "assets" / "previews"
+            with Image.open(directory / section["migration"]["beforeImage"]) as before, Image.open(directory / section["migration"]["afterImage"]) as after, Image.open(directory / section["migration"]["focusImage"]) as focus:
+                assert before.size == after.size == focus.size == (520, 116)
+                assert ImageChops.difference(before.convert("RGB"), after.convert("RGB")).getbbox(), "Migration inputs must show different actual controls"
+                assert ImageChops.difference(after.convert("RGB"), focus.convert("RGB")).getbbox(), "Focus feedback must be visible"
         for card in section.get("gallery", []):
             asset = SITE / "dist" / "assets" / "previews" / f"{card['image']}-light.png"
             assert asset.exists() and asset.stat().st_size > 100, asset

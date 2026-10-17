@@ -70,7 +70,7 @@ def _step_oracle(year, month, day, column, steps, minimum, maximum):
 
 
 class DateBackendAvailabilityTests(unittest.TestCase):
-    def test_missing_binary_defers_failure_until_a_calculation(self):
+    def test_missing_binary_falls_back_except_when_native_is_explicitly_required(self):
         with patch.object(backend, "_extension", None), patch.object(backend, "_native_import_error", "test missing binary"):
             self.assertFalse(backend.native_available())
             self.assertEqual(backend.native_error(), "test missing binary")
@@ -81,11 +81,17 @@ class DateBackendAvailabilityTests(unittest.TestCase):
                 lambda: backend.column_values(2024, 2, 29, 0),
                 backend.backend_name,
             )
-            for mode in ("auto", "python", "native"):
+            for mode in ("auto", "python"):
                 with patch.dict(os.environ, {"FLUENTPY_BACKEND": mode}):
-                    for call in calls:
-                        with self.assertRaisesRegex(RuntimeError, "Rebuild.*build_native.py"):
-                            call()
+                    self.assertEqual(backend.backend_name(), "python")
+                    self.assertEqual(backend.days_in_month(2024, 2), 29)
+                    self.assertEqual(backend.clamp_date(2024, 2, 31), (2024, 2, 29))
+                    self.assertEqual(backend.step_date(2024, 2, 29, 0, 1), (2025, 2, 28))
+                    self.assertEqual(backend.column_values(2024, 2, 29, 0)[4], 2024)
+            with patch.dict(os.environ, {"FLUENTPY_BACKEND": "native"}):
+                for call in calls:
+                    with self.assertRaisesRegex(RuntimeError, "Rebuild.*build_native.py"):
+                        call()
 
     def test_real_import_handles_a_missing_and_a_text_only_extension(self):
         for name, extension in (("missing", None), ("old", types.SimpleNamespace(json_spans=lambda text: []))):
@@ -93,7 +99,7 @@ class DateBackendAvailabilityTests(unittest.TestCase):
             package = types.ModuleType(namespace)
             package.__path__ = []
             subpackage = types.ModuleType(f"{namespace}.backends")
-            subpackage.__path__ = []
+            subpackage.__path__ = [str(_SOURCE / "backends")]
             with patch.dict(sys.modules, {namespace: package, subpackage.__name__: subpackage}):
                 spec = importlib.util.spec_from_file_location(
                     f"{namespace}.backends.date", _SOURCE / "backends" / "date.py",
@@ -106,16 +112,22 @@ class DateBackendAvailabilityTests(unittest.TestCase):
                         spec.loader.exec_module(module)
                 self.assertFalse(module.native_available())
                 self.assertIn("_native", module.native_error())
-                with self.assertRaisesRegex(RuntimeError, "compiled fluentpy._native"):
-                    module.days_in_month(2024, 2)
+                with patch.dict(os.environ, {"FLUENTPY_BACKEND": "auto"}):
+                    self.assertEqual(module.days_in_month(2024, 2), 29)
+                with patch.dict(os.environ, {"FLUENTPY_BACKEND": "native"}):
+                    with self.assertRaisesRegex(RuntimeError, "compiled fluentpy._native"):
+                        module.days_in_month(2024, 2)
 
 
-@unittest.skipUnless(backend.native_available(), "native date extension is not built for this interpreter")
 class NativeDateTests(unittest.TestCase):
-    def test_backend_is_native_even_when_text_backend_is_python(self):
+    def test_backend_selection_is_consistent_with_global_mode(self):
         for mode in ("auto", "python", "native"):
             with patch.dict(os.environ, {"FLUENTPY_BACKEND": mode}):
-                self.assertEqual(backend.backend_name(), "native")
+                if mode == "native" and not backend.native_available():
+                    with self.assertRaises(RuntimeError):
+                        backend.backend_name()
+                    continue
+                self.assertEqual(backend.backend_name(), "python" if mode == "python" or not backend.native_available() else "native")
                 self.assertEqual(backend.days_in_month(2024, 2), 29)
 
     def test_gregorian_leap_centuries_and_month_lengths(self):

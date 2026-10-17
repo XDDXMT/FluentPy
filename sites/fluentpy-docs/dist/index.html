@@ -3,24 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="FluentPy 中文组件文档。查看交互预览、Python 用法和来自源码的 API 接口。">
+  <meta name="description" content="FluentPy 中文组件文档。按组件查找示例、Python 用法和 API 参考。">
   <meta name="theme-color" content="#161616">
-  <title>输入框 · FluentPy 文档</title>
+  <title>FluentPy · Qt for Python 组件库</title>
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=fd177ea615">
-  <link rel="stylesheet" href="native-flow.css?v=fd177ea615">
+  <link rel="stylesheet" href="styles.css?v=729bea48b0">
+  <link rel="stylesheet" href="native-flow.css?v=729bea48b0">
+  <link rel="stylesheet" href="migration.css?v=729bea48b0">
   <script>let p='system';try{p=localStorage.getItem('fluentpy-theme-mode')||'system'}catch{}if(!['system','light','dark'].includes(p))p='system';document.documentElement.dataset.preference=p;document.documentElement.dataset.theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p;</script>
-  <script src="data.js?v=fd177ea615" defer></script>
-  <script src="native-flow.js?v=fd177ea615" defer></script>
-  <script src="app.js?v=fd177ea615" defer></script>
+  <script src="data.js?v=729bea48b0" defer></script>
+  <script src="native-flow.js?v=729bea48b0" defer></script>
+  <script src="migration.js?v=729bea48b0" defer></script>
+  <script src="app.js?v=729bea48b0" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">跳到正文</a>
   <header class="topbar">
     <button class="icon-button menu-toggle" id="menu-toggle" aria-label="展开导航" aria-expanded="false">☰</button>
-    <a class="brand" href="#/inputs"><img src="assets/mark.svg" alt="" width="27" height="29"><span>Fluent<span class="brand-py">Py</span></span><span class="docs-label">文档</span></a>
-    <span class="version">0.1.0</span>
+    <a class="brand" href="#/introduction"><img src="assets/mark.svg" alt="" width="27" height="29"><span>Fluent<span class="brand-py">Py</span></span><span class="docs-label">文档</span></a>
+    <span class="version">0.6.9</span>
     <div class="top-actions">
+      <a class="top-link" href="#/getting-started">快速开始</a>
+      <a class="top-link" href="#/components">组件</a>
       <button class="search-trigger" id="search-trigger" aria-label="搜索组件与接口"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><span>搜索组件与接口…</span><kbd>Ctrl K</kbd></button>
       <a class="repo-link" href="https://github.com/XDDXMT/FluentPy" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
       <div class="top-divider"></div>
@@ -28,7 +32,7 @@
     </div>
   </header>
   <div class="sidebar-shade" id="sidebar-shade"></div>
-  <aside class="sidebar" id="sidebar" aria-label="文档导航"><nav id="navigation"></nav><div class="sidebar-footer"><span class="status-dot"></span>独立实现 · MIT 许可<a href="#/introduction">关于 FluentPy <span>↗</span></a></div></aside>
+  <aside class="sidebar" id="sidebar" aria-label="文档导航"><nav id="navigation"></nav><div class="sidebar-footer"><span class="status-dot"></span>独立实现 · MIT 许可<a href="https://github.com/XDDXMT/FluentPy-Docs" target="_blank" rel="noreferrer">文档源码 <span>↗</span></a></div></aside>
   <div class="workspace"><main id="main" tabindex="-1"></main><aside class="toc" aria-label="本页目录"><div class="toc-label">本页内容</div><nav id="toc"></nav><div class="toc-note">发现问题？<a href="https://github.com/XDDXMT/FluentPy/issues" target="_blank" rel="noreferrer">提交反馈 ↗</a></div></aside></div>
   <dialog id="search-dialog" aria-label="搜索文档"><div class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search-input" placeholder="搜索组件、方法或关键词" autocomplete="off" aria-label="搜索组件、方法或关键词"><button class="search-close" id="search-close" aria-label="关闭搜索">Esc</button></div><div id="search-results" class="search-results"></div><div class="search-help">↑ ↓ 选择 <span>Enter 打开</span></div></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

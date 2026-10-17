@@ -17,10 +17,11 @@ import sys
 import traceback
 
 SITE = Path(__file__).resolve().parent
-ROOT = SITE.parents[1]
+from source_project import source_root
+ROOT = source_root()
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "examples")]
 
-from PIL import Image
+from PIL import Image, ImageStat
 from showcase import BRAND_ICON, create_showcase_window
 from fluentpy import QT_API, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets
@@ -38,7 +39,7 @@ DURATION_MS = 8000
 
 def create_settled_showcase(app):
     """Wait for layout and the initial sidebar animation before taking a shot."""
-    window = create_showcase_window("light", page="cards")
+    window = create_showcase_window("light", page="navigation")
     window.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
     window.resize(*SIZE)
     window.show()
@@ -93,7 +94,7 @@ def record_showcase(window, destination):
         (500, lambda: click(window.sidebar._toggle)),
         (1000, lambda: click(window.sidebar._toggle)),
         (1500, lambda: route("inputs")),
-        (2300, lambda: route("feedback")),
+        (2300, lambda: route("navigation")),
         (3000, lambda: click(window.feedback_pivot._items[1].widget)),
         (3700, lambda: click(window.feedback_pivot._items[2].widget)),
         (4400, lambda: (window.stack.currentWidget().ensureWidgetVisible(window.document_stack, 10, 10), document("notes"))),
@@ -102,6 +103,7 @@ def record_showcase(window, destination):
         (6600, lambda: route("cards")),
     ]
     frames, timestamps, fired, errors = [], [], set(), []
+    unavailable_compositor_frames = []
     clock = QtCore.QElapsedTimer()
     timer = QtCore.QTimer()
     timer.setInterval(83)
@@ -119,7 +121,14 @@ def record_showcase(window, destination):
                 if elapsed >= at and index not in fired:
                     action()
                     fired.add(index)
-            frames.append(_grab(window).quantize(palette=palette, dither=Image.Dither.NONE))
+            frame = _grab(window)
+            # Some Qt graphics-effect transitions cannot be grabbed offscreen.
+            # Keep the last real frame for their elapsed time instead of encoding
+            # the unavailable black surface. Every encoded frame is a Qt grab.
+            if min(ImageStat.Stat(frame.crop((220, 60, 1100, 740))).mean) < 200:
+                unavailable_compositor_frames.append(elapsed)
+                return
+            frames.append(frame.quantize(palette=palette, dither=Image.Dither.NONE))
             timestamps.append(elapsed)
         except Exception:
             errors.append(traceback.format_exc())
@@ -150,6 +159,7 @@ def record_showcase(window, destination):
     return {"path": str(destination), "dimensions": list(SIZE), "bytes": destination.stat().st_size,
             "sampled_frames": len(frames), "encoded_frames": count, "duration_ms": total,
             "mean_interval_ms": statistics.mean(intervals), "native_control_actions": len(fired),
+            "unavailable_compositor_frames_skipped": len(unavailable_compositor_frames),
             "real_Qt_widget_grabs_only": True, "desktop_pointer_moved": False}
 
 

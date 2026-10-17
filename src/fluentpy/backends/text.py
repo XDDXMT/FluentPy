@@ -13,9 +13,9 @@ implementations are also exposed for reproducible differential benchmarks.
 
 from __future__ import annotations
 
-import os
 import re
 from importlib import import_module
+from ._compat import select_backend
 
 try:
     _extension = import_module(f"{__package__.rpartition('.')[0]}._native")
@@ -24,6 +24,9 @@ except (ImportError, OSError) as error:
     _native_import_error = str(error)
 else:
     _native_import_error = None
+    if not callable(getattr(_extension, "json_spans", None)):
+        _extension = None
+        _native_import_error = "The installed fluentpy._native extension has no JSON scanner."
 
 __all__ = [
     "backend_name", "json_spans", "json_spans_native", "json_spans_python",
@@ -49,16 +52,7 @@ def native_error() -> str | None:
 
 def backend_name() -> str:
     """Resolve the backend selection, rejecting invalid or unavailable modes."""
-    mode = os.environ.get("FLUENTPY_BACKEND", "auto").strip().lower()
-    if mode not in ("auto", "python", "native"):
-        raise ValueError("FLUENTPY_BACKEND must be 'auto', 'python', or 'native'")
-    if mode == "python":
-        return "python"
-    if _extension is not None:
-        return "native"
-    if mode == "native":
-        _require_native()
-    return "python"
+    return select_backend(_extension, _native_import_error, "text")
 
 
 def _require_native() -> None:

@@ -26,6 +26,8 @@ $env:FLUENTPY_BACKEND = 'native'  # 要求 C；缺失时明确报错
 
 以上三行是互斥的配置示例，选择需要的一行。编辑器在载入内容、切换语言或重新高亮时刷新后端选择，不在每一行上重复读取配置。
 
+同一模式也作用于日期、拖放与快捷键策略。默认auto在对应C接口不可用时自动使用Python，不会禁用组件；`python`可强制兼容实现，`native`仅用于明确要求C的场景。详见[后端选择与回退](backends.md)。
+
 编译与 wheel 安装详见 [C 后端构建说明](native-build.md)。当前实际编译和运行验证为 Windows x64、CPython 3.13.1、PySide6 / Qt 6.11.1；其他 Python 版本需要对应二进制或重新编译，不能共用这个 `.pyd`。
 
 ## 可以运行的对照 Demo

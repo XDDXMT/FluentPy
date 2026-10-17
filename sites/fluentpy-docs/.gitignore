@@ -1,2 +1,3 @@
 .openai/
 node_modules/
+dist/assets/previews/*-validation.json

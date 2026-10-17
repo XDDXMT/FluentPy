@@ -1,14 +1,10 @@
-"""Bindings to FluentPy's required C Gregorian date backend.
-
-Importing this module remains possible when the binary is absent or outdated.
-The first calculation then explains how to rebuild it. Date arithmetic always
-uses C, including when ``FLUENTPY_BACKEND=python`` selects the text reference
-backend. There is no Python calendar implementation.
-"""
+"""Prefer the C Gregorian backend, with compatible Python calendar fallback."""
 
 from __future__ import annotations
 
 from importlib import import_module
+from ._compat import select_backend
+from . import _date_python
 
 __all__ = [
     "backend_name", "native_available", "native_error", "days_in_month",
@@ -54,14 +50,15 @@ def _require_native():
 
 
 def backend_name() -> str:
-    """Date calculations always use the native backend when available."""
-    _require_native()
-    return "native"
+    """Resolve auto / python / native for this component's capabilities."""
+    return select_backend(_extension, _native_import_error, "date")
 
 
 def days_in_month(year: int, month: int) -> int:
     """Return the Gregorian month length, for years 1 through 9999."""
-    return _require_native().date_days_in_month(year=year, month=month)
+    if backend_name() == "native":
+        return _extension.date_days_in_month(year=year, month=month)
+    return _date_python.days_in_month(year, month)
 
 
 def clamp_date(
@@ -70,9 +67,9 @@ def clamp_date(
     maximum: tuple[int, int, int] = (9999, 12, 31),
 ) -> tuple[int, int, int]:
     """Clamp the day and complete date to a valid inclusive date range."""
-    return _require_native().date_clamp_date(
-        year=year, month=month, day=day, minimum=minimum, maximum=maximum,
-    )
+    if backend_name() == "native":
+        return _extension.date_clamp_date(year=year, month=month, day=day, minimum=minimum, maximum=maximum)
+    return _date_python.clamp_date(year, month, day, minimum, maximum)
 
 
 def step_date(
@@ -81,10 +78,10 @@ def step_date(
     maximum: tuple[int, int, int] = (9999, 12, 31),
 ) -> tuple[int, int, int]:
     """Step one column: years clamp, months/days wrap without carrying."""
-    return _require_native().date_step_date(
-        year=year, month=month, day=day, column=column, steps=steps,
-        minimum=minimum, maximum=maximum,
-    )
+    if backend_name() == "native":
+        return _extension.date_step_date(year=year, month=month, day=day, column=column, steps=steps,
+                                         minimum=minimum, maximum=maximum)
+    return _date_python.step_date(year, month, day, column, steps, minimum, maximum)
 
 
 def column_values(
@@ -97,7 +94,7 @@ def column_values(
     Year boundaries and the neighbors of a single selectable value are empty.
     Other month/day intervals wrap. ``None`` represents an empty row.
     """
-    return _require_native().date_column_values(
-        year=year, month=month, day=day, column=column, radius=radius,
-        minimum=minimum, maximum=maximum,
-    )
+    if backend_name() == "native":
+        return _extension.date_column_values(year=year, month=month, day=day, column=column, radius=radius,
+                                             minimum=minimum, maximum=maximum)
+    return _date_python.column_values(year, month, day, column, radius, minimum, maximum)

@@ -62,7 +62,7 @@ class BackendSelectionTests(unittest.TestCase):
         package = types.ModuleType(namespace)
         package.__path__ = []  # Deliberately hide the compiled sibling module.
         subpackage = types.ModuleType(f"{namespace}.backends")
-        subpackage.__path__ = []
+        subpackage.__path__ = [str(_SOURCE / "backends")]
         module_name = f"{namespace}.backends.text"
         with patch.dict(sys.modules, {namespace: package, subpackage.__name__: subpackage}):
             spec = importlib.util.spec_from_file_location(module_name, _SOURCE / "backends" / "text.py")

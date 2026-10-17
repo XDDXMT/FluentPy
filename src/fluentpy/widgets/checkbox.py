@@ -8,19 +8,51 @@ from ..theme.fonts import ui_font
 class CheckBox(QtWidgets.QAbstractButton):
     stateChanged = Signal(int)
 
-    def __init__(self, text: str = "", parent: QtWidgets.QWidget | None = None) -> None:
+    def __init__(self, text: str = "", parent: QtWidgets.QWidget | None = None, *, description: str = "") -> None:
         super().__init__(parent)
+        self._description = str(description)
+        self._keyboard_focus = False
         self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setText(text)
+        self.setAccessibleDescription(self._description)
         self.setCheckable(True)
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
-        self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
-        self.setMinimumHeight(32)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
+        self._update_minimum_height()
         self._tristate = False
         self._state = QtCore.Qt.CheckState.Unchecked
         self._hover = False
         self._pressed = False
         theme.subscribe(self, self.update)
+
+    def description(self) -> str:
+        return self._description
+
+    def set_description(self, text: str) -> None:
+        text = str(text)
+        if text == self._description:
+            return
+        self._description = text
+        self.setAccessibleDescription(text)
+        self._update_minimum_height()
+        self.updateGeometry()
+        self.update()
+
+    def setDescription(self, text: str) -> None:  # noqa: N802 - Qt API
+        self.set_description(text)
+
+    def _description_font(self) -> QtGui.QFont:
+        font = QtGui.QFont(self.font())
+        font.setPixelSize(max(10, QtGui.QFontInfo(font).pixelSize() - 2))
+        return font
+
+    def _content_height(self) -> int:
+        if not self._description:
+            return max(32, self.fontMetrics().height() + 8)
+        return max(40, self.fontMetrics().height() + QtGui.QFontMetrics(self._description_font()).height() + 9)
+
+    def _update_minimum_height(self) -> None:
+        self.setMinimumHeight(self._content_height())
 
     def setTristate(self, enabled: bool = True) -> None:  # noqa: N802 - Qt API
         self._tristate = enabled
@@ -57,7 +89,30 @@ class CheckBox(QtWidgets.QAbstractButton):
             self.setChecked(not self.isChecked())
 
     def sizeHint(self) -> QtCore.QSize:
-        return QtCore.QSize(self.fontMetrics().horizontalAdvance(self.text()) + 34, 32)
+        width = self.fontMetrics().horizontalAdvance(self.text())
+        if self._description:
+            width = max(width, QtGui.QFontMetrics(self._description_font()).horizontalAdvance(self._description))
+        return QtCore.QSize(max(24, width + 34), self._content_height())
+
+    def minimumSizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(54 if self.text() or self._description else 24, self._content_height())
+
+    def changeEvent(self, event: QtCore.QEvent) -> None:
+        super().changeEvent(event)
+        if event.type() == QtCore.QEvent.Type.FontChange and hasattr(self, "_description"):
+            self._update_minimum_height()
+            self.updateGeometry()
+
+    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+        self._keyboard_focus = event.reason() in (QtCore.Qt.FocusReason.TabFocusReason,
+            QtCore.Qt.FocusReason.BacktabFocusReason, QtCore.Qt.FocusReason.ShortcutFocusReason)
+        super().focusInEvent(event)
+        self.update()
+
+    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+        self._keyboard_focus = False
+        super().focusOutEvent(event)
+        self.update()
 
     def enterEvent(self, event: QtCore.QEvent) -> None:
         self._hover = True
@@ -71,7 +126,8 @@ class CheckBox(QtWidgets.QAbstractButton):
         super().leaveEvent(event)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        self._pressed = True
+        self._keyboard_focus = False
+        self._pressed = event.button() == QtCore.Qt.MouseButton.LeftButton
         self.update()
         super().mousePressEvent(event)
 
@@ -85,8 +141,22 @@ class CheckBox(QtWidgets.QAbstractButton):
         tokens = theme.tokens
         painter = QtGui.QPainter(self)
         painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
+        painter.setFont(self.font())
 
-        box = QtCore.QRectF(2, self.height() / 2 - 10, 20, 20)
+        rtl = self.isRightToLeft()
+        title_height = self.fontMetrics().height()
+        if self._description:
+            secondary_height = QtGui.QFontMetrics(self._description_font()).height()
+            top = max(2.0, (self.height() - title_height - secondary_height - 1) / 2)
+            box_y = max(2.0, top + title_height / 2 - 10)
+            title_rect = QtCore.QRectF(2 if rtl else 32, top, max(0, self.width() - 34), title_height)
+        else:
+            box_y = self.height() / 2 - 10
+            title_rect = QtCore.QRectF(2 if rtl else 32, 0, max(0, self.width() - 34), self.height())
+        box = QtCore.QRectF(self.width() - 22 if rtl else 2, box_y, 20, 20)
+        painter.save()
+        if not self.isEnabled():
+            painter.setOpacity(0.45)
         selected = self._state != QtCore.Qt.CheckState.Unchecked
         if selected:
             fill = QtGui.QColor(tokens.accent)
@@ -116,6 +186,21 @@ class CheckBox(QtWidgets.QAbstractButton):
             painter.setBrush(QtGui.QColor("#ffffff"))
             painter.drawRoundedRect(QtCore.QRectF(box.left() + 5, box.center().y() - 1.5, 10, 3), 1.5, 1.5)
 
+        painter.restore()
+
         text_color = QtGui.QColor(tokens.text if self.isEnabled() else tokens.disabled)
         painter.setPen(text_color)
-        painter.drawText(QtCore.QRectF(32, 0, self.width() - 34, self.height()), QtCore.Qt.AlignmentFlag.AlignVCenter, self.text())
+        title_rect.translate(0, -3)
+        alignment = QtCore.Qt.AlignmentFlag.AlignVCenter | (QtCore.Qt.AlignmentFlag.AlignRight if rtl else QtCore.Qt.AlignmentFlag.AlignLeft)
+        title = self.fontMetrics().elidedText(self.text(), QtCore.Qt.TextElideMode.ElideRight, int(title_rect.width()))
+        painter.drawText(title_rect, alignment, title)
+        if self._description:
+            font = self._description_font()
+            painter.setFont(font)
+            painter.setPen(QtGui.QColor(tokens.text_muted if self.isEnabled() else tokens.disabled))
+            description = QtGui.QFontMetrics(font).elidedText(self._description, QtCore.Qt.TextElideMode.ElideRight, int(title_rect.width()))
+            painter.drawText(QtCore.QRectF(title_rect.left(), title_rect.bottom() + 1, title_rect.width(), secondary_height), alignment, description)
+        if self.hasFocus() and self._keyboard_focus:
+            painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
+            painter.setPen(QtGui.QPen(QtGui.QColor(tokens.accent), 1))
+            painter.drawRoundedRect(QtCore.QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5), 4, 4)

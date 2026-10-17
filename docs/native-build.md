@@ -1,8 +1,10 @@
 # 可选 C 后端：编译与打包
 
-FluentPy 的界面、信号和 Qt 对象仍由 Python 与 Qt 管理。`native/text_accel.c` 提供独立的文本扫描热路径，编译为 `fluentpy._native`，不需要 Qt 的 C++ 开发包。未安装本机扩展时，CodeEdit 的文本扫描自动回退 Python；普通组件的安装和使用不要求 C 编译器。
+FluentPy的界面、信号和Qt对象由Python与Qt管理，`fluentpy._native`提供可选C加速，不需要Qt的C++开发包。默认auto模式在扩展不可用时自动回退Python，CodeEdit、日期、时间、拖放和快捷键组件均可继续使用，无需为基本运行安装C编译器。
 
-日期选择器的日历运算也位于同一 C 扩展。DatePicker 需要包含日期接口的新扩展，不提供新增 Python 日历算法；未编译时其他组件仍可导入，日期区提示构建。以下命令会一并编译文本与日期源文件，已有旧版 `.pyd` 也应重新构建。
+日期日历、时制换算与时间滚轮、文件拖放策略、快捷键校验和文本扫描都优先使用同一扩展中的对应接口。缺失、不兼容或旧版二进制缺少某组接口时，仅该组切换到兼容实现，不禁用组件；可用的其他C接口继续使用。构建成功后重启应用即可恢复C加速。
+
+构建脚本编译`native/text_accel.c`、`native/date_accel.c`、`native/time_accel.c`、`native/calendar_accel.c`、`native/drop_accel.c`和`native/shortcut_accel.c`六份源文件。Python兼容策略位于`src/fluentpy/backends/`，与C实现保持返回值、输入校验和拒绝原因一致。Qt仍负责界面、原生文件信息、按键事件及QKeySequence转换。模式与诊断见[后端选择与回退](backends.md)。
 
 ## 当前支持范围
 
@@ -61,6 +63,8 @@ python -m build --wheel --outdir dist/python-only
 ```
 
 该 wheel 的标签为 `py3-none-any`，即使源码目录已经存在开发用 `.pyd`，也不会把它打包进去。
+
+这个纯Python包仍能使用日期、文件拖放、快捷键和代码编辑器的兼容后端；C扩展是可选加速。当前构建产物已在不加载C模块的独立进程中检查实际录制、筛选、日期操作和完整工作台。
 
 默认 `FLUENTPY_BUILD_NATIVE=auto`：尝试构建可选扩展；编译器不可用时 setuptools 会输出警告，保留 Python 实现。若要发布原生包，应使用 `1`，使任何编译失败直接终止构建；若要发布跨平台 Python 包，应使用 `0`，避免平台标签受可选扩展影响。
 

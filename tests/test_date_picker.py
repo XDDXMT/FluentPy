@@ -427,13 +427,16 @@ class DatePickerTests(unittest.TestCase):
         # the solid surface a little further inside the same top edge.
         self.assertLess(image.pixelColor(0, 0).alpha(), image.pixelColor(12, 4).alpha())
 
-    def test_date_calls_use_native_calendar_with_either_text_backend(self):
+    def test_date_calls_follow_the_selected_backend_without_changing_ui_behavior(self):
         calendar = picker_module.calendar
         for mode in ("python", "native"):
+            if mode == "native" and not calendar.native_available():
+                continue
             with self.subTest(text_backend=mode), patch.dict(os.environ, {"FLUENTPY_BACKEND": mode}):
                 with patch.object(calendar, "clamp_date", wraps=calendar.clamp_date) as clamp:
                     self.view.set_date(QtCore.QDate(2024, 2, 29))
                     self.assertTrue(clamp.called)
+                self.assertEqual(self.view.acceleration_backend(), mode)
                 popup = self.open_popup(column=0)
                 with patch.object(calendar, "step_date", wraps=calendar.step_date) as step:
                     QTest.keyClick(popup.wheel, QtCore.Qt.Key.Key_Down)
@@ -463,18 +466,18 @@ sys.meta_path.insert(0, BlockNative())
 import fluentpy
 from fluentpy.qt import QtWidgets
 app = QtWidgets.QApplication([])
-try:
-    fluentpy.DatePicker()
-except RuntimeError as error:
-    text = str(error)
-    assert 'native' in text.lower() and ('compil' in text.lower() or 'build' in text.lower()), text
-    print(json.dumps({'imported': True, 'constructor_error': text}))
-else:
-    raise AssertionError('DatePicker unexpectedly worked without the C calendar backend')
+from fluentpy.qt import QtCore
+picker = fluentpy.DatePicker()
+picker.set_date(QtCore.QDate(2024, 2, 29))
+assert picker.acceleration_backend() == 'python'
+assert picker.date().getDate() == (2024, 2, 29)
+picker.set_date_range(QtCore.QDate(2025, 2, 1), QtCore.QDate(2025, 2, 28))
+assert picker.date().getDate() == (2025, 2, 1)
+print(json.dumps({'imported': True, 'backend': picker.acceleration_backend()}))
 '''
         env = os.environ.copy()
         env["QT_QPA_PLATFORM"] = "offscreen"
-        env["FLUENTPY_BACKEND"] = "python"
+        env["FLUENTPY_BACKEND"] = "auto"
         result = subprocess.run(
             [sys.executable, "-I", "-B", "-X", "utf8", "-c", probe, source],
             cwd=Path(__file__).resolve().parents[1], env=env,

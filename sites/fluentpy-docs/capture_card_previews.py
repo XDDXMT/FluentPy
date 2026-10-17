@@ -12,7 +12,8 @@ import sys
 import traceback
 
 SITE = Path(__file__).resolve().parent
-ROOT = SITE.parents[1]
+from source_project import source_root
+ROOT = source_root()
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "examples"), str(SITE)]
 
 from capture_animations import _capture_font, _font_families, _image

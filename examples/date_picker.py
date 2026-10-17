@@ -87,7 +87,7 @@ class DatePickerDemo(QtWidgets.QWidget):
         for title_text, detail in (
             ("01  三列独立选择", "滚轮或拖动选择年、月、日。点击相邻行，也能直接切换。"),
             ("02  确认才保存", "✓ 或 Enter 确认，×、Esc 或点击外部取消。左右方向键切换列。"),
-            ("03  日历运算由 C 处理", "闰年、大小月和日期范围自动处理。2 月 29 日切换年份会调整为有效日期。"),
+            ("03  日历运算自动适配", "优先C运算，缺少扩展时使用Python；2月29日切换年份会调整为有效日期。"),
         ):
             label = QtWidgets.QLabel(title_text)
             label.setObjectName("noteTitle")
@@ -106,7 +106,8 @@ class DatePickerDemo(QtWidgets.QWidget):
         notes.addStretch()
         body.addLayout(notes, 1)
         root.addLayout(body, 1)
-        footer = QtWidgets.QLabel("默认尺寸 300 × 38 · Python 接口 / C 日期运算 / Qt 绘制")
+        backend = "C 加速" if self.picker.acceleration_backend() == "native" else "Python 兼容"
+        footer = QtWidgets.QLabel(f"默认尺寸 300 × 38 · {backend} / Qt 绘制")
         footer.setObjectName("muted")
         root.addWidget(footer)
         self._apply_theme()
@@ -164,7 +165,7 @@ def main() -> int:
     try:
         window = DatePickerDemo()
     except RuntimeError as error:
-        QtWidgets.QMessageBox.critical(None, "需要编译 C 日期后端", str(error))
+        QtWidgets.QMessageBox.critical(None, "后端配置错误", str(error))
         return 1
     if args.screenshot:
         window.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)

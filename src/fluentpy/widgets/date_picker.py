@@ -1,4 +1,4 @@
-"""Three-column date picker. Calendar calculations live in the C backend."""
+"""Three-column date picker with C acceleration and Python calendar fallback."""
 
 from __future__ import annotations
 
@@ -89,7 +89,14 @@ class _DateWheel(QtWidgets.QWidget):
         self.update()
 
     def _column_at(self, x: float) -> int:
-        return max(0, min(2, int(x * 3 / max(1, self.width()))))
+        count = self._column_count()
+        return max(0, min(count - 1, int(x * count / max(1, self.width()))))
+
+    def _column_count(self) -> int:
+        return 3
+
+    def _format_value(self, column, value) -> str:
+        return f"{value}{('年', '月', '日')[column]}"
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
         column = self._column_at(event.position().x())
@@ -160,7 +167,7 @@ class _DateWheel(QtWidgets.QWidget):
         elif key == QtCore.Qt.Key.Key_Escape:
             self.cancelRequested.emit()
         elif key in (QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Right):
-            self.column = (self.column + (1 if key == QtCore.Qt.Key.Key_Right else -1)) % 3
+            self.column = (self.column + (1 if key == QtCore.Qt.Key.Key_Right else -1)) % self._column_count()
             self.update()
         elif key in (QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down):
             self.step(self.column, -1 if key == QtCore.Qt.Key.Key_Up else 1)
@@ -176,9 +183,9 @@ class _DateWheel(QtWidgets.QWidget):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         painter.setFont(ui_font(16, self.font()))
         tokens = theme.tokens
-        width = self.width() / 3
+        width = self.width() / self._column_count()
         painter.setPen(QtGui.QPen(QtGui.QColor(tokens.border), 1))
-        for column in (1, 2):
+        for column in range(1, self._column_count()):
             painter.drawLine(QtCore.QPointF(column * width, 0), QtCore.QPointF(column * width, self.height()))
         selected = QtCore.QRectF(0, self.RADIUS * self.ROW_HEIGHT, self.width(), self.ROW_HEIGHT)
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
@@ -186,7 +193,6 @@ class _DateWheel(QtWidgets.QWidget):
         painter.setBrush(accent)
         painter.drawRoundedRect(selected, 6, 6)
         selected_text = QtGui.QColor("#102429" if QtGui.qGray(accent.rgb()) > 170 else "#ffffff")
-        suffixes = ("年", "月", "日")
         for column, values in enumerate(self._values):
             painter.save()
             painter.setClipRect(QtCore.QRectF(column * width, 0, width, self.height()))
@@ -196,11 +202,11 @@ class _DateWheel(QtWidgets.QWidget):
                 y = (index - 1) * self.ROW_HEIGHT + self._offsets[column]
                 row_rect = QtCore.QRectF(column * width, y, width, self.ROW_HEIGHT)
                 painter.setPen(QtGui.QColor(tokens.text))
-                painter.drawText(row_rect, QtCore.Qt.AlignmentFlag.AlignCenter, f"{value}{suffixes[column]}")
+                painter.drawText(row_rect, QtCore.Qt.AlignmentFlag.AlignCenter, self._format_value(column, value))
                 painter.save()
                 painter.setClipRect(selected, QtCore.Qt.ClipOperation.IntersectClip)
                 painter.setPen(selected_text)
-                painter.drawText(row_rect, QtCore.Qt.AlignmentFlag.AlignCenter, f"{value}{suffixes[column]}")
+                painter.drawText(row_rect, QtCore.Qt.AlignmentFlag.AlignCenter, self._format_value(column, value))
                 painter.restore()
             painter.restore()
 
@@ -321,14 +327,15 @@ class _DatePopup(QtWidgets.QFrame):
 class DatePicker(QtWidgets.QWidget):
     """Year/month/day field with a confirmed, three-wheel date flyout.
 
-    An unselected picker returns an invalid QDate. Calendar calculations require
-    the compiled C backend; importing the library itself does not require it.
+    An unselected picker returns an invalid QDate. Calendar calculations prefer
+    the compiled C backend and remain available with the Python fallback.
     """
 
     dateChanged = Signal(QtCore.QDate)
     dateAccepted = Signal(QtCore.QDate)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        calendar.backend_name()
         super().__init__(parent)
         self._minimum = (1900, 1, 1)
         self._maximum = (2100, 12, 31)
@@ -354,6 +361,9 @@ class DatePicker(QtWidgets.QWidget):
 
     def date(self) -> QtCore.QDate:
         return QtCore.QDate(self._date)
+
+    def acceleration_backend(self) -> str:
+        return calendar.backend_name()
 
     def set_date(self, value: QtCore.QDate) -> None:
         if not isinstance(value, QtCore.QDate):

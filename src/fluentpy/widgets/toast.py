@@ -64,8 +64,9 @@ class Toast(QtWidgets.QFrame):
     Existing corner placements remain available without a target.
     """
 
-    SHOW_DURATION = 240
-    HIDE_DURATION = 140
+    SHOW_DURATION = 280
+    HIDE_DURATION = 180
+    PLACEMENTS = ("top-left", "top-right", "bottom-left", "bottom-right")
 
     def __init__(
         self,
@@ -193,6 +194,8 @@ class Toast(QtWidgets.QFrame):
                    (50 if self._compact else 64) + title_height + (2 + detail_height if detail_height else 0))
 
     def show_at(self, placement: str = "top-right") -> None:
+        if placement not in self.PLACEMENTS:
+            raise ValueError(f"placement must be one of {self.PLACEMENTS}")
         was_visible = self.isVisible() and not self._closing
         self._reveal.stop()
         self._closing = False
@@ -277,7 +280,7 @@ class Toast(QtWidgets.QFrame):
         self._reveal.setDuration(duration)
         self._reveal.setStartValue(self._reveal_progress)
         self._reveal.setEndValue(end)
-        self._reveal.setEasingCurve(QtCore.QEasingCurve.Type.OutQuad if end else QtCore.QEasingCurve.Type.InCubic)
+        self._reveal.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic if end else QtCore.QEasingCurve.Type.InCubic)
         self._reveal.start()
 
     def _set_reveal_progress(self, value: float) -> None:
@@ -295,9 +298,12 @@ class Toast(QtWidgets.QFrame):
             self._allow_close = True
             self.close()
 
+    def _card_rect(self) -> QtCore.QRectF:
+        return QtCore.QRectF(16.5, 12.5, max(0, self.width() - 33), max(0, self.height() - 33))
+
     def _card_path(self) -> QtGui.QPainterPath:
         path = QtGui.QPainterPath()
-        rect = QtCore.QRectF(16.5, 12.5, max(0, self.width() - 33), max(0, self.height() - 33))
+        rect = self._card_rect()
         path.addRoundedRect(rect, 10, 10)
         if self._arrow_edge is not None and rect.width() > 36:
             triangle = QtGui.QPainterPath()

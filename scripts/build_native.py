@@ -27,7 +27,7 @@ def build_with_zig(zig: Path, output: Path) -> Path:
     zig = zig.expanduser().resolve()
     if not zig.is_file():
         raise FileNotFoundError(f"Zig executable not found: {zig}")
-    sources = [ROOT / "native" / name for name in ("text_accel.c", "date_accel.c")]
+    sources = [ROOT / "native" / name for name in ("text_accel.c", "date_accel.c", "drop_accel.c", "shortcut_accel.c", "time_accel.c", "calendar_accel.c")]
     for source in sources:
         if not source.is_file():
             raise FileNotFoundError(f"Native source not found: {source}")

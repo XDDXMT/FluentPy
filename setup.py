@@ -40,8 +40,8 @@ setup(
     ext_modules=[] if MODE == "0" else [
         Extension(
             "fluentpy._native",
-            sources=["native/text_accel.c", "native/date_accel.c"],
-            depends=["native/date_accel.h"],
+            sources=["native/text_accel.c", "native/date_accel.c", "native/drop_accel.c", "native/shortcut_accel.c", "native/time_accel.c", "native/calendar_accel.c"],
+            depends=["native/date_accel.h", "native/drop_accel.h", "native/shortcut_accel.h", "native/time_accel.h", "native/calendar_accel.h"],
             optional=MODE != "1",
         )
     ],

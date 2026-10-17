@@ -1,42 +1,70 @@
 # FluentPy 中文文档站
 
-静态文档站，使用当前本地 FluentPy 源码生成接口签名，组件展示区使用库本身的 Qt 亮色截图与 GIF 动画。提供分类导航、全文接口搜索、代码复制、图标搜索和移动端导航。网站默认跟随系统主题，右上角可在跟随系统、浅色、深色之间切换；图片与动画始终为亮色。
+官网：[fluentpy.mcxmcl.cn](https://fluentpy.mcxmcl.cn/)。纯静态文档，无在线字体或服务器运行时依赖。
 
-源码位置：`dist/index.html`、`dist/styles.css`、`dist/app.js`。简介原理动画由 `dist/native-flow.js` 与 `dist/native-flow.css` 实现。内容与接口由 `build_content.py` 生成，控件截图由 `capture_previews.py` 生成。生成脚本默认读取此目录上两级的 FluentPy 源码，独立检出时可调整脚本中的 `ROOT`。
+独立开源仓库：[XDDXMT/FluentPy-Docs](https://github.com/XDDXMT/FluentPy-Docs)，包含网页源码、完整静态页面及媒体生成脚本，采用 MIT 许可。本目录保留组件库内的文档副本；运行 `python scripts/export_docs.py --output <空目录>` 可导出独立仓库内容，忽略本机配置、缓存和构建产物。
 
-消息提示新增两种实际 Qt 动画：紧凑单行侧滑淡入，以及带箭头的双行卡片。`python capture_animations.py` 会生成亮色 GIF 与静态预览；网页可暂停／播放，系统开启减少动画时默认显示静态预览。动图保留自然尺寸，不额外放大控件。
+独立检出后，可直接用 `python -m http.server 8767 --bind 0.0.0.0 --directory dist` 预览。生成 API 或 Qt 媒体时，把组件库克隆在旁边的 `FluentPy/` 目录，或设置环境变量 `FLUENTPY_SOURCE_ROOT`；脚本不再依赖固定的本机路径。
 
-卡片组件页 `#/cards` 展示普通、简洁、悬浮、标题与分组设置五类卡片。`python capture_card_previews.py` 复现其亮色截图及悬浮动画 GIF；演示使用 Unicode 表情与微软官方 Fluent SVG 图标。
+## 页面结构
 
-卡片示例使用桌面逻辑尺寸：应用行72、标题14px／说明12px、标准80×32按钮，表情卡片128×128。表情动图画布440×168，网站媒体保留自然尺寸；实际窗口随系统DPI缩放，不以参考截图物理像素设置控件大小。
+- 简介先展示当前组件示例程序，之后直接展示 Qt → FluentPy 输入框过渡与 Python → C → Qt 流程两组 JS 动画，保留简短的项目说明与许可入口。
+- 组件目录 `#/components` 按用途分组，可按名称、类名和用途搜索，也可筛选分类。
+- 组件页分为“示例与用法”和“API 参考”；配图后的代码默认收起，交互动图按需展开、播放或暂停。
+- 侧栏按七组组织，当前分组默认展开；窄屏使用可收起的导航。常见问题 `#/faq` 按问题展开。
+- 站内搜索支持组件名、方法名和完整类方法，例如 `CalendarPicker.set_disabled_dates`，搜索结果直接进入对应 API。
+- C 后端原理动画在简介和 `#/performance/data-flow` 中展示，实测数据与示意动画分开标注。默认 C 优先，扩展不可用时使用 Python 兼容实现。
 
-动画录制需要当前 Qt 后端与 Pillow；如未安装，可运行 `python -m pip install Pillow`。站点本身只加载生成后的本地图片，无需这些运行环境。
+网页默认跟随系统主题，可切换浅色／深色；控件图片和 GIF 保持亮色。开启减少动画偏好时，动图默认显示静态预览；页面离开可视区域或标签页隐藏时暂停相关网页动画。
 
-简介首屏先展示新版工作台的亮色静态截图，让读者看到实际界面；后面的 C 加速说明使用网页原生 JS/SVG 动画，解释 Python 调用、C 后端运算、Qt 呈现三个环节。可切换 JSON 高亮与日期计算，暂停／恢复或重新演示；动画配色跟随网页主题，减少动画时默认静止，离屏或标签页隐藏时自动暂停。动画是原理示意，实测数字另标注来源，不作为实时测速结果。
+## 本地运行与维护
 
-运行 `python capture_showcase.py --static-only` 可在正常1120×780逻辑尺寸下重新捕获“开始使用”页的亮色工作台PNG。`capture_previews.py` 的工作台截图也来自当前示例，并等待初始侧栏动画结束；“开始使用”展示新的卡片页、统一主图标和紧凑尺寸。`capture_introduction.py` 保留独立的组件组合与代码缩略图捕获，之后运行 `python build_content.py` 更新页面、JS/CSS和媒体缓存版本。
-
-日期选择器和新的示例工作台已加入文档。`capture_previews.py` 会一并生成它们的亮色截图；日期截图来自实际弹出的三列滚轮。运行截图与示例检查前，需先编译包含日期接口的 C 扩展。
-
-“性能与 C 后端”记录同一份完整 JSON 的实测结果。性能 Demo 配图来自 `python examples/text_performance.py --screenshot <绝对输出路径> --quit-after-screenshot` 的实际报告界面，不参与普通控件截图批次生成。
-
-简介新增 Python / C / Qt 职责图和实测摘要，代码编辑器页面也提供 C 后端入口。性能页包含当前接入范围、后续后端运算使用 C 的开发约定、编译方式、模式选择、回退诊断及完整性能表；`native` 代表 C 已启用，`python` 代表兼容实现。
+在仓库根目录运行：
 
 ```powershell
-python capture_previews.py
-python capture_showcase.py --static-only
-python capture_animations.py
-python build_content.py
-python validate_site.py
-python -m http.server 8767 --bind 0.0.0.0 --directory dist
+python sites/fluentpy-docs/build_content.py
+python sites/fluentpy-docs/validate_site.py
+python -m http.server 8767 --bind 0.0.0.0 --directory sites/fluentpy-docs/dist
 ```
 
-在浏览器打开 `http://127.0.0.1:8767/#/introduction`。站点无需构建工具或在线字体。
+浏览器打开 [本地简介](http://127.0.0.1:8767/#/introduction)。也可双击本目录的“启动本地文档.bat”。局域网设备使用本机实际 IP 访问；`0.0.0.0` 是监听地址。
 
-服务监听 `0.0.0.0:8767`。同一局域网内的其他设备可使用 `http://本机局域网IP:8767/#/introduction` 访问；`0.0.0.0` 是监听地址，浏览器访问时使用实际 IP。
+| 文件 | 用途 |
+| --- | --- |
+| `dist/index.html`、`dist/styles.css`、`dist/app.js` | 页面结构、主题、导航与交互 |
+| `build_content.py` | 页面内容、分类、源码 API 和资源缓存版本 |
+| `dist/native-flow.js`、`dist/native-flow.css` | Python → C → Qt 原理动画 |
+| `dist/migration.js`、`dist/migration.css` | Qt → FluentPy 输入框过渡 |
+| `validate_site.py` | 资源、导航、接口、可执行示例和 GIF 验证 |
 
-日常使用也可以双击本目录的 `启动本地文档.bat`，然后打开上面的本地地址。保持启动窗口运行，关闭窗口即可停止服务。文档现在按本地方式运行与更新，无需登录 ChatGPT。
+修改后重新生成内容并验证；`dist/data.js` 是生成文件，不直接编辑。当前组件库版本 0.6.9，网页从组件库源码读取版本号。
 
-本站文案和布局为 FluentPy 独立编写，未使用参考站点的源码、文字或图片。截图来自 FluentPy 自身控件。图标来自 Microsoft Fluent System Icons，完整许可随 `dist/assets/icons-LICENSE.txt` 提供。
+## 更新真实 Qt 配图
 
-文档与组件源码一同维护，包含 CodeEdit、日期选择器、五类卡片与新版示例工作台。组件库版本号保持 0.1.0。
+首页和 README 使用当前组件概览截图，开始使用页与其他工作台展示使用新版页面导航截图；亮暗配图同步生成：
+
+```powershell
+python sites/fluentpy-docs/capture_workbench_redesign.py
+python sites/fluentpy-docs/build_content.py
+python sites/fluentpy-docs/validate_site.py
+```
+
+该脚本在隐藏的 Qt 窗口中捕获 12 个页面的明暗主题，检查常规尺寸和最小窗口布局；检查结果及配图在 `build/workbench-redesign/`。实际控件交互来自本库，截图不是网页模拟。
+
+独立组件媒体由同目录的 `capture_previews.py`、`capture_animations.py`、`capture_card_previews.py`、`capture_button_previews.py`、`capture_drop_previews.py`、`capture_shortcut_previews.py`、`capture_progress_toasts.py`、`capture_time_previews.py` 和 `capture_calendar_previews.py` 维护。录制前查看脚本说明；需要本地 Qt 与 Pillow，服务器不需要这些依赖。基础批次可用默认 Python 回退；展示 C 模式时先构建扩展。
+
+## 完整部署包
+
+在仓库根目录运行：
+
+```powershell
+python sites/fluentpy-docs/package_deploy.py --output dist/docs/FluentPy-docs-redesign-20261017.zip
+```
+
+打包器验证页面和所有引用资源，刷新缓存版本，生成 `dist/`、`部署说明.txt` 和 `SHA256SUMS.txt`。在宝塔解压覆盖到 `/www/wwwroot/fluentpy.mcxmcl.cn/`，站点根目录保持 `/www/wwwroot/fluentpy.mcxmcl.cn/dist`。图片、GIF、图标和许可文件均随包提供。
+
+此包仅用于静态文档，组件库与 C 扩展通过项目自身的安装流程安装。
+
+## 内容与许可
+
+站点布局和文案独立编写，未使用参考站点的源码、文字或图片。控件截图来自 FluentPy。Microsoft Fluent System Icons 的完整许可位于 `dist/assets/icons-LICENSE.txt`，FluentPy 的 MIT 许可位于 `dist/assets/FluentPy-LICENSE.txt`。

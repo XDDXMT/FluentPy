@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluentpy"
-version = "0.1.0"
+version = "0.6.9"
 description = "Independent MIT-licensed Fluent-inspired UI toolkit for Qt for Python."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -33,7 +33,8 @@ dependencies = [
 dev = ["pytest>=8", "build>=1.2"]
 
 [project.urls]
-Homepage = "https://github.com/XDDXMT/FluentPy"
+Homepage = "https://fluentpy.mcxmcl.cn/"
+Documentation = "https://fluentpy.mcxmcl.cn/"
 Repository = "https://github.com/XDDXMT/FluentPy"
 Issues = "https://github.com/XDDXMT/FluentPy/issues"
 

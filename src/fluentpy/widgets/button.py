@@ -15,13 +15,15 @@ class Button(QtWidgets.QPushButton):
     def __init__(self, text: str = "", parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(text, parent)
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
-        self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.setMinimumHeight(32)
         self.setIconSize(QtCore.QSize(16, 16))
         self._apply_font()
         self._hovered = False
         self._hover_progress = 0.0
         self._press_progress = 0.0
+        self._keyboard_activation = False
+        self._keyboard_focus = False
         self._hover_animation = self._make_state_animation("_hover_progress")
         self._press_animation = self._make_state_animation("_press_progress")
         theme.changed.connect(self._on_theme_changed)
@@ -45,12 +47,79 @@ class Button(QtWidgets.QPushButton):
         super().leaveEvent(event)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        self._animate_state(self._press_animation, self._press_progress, 1.0, 70)
+        self._keyboard_focus = False
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            self._animate_state(self._press_animation, self._press_progress, 1.0, 70)
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         self._animate_state(self._press_animation, self._press_progress, 0.0, 140)
         super().mouseReleaseEvent(event)
+
+    def keyPressEvent(self, event):
+        if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter) and self.isEnabled():
+            if not event.isAutoRepeat():
+                self._keyboard_activation = True
+                self.setDown(True)
+                self._animate_state(self._press_animation, self._press_progress, 1.0, 70)
+            event.accept()
+            return
+        if event.key() == QtCore.Qt.Key.Key_Space and not event.isAutoRepeat():
+            self._animate_state(self._press_animation, self._press_progress, 1.0, 70)
+        super().keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter) and self._keyboard_activation:
+            self._keyboard_activation = False
+            self.setDown(False)
+            self._animate_state(self._press_animation, self._press_progress, 0.0, 140)
+            if self.isEnabled():
+                self.click()
+            event.accept()
+            return
+        if event.key() == QtCore.Qt.Key.Key_Space:
+            self._animate_state(self._press_animation, self._press_progress, 0.0, 140)
+        super().keyReleaseEvent(event)
+
+    def focusInEvent(self, event):
+        self._keyboard_focus = event.reason() not in (QtCore.Qt.FocusReason.MouseFocusReason,
+            QtCore.Qt.FocusReason.ActiveWindowFocusReason, QtCore.Qt.FocusReason.PopupFocusReason)
+        self.update()
+        super().focusInEvent(event)
+
+    def focusOutEvent(self, event):
+        self._keyboard_activation = self._keyboard_focus = False
+        self.setDown(False)
+        if hasattr(self, "_press_animation"):
+            self._animate_state(self._press_animation, self._press_progress, 0.0, 100)
+        super().focusOutEvent(event)
+
+    def _reset_interaction(self):
+        self._keyboard_activation = self._keyboard_focus = self._hovered = False
+        self.setDown(False)
+        for animation in (self._hover_animation, self._press_animation):
+            animation.stop()
+        self._hover_progress = self._press_progress = 0.0
+        self.update()
+
+    def hideEvent(self, event):
+        self._reset_interaction()
+        super().hideEvent(event)
+
+    def changeEvent(self, event):
+        if event.type() == QtCore.QEvent.Type.EnabledChange and hasattr(self, "_press_animation") and not self.isEnabled():
+            self._reset_interaction()
+        super().changeEvent(event)
+
+    def _visual_enabled(self):
+        return self.isEnabled()
+
+    def _draw_focus_ring(self, painter, rect, *, accent=False):
+        if self.hasFocus() and self._keyboard_focus and self.isEnabled():
+            color = QtGui.QColor("#ffffff" if theme.mode.value == "light" else "#101010") if accent else QtGui.QColor(theme.tokens.accent)
+            painter.setPen(QtGui.QPen(color, 1))
+            painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
+            painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), max(2, self._radius(rect)-2), max(2, self._radius(rect)-2))
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         del event
@@ -61,8 +130,8 @@ class Button(QtWidgets.QPushButton):
         rect = self._paint_rect()
         radius = self._radius(rect)
         color = self._surface_color()
-        if not self.isEnabled():
-            color.setAlpha(76 if tokens.mode.value == "light" else 46)
+        if not self._visual_enabled():
+            color.setAlpha(min(color.alpha(), 76 if tokens.mode.value == "light" else 46))
         else:
             color = _mix_color(color, self._surface_hover_color(), self._hover_progress)
             color = _mix_color(color, self._surface_pressed_color(), self._press_progress)
@@ -73,10 +142,11 @@ class Button(QtWidgets.QPushButton):
 
         self._draw_button_border(painter, rect, radius)
 
-        text_color = QtGui.QColor(tokens.text if self.isEnabled() else tokens.disabled)
+        text_color = QtGui.QColor(tokens.text if self._visual_enabled() else tokens.disabled)
         if self._press_progress:
             text_color.setAlphaF(1.0 - 0.34 * self._press_progress)
         self._draw_content(painter, rect, text_color)
+        self._draw_focus_ring(painter, rect)
 
     def _draw_content(
         self, painter: QtGui.QPainter, rect: QtCore.QRectF, color: QtGui.QColor
@@ -112,12 +182,15 @@ class Button(QtWidgets.QPushButton):
         painter: QtGui.QPainter,
         rect: QtCore.QRect,
         color: QtGui.QColor,
+        icon: QtGui.QIcon | None = None,
     ) -> None:
-        pixmap = QtGui.QPixmap(rect.size())
+        ratio = self.devicePixelRatioF()
+        pixmap = QtGui.QPixmap(rect.size() * ratio)
+        pixmap.setDevicePixelRatio(ratio)
         pixmap.fill(QtCore.Qt.GlobalColor.transparent)
 
         icon_painter = QtGui.QPainter(pixmap)
-        self.icon().paint(icon_painter, QtCore.QRect(QtCore.QPoint(0, 0), rect.size()))
+        (self.icon() if icon is None else icon).paint(icon_painter, QtCore.QRect(QtCore.QPoint(0, 0), rect.size()))
         icon_painter.setCompositionMode(QtGui.QPainter.CompositionMode.CompositionMode_SourceIn)
         icon_painter.fillRect(pixmap.rect(), color)
         icon_painter.end()
@@ -235,7 +308,7 @@ class AccentButton(Button):
         radius = self._radius(rect)
 
         color = QtGui.QColor(tokens.accent)
-        if not self.isEnabled():
+        if not self._visual_enabled():
             color = QtGui.QColor("#cdcdcd" if tokens.mode.value == "light" else "#343434")
         else:
             color = _mix_color(color, color.lighter(103), self._hover_progress)
@@ -258,9 +331,10 @@ class AccentButton(Button):
         text = QtGui.QColor("#ffffff" if tokens.mode.value == "light" else "#000000")
         if self._press_progress:
             text.setAlphaF(1.0 - 0.24 * self._press_progress)
-        if not self.isEnabled():
+        if not self._visual_enabled():
             text = QtGui.QColor(tokens.disabled)
         self._draw_content(painter, rect, text)
+        self._draw_focus_ring(painter, rect, accent=True)
 
 
 class FilledButton(AccentButton):
@@ -283,6 +357,7 @@ class HyperlinkButton(TextButton):
     ) -> None:
         super().__init__(text, parent)
         self.url = url
+        self.clicked.connect(self.open_url)
         self.setIcon(fluent_icon(FluentIcon.OPEN))
         self.setMinimumWidth(0)
         self.setMinimumHeight(30)
@@ -290,6 +365,12 @@ class HyperlinkButton(TextButton):
     def sizeHint(self) -> QtCore.QSize:
         text_width = self.fontMetrics().horizontalAdvance(self.text())
         return QtCore.QSize(text_width + 34, 30)
+
+    def open_url(self):
+        if self.url:
+            url = QtCore.QUrl(self.url)
+            if url.isValid() and url.scheme().lower() in ("http", "https", "mailto"):
+                QtGui.QDesktopServices.openUrl(url)
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         del event
@@ -323,6 +404,7 @@ class HyperlinkButton(TextButton):
         text_rect = QtCore.QRectF(icon_rect.right() + 8, rect.top(), content_rect.width() - 22, rect.height())
         painter.setPen(accent)
         painter.drawText(text_rect, QtCore.Qt.AlignmentFlag.AlignVCenter, self.text())
+        self._draw_focus_ring(painter, rect)
 
 
 class OutlinedButton(Button):
