@@ -47,10 +47,10 @@ FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小
 
 需要 **Python 3.10+**。PyPI 安装名为 **`fluentpy-qt`**，代码导入名仍是 **`fluentpy`**。PyPI 上的 `fluentpy` 属于其他项目，不要用它安装本组件库，也不要将两个项目装在同一环境。
 
-0.6.9 已在 [PyPI](https://pypi.org/project/fluentpy-qt/) 发布，0.7.0 为本次源码更新版本，尚未上传到 PyPI。已有虚拟环境时，以下命令安装 PyPI 上已发布的版本：
+**0.7.0 已在 [PyPI](https://pypi.org/project/fluentpy-qt/0.7.0/) 发布**。已有虚拟环境时，以下命令安装或升级到最新发布版本：
 
 ```console
-python -m pip install fluentpy-qt
+python -m pip install --upgrade fluentpy-qt
 ```
 
 新建环境，以 Windows PowerShell 为例：

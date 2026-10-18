@@ -747,7 +747,7 @@ window.content_layout.addWidget(button)
 window.show()
 sys.exit(app.exec())''', note='将代码保存为 app.py，用刚才虚拟环境中的 Python 运行：Windows 为 .\\.venv\\Scripts\\python.exe app.py，macOS / Linux 为 .venv/bin/python app.py。'),
         section("wheels", "C 加速包与通用包", "pip 会根据当前解释器和平台选择兼容的 wheel。默认 auto 模式优先使用 C；扩展不可用时自动回退 Python，组件使用方式不变。", table={
-            'caption':'PyPI 0.6.9 发布包与运行路径',
+            'caption':f'PyPI {VERSION} 发布包与运行路径',
             'headers':['环境', '发布文件', '默认运行路径'],
             'rows':[
                 ['Windows x64 / 普通 CPython 3.13', 'cp313-cp313-win_amd64.whl', '内含 C 扩展，优先使用 C'],
@@ -761,7 +761,7 @@ python -m venv .venv
 .\\.venv\\Scripts\\python.exe -m pip install -e .
 .\\.venv\\Scripts\\python.exe examples/showcase.py''', language='PowerShell',
                 note='wheel 安装组件库，不包含 examples 工作台。上述命令为 Windows；macOS / Linux 使用 python3 创建环境，并将解释器路径改为 .venv/bin/python。'),
-        section("gallery", "新的示例工作台", "工作台包含概览、输入与日期、日历与日程、按钮与菜单、拖放文件、卡片与设置、导航与反馈、代码与性能、音符视图九个可操作页面。侧栏支持展开收起，页面与文档标签内容使用库内切换动画。下图展示使用统一主图标与紧凑尺寸的新版工作台。Windows可双击examples/run_showcase.bat，添加--page calendar直达新增日历页。", "python examples/showcase.py", preview="showcase", links=[{"label": "日历与日程 →", "page": "calendar-picker"}, {"label": "在简介了解C加速 →", "page": "introduction"}], note="在源码仓库中使用对应虚拟环境运行。当前 PyPI 版本为 0.6.9；文档随源码更新，开发中的接口可能领先于已发布版本。"),
+        section("gallery", "新的示例工作台", "工作台包含概览、输入与日期、日历与日程、按钮与菜单、拖放文件、卡片与设置、导航与反馈、代码与性能、音符视图九个可操作页面。侧栏支持展开收起，页面与文档标签内容使用库内切换动画。下图展示使用统一主图标与紧凑尺寸的新版工作台。Windows可双击examples/run_showcase.bat，添加--page calendar直达新增日历页。", "python examples/showcase.py", preview="showcase", links=[{"label": "日历与日程 →", "page": "calendar-picker"}, {"label": "在简介了解C加速 →", "page": "introduction"}], note=f"在源码仓库中使用对应虚拟环境运行。当前 PyPI 版本为 {VERSION}；文档随源码更新，开发中的接口可能领先于已发布版本。"),
     ]),
     page("faq", "常见问题", "Frequently asked questions", "快速入门", "关于商用、MIT许可、闭源发布、安装、C扩展和示例体验，你可能想先了解这些。", [], [
         section("commercial", "我想用这个 Python 组件库做商用软件，可以吗？", "完全可以。FluentPy采用MIT许可证，允许用于商业项目，也允许修改和分发，无需为本库另行购买商业授权。", paragraphs=[

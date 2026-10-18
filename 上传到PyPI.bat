@@ -13,7 +13,7 @@ if /i "%~1"=="--check" (
   if errorlevel 1 exit /b 1
   exit /b 0
 )
-echo Project: fluentpy-qt 0.6.9
+echo Project: fluentpy-qt
 echo Paste your PyPI API token at the hidden token/password prompt.
 echo Do not enter your account password. Your token will not be saved.
 "%RELEASE_PYTHON%" -X utf8 -B "%~dp0scripts\publish_pypi.py" --upload

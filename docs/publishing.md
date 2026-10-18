@@ -1,10 +1,12 @@
-# 首次发布到 PyPI
+# 发布到 PyPI
 
 项目安装名为 **fluentpy-qt**，导入名保留 **fluentpy**。PyPI 上的 `fluentpy` 已由其他项目使用。
-不要把两个项目安装到同一个环境。当前源码版本为 0.7.0，尚未上传到 PyPI。
-发布助手按当前项目版本检查 `dist/pypi/0.7.0/`；先完成构建，再使用本机隐藏令牌提示上传。
+不要把两个项目安装到同一个环境。当前源码及 PyPI 发布版本为 **0.7.0**。
+发布助手按当前项目版本检查 `dist/pypi/0.7.0/`；发布文件已经上传，重复运行仅核对或跳过相同文件。
 
-**0.6.9 已发布**：[PyPI 项目页](https://pypi.org/project/fluentpy-qt/0.6.9/)。三个文件均已核对公开 SHA-256，并从 PyPI 实际下载安装验证。
+**0.7.0 已发布**：[PyPI 项目页](https://pypi.org/project/fluentpy-qt/0.7.0/)。三个文件均已核对公开 SHA-256；原生 wheel 已从 PyPI 实际下载安装，并通过八组后端、107 个图标及主要控件的安装验证。
+
+此前的 [0.6.9](https://pypi.org/project/fluentpy-qt/0.6.9/) 发布文件保留原样。
 
 ## 账号准备
 
@@ -15,13 +17,13 @@
 API token 只在本机上传窗口的隐藏输入提示中填写，不发到聊天、不写入仓库或命令行参数。
 本项目的上传助手不保存 token，也不修改用户的 `.pypirc` 或系统凭据。
 
-## 0.6.9 的已发布文件
+## 0.7.0 的已发布文件
 
-`dist/pypi/0.6.9/` 中只上传以下三种文件，`release.json` 是本地校验清单，不上传：
+`dist/pypi/0.7.0/` 中只上传以下三种文件，`release.json` 是本地校验清单，不上传：
 
-- `fluentpy_qt-0.6.9-py3-none-any.whl`：通用 Python 回退包，基本运行无需编译器。
-- `fluentpy_qt-0.6.9-cp313-cp313-win_amd64.whl`：Windows x64／普通 CPython 3.13，含 C 扩展。
-- `fluentpy_qt-0.6.9.tar.gz`：源码，含 C 文件、构建入口、测试和示例。
+- `fluentpy_qt-0.7.0-py3-none-any.whl`：通用 Python 回退包，基本运行无需编译器。
+- `fluentpy_qt-0.7.0-cp313-cp313-win_amd64.whl`：Windows x64／普通 CPython 3.13，含 C 扩展。
+- `fluentpy_qt-0.7.0.tar.gz`：源码，含 C 文件、构建入口、测试和示例。
 
 当前解释器兼容时，pip 优先选择原生 wheel；其他环境选择通用 wheel。
 通用 wheel 运行兼容后端。其他平台要启用 C，可从源码构建，或以后补充对应平台的原生 wheel。
@@ -54,7 +56,7 @@ PyPI 公开索引可能稍晚于上传成功响应，本地助手会在约 27 �
 
 ```powershell
 python -m venv .venv-test
-.\.venv-test\Scripts\python.exe -m pip install --index-url https://pypi.org/simple fluentpy-qt==0.6.9
+.\.venv-test\Scripts\python.exe -m pip install --index-url https://pypi.org/simple fluentpy-qt==0.7.0
 .\.venv-test\Scripts\python.exe -c "import fluentpy; print(fluentpy.__version__)"
 ```
 
