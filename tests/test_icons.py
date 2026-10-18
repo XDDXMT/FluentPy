@@ -23,10 +23,10 @@ class IconTests(unittest.TestCase):
     def setUpClass(cls):
         cls.app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
 
-    def test_all_106_enums_have_exactly_one_bundled_svg(self):
+    def test_all_107_enums_have_exactly_one_bundled_svg(self):
         enums = list(FluentIcon)
         files = {path.name for path in ASSETS.glob("ic_fluent_*_24_regular.svg")}
-        self.assertEqual(len(enums), 106)
+        self.assertEqual(len(enums), 107)
         self.assertEqual(files, {icon.value for icon in enums})
         self.assertEqual(enums[enums.index(FluentIcon.MONEY) + 1], FluentIcon.MUSIC_NOTE_2)
 
@@ -58,11 +58,16 @@ class IconTests(unittest.TestCase):
         license_text = (ROOT / "licenses" / "Microsoft-Fluent-System-Icons-LICENSE.txt").read_text(encoding="utf-8")
         self.assertIn(MUSIC_COMMIT, source)
         self.assertIn(MUSIC_DIGEST, source)
-        self.assertIn("106 regular 24px SVG icons", source)
-        self.assertIn("106 icons", notices)
+        self.assertIn("107 regular 24px SVG icons", source)
+        self.assertIn("107 icons", notices)
         self.assertIn("MUSIC_NOTE_2", notices)
         self.assertIn("Permission is hereby granted, free of charge", license_text)
         self.assertIn('THE SOFTWARE IS PROVIDED "AS IS"', license_text)
+
+    def test_eyedropper_asset_matches_official_download_and_renders(self):
+        data=(ASSETS / FluentIcon.EYEDROPPER.value).read_bytes()
+        self.assertEqual(hashlib.sha256(data).hexdigest(),'760f2318a6cca80a85e254428b843d97e4f3c974c2293c80ea1a11836e8b42ec')
+        self.assertFalse(fluent_icon(FluentIcon.EYEDROPPER).pixmap(24,24).isNull())
 
 
 if __name__ == "__main__":

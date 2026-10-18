@@ -226,7 +226,7 @@ scheduled.show(); scheduled.show_popup(); QTest.qWait(240); scheduled._popup.sec
 assert scheduled.date_time().time()==QtCore.QTime(20,0,5)
 for widget in (picker,files,keys,time_picker,single,interval,scheduled): assert widget.acceleration_backend()=='python'
 from showcase import Showcase
-workbench=Showcase(page='inputs'); workbench.show(); QTest.qWait(350)
+workbench=Showcase(page='inputs', startup=False); workbench.show(); QTest.qWait(350)
 assert workbench.date_picker is not None
 assert hasattr(workbench,'drop_examples') and hasattr(workbench,'shortcut_examples')
 assert all(backend.backend_name()=='python' for backend in (date,drop,shortcut,clock,calendar))

@@ -17,12 +17,15 @@ from fluentpy import (  # noqa: E402
     FramelessDialog, IconButton, LineEdit, MaskedDialog, NavigationItem, NavigationView,
     NoteEvent, NoteTimeline, OutlinedButton, PasswordLineEdit, Pivot,
     ProgressBar, RadioButton, SearchLineEdit, SegmentedWidget, Slider,
-    SpinBox, TabBar, TextButton, TextEdit, TimePicker, Toast, ToggleSwitch, fluent_icon, theme,
+    SpinBox, SplashScreen, TabBar, TextButton, TextEdit, TimePicker, Toast, ToggleSwitch, fluent_icon, theme,
 )
 from fluentpy import CardWidget, HeaderCardWidget, __version__
 from fluentpy.backends import text as text_backend, date as date_backend, drop as drop_backend, shortcut as shortcut_backend, time as time_backend, calendar as calendar_backend  # noqa: E402
-from fluentpy.qt import QtCore, QtGui, QtWidgets  # noqa: E402
+from fluentpy.backends import color as color_backend
+from fluentpy.backends import input as input_backend
+from fluentpy.qt import QtCore, QtGui, QtWidgets, Signal  # noqa: E402
 from fluentpy.theme.fonts import ui_font  # noqa: E402
+from workbench_settings import DEFAULT_PREFERENCES, WorkbenchSettings, accent_color, load_preferences
 
 try:
     from fluentpy import DatePicker
@@ -37,15 +40,19 @@ PAGES = (
     ("overview", "组件概览", FluentIcon.HOME),
     ("buttons", "按钮与菜单", FluentIcon.TOOLBOX),
     ("inputs", "文本与选择", FluentIcon.TEXT_FONT),
+    ("tables", "表格", FluentIcon.TABLE),
+    ("sliders", "滑块", FluentIcon.FILTER),
     ("wheels", "日期与时间滚轮", FluentIcon.CLOCK),
     ("calendar", "日历选择", FluentIcon.CALENDAR_LTR),
     ("drop", "文件拖放", FluentIcon.FOLDER_OPEN),
+    ("colors", "颜色与取色", FluentIcon.COLOR),
     ("shortcut", "快捷键", FluentIcon.KEY),
     ("cards", "卡片容器", FluentIcon.TABLE),
     ("navigation", "页面导航", FluentIcon.NAVIGATION),
     ("feedback", "消息与对话框", FluentIcon.ALERT),
     ("code", "代码编辑器", FluentIcon.CODE),
     ("notes", "音符时间轴", FluentIcon.MUSIC_NOTE_2),
+    ("settings", "设置", FluentIcon.SETTINGS),
 )
 
 BRAND_ICON = resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg")
@@ -55,6 +62,8 @@ def label(text: str = "", *, role: str = "", wrap: bool = False) -> QtWidgets.QL
     widget = QtWidgets.QLabel(text)
     if role:
         widget.setObjectName(role)
+    if role in ('muted', 'railCaption', 'backendBadge'):
+        widget.setForegroundRole(QtGui.QPalette.ColorRole.PlaceholderText)
     widget.setWordWrap(wrap)
     return widget
 
@@ -78,10 +87,45 @@ class Panel(HeaderCardWidget):
             self.body.addWidget(label(description, role="muted", wrap=True))
 
 
+class _StartupSplash(SplashScreen):
+    """Queue work only after the first real paint has returned to Qt."""
+    firstFramePainted = Signal()
+
+    def __init__(self, parent):
+        super().__init__(parent=parent)
+        self._painted = False
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if not self._painted and self.isVisible():
+            self._painted = True
+            self.firstFramePainted.emit()
+
+
 class Showcase(FluentWindow):
-    def __init__(self, *, dark: bool = False, page: str = "overview") -> None:
-        theme.set_mode("dark" if dark else "light")
+    initialized = Signal()
+    ready = Signal()
+    startupFailed = Signal(str)
+
+    def __init__(self, *, dark: bool | None = None, page: str = "overview",
+                 preferences: QtCore.QSettings | None = None, restore_preferences: bool = True,
+                 startup: bool = True) -> None:
+        store = (preferences if preferences is not None else QtCore.QSettings("FluentPy", "Showcase")) if restore_preferences else None
+        state = load_preferences(store)
+        if dark is not None:
+            state["theme"] = "dark" if dark else "light"
+        theme.set_theme(state["theme"], accent=accent_color(state))
         super().__init__("FluentPy · 组件示例")
+        self._preferences = state
+        self._preference_store = store
+        self._initialized = False
+        self._startup_cancelled = False
+        self._startup_steps = None
+        self._startup_error = ""
+        self._startup_timer = QtCore.QTimer(self)
+        self._startup_timer.setSingleShot(True)
+        self._startup_timer.timeout.connect(self._advance_startup)
+        self.startup_splash = None
         self.setFont(ui_font(14))
         self.setWindowIcon(QtGui.QIcon(str(BRAND_ICON)))
         self.resize(1120, 780)
@@ -101,50 +145,94 @@ class Showcase(FluentWindow):
         layout = self.content_layout
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        header = QtWidgets.QFrame()
-        header.setObjectName("showcaseHeader")
-        header_row = QtWidgets.QHBoxLayout(header)
-        header.setFixedHeight(58)
-        header_row.setContentsMargins(20, 10, 20, 10)
-        header_row.setSpacing(12)
-        brand = label(role="showcaseMark")
-        brand.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        brand.setFixedSize(28, 30)
-        brand.setPixmap(self.windowIcon().pixmap(QtCore.QSize(26, 28), self.devicePixelRatioF()))
-        brand.setAccessibleName("FluentPy 主图标")
-        self.brand_mark = brand
-        header_row.addWidget(brand)
-        header_row.addWidget(label("FluentPy", role="showcaseBrand"))
-        header_row.addSpacing(4)
-        header_row.addWidget(label("组件示例", role="muted"))
-        header_row.addStretch(1)
+        # Install ancestor rules before any asynchronously created page can
+        # show. A first late stylesheet repolishes the visible page and resets
+        # its explicit palette to the operating system's colors.
+        self._install_showcase_styles()
+        self.set_title_bar_enabled(True)
+        self.set_theme_transition_enabled(True)
+        self.setProperty('fluentLazyThemeRefresh', True)
+        self.set_backdrop_enabled(state["mica_enabled"])
+        title_bar = self.title_bar()
+        self.brand_mark = title_bar.icon_label
+        self.brand_mark.setAccessibleName("FluentPy 主图标")
+
+        if startup:
+            self.startup_splash = _StartupSplash(self)
+            self.startup_splash.firstFramePainted.connect(self._queue_startup)
+            self.startup_splash.finished.connect(self.ready)
+            self.startup_splash.show()
+            self._startup_steps = self._initialize_workbench(page)
+        else:
+            # Synchronous construction is reserved for component tests and
+            # documentation captures, not the interactive launch path.
+            for _step in self._initialize_workbench(page):
+                pass
+            self._initialized = True
+
+    def _queue_startup(self):
+        if not self._startup_cancelled and self._startup_steps is not None:
+            self._startup_timer.start(0)
+
+    def _advance_startup(self):
+        if self._startup_cancelled or self._startup_steps is None:
+            return
+        try:
+            next(self._startup_steps)
+        except StopIteration:
+            self._startup_steps = None
+            self._initialized = True
+            self.initialized.emit()
+            if not self._startup_cancelled:
+                self.startup_splash.finish()
+        except Exception as error:
+            import traceback
+            traceback.print_exc()
+            self._startup_steps = None
+            self._startup_error = str(error) or type(error).__name__
+            self.startup_splash.set_text("启动失败：" + self._startup_error)
+            self.startupFailed.emit(self._startup_error)
+        else:
+            self._queue_startup()
+
+    def _initialize_workbench(self, page):
+        """Create Qt controls in GUI-thread batches, with no simulated delay."""
+        state = self._preferences
+        layout = self.content_layout
+        title_bar = self.title_bar()
         backends = {"文本": text_backend.backend_name(), "日期": date_backend.backend_name(),
                     "拖放": drop_backend.backend_name(), "快捷键": shortcut_backend.backend_name(), "时间": time_backend.backend_name(),
-                    "日历选择": calendar_backend.backend_name()}
+            "日历选择": calendar_backend.backend_name(), "颜色": color_backend.backend_name(), "分格输入": input_backend.backend_name()}
         modes = set(backends.values())
         status = "C 后端就绪" if modes == {"native"} else "Python 兼容模式" if modes == {"python"} else "混合后端"
         self.backend_badge = label(status, role="backendBadge")
         self.backend_badge.setToolTip("\n".join(f"{name}：{mode}" for name, mode in backends.items()))
 
-        header_row.addSpacing(12)
         self.theme_caption = label("深色模式", role="muted")
-        header_row.addWidget(self.theme_caption)
+        title_bar.button_layout.addWidget(self.theme_caption)
         self.theme_toggle = ToggleSwitch()
-        self.theme_toggle.setChecked(dark)
+        self.theme_toggle.setChecked(state["theme"] == "dark")
         self.theme_toggle.setAccessibleName("切换深色模式")
-        self.theme_toggle.toggled.connect(lambda checked: theme.set_mode("dark" if checked else "light"))
-        header_row.addWidget(self.theme_toggle)
-        layout.addWidget(header)
+        self.theme_toggle.toggled.connect(lambda checked: self._set_preference("theme", "dark" if checked else "light"))
+        title_bar.button_layout.addWidget(self.theme_toggle)
 
-        self.navigation = NavigationView(self)
+        self.navigation = self.navigation_view()
         self.sidebar = self.navigation.sidebar
-        self.sidebar.set_expanded_width(216)
-        self.sidebar.set_expanded(True)
+        self.set_navigation_width(state["sidebar_width"])
+        self.set_navigation_mode("expanded" if state["sidebar_expanded"] else "compact")
+        self.sidebar_search = SearchLineEdit("搜索导航")
+        self.sidebar_search.setMinimumWidth(0)
+        self.sidebar_search.setAccessibleName("搜索侧栏导航")
+        self.sidebar.set_header_widget(self.sidebar_search)
+        self.sidebar_search.textChanged.connect(self.sidebar.set_filter_text)
+        self.sidebar_search.returnPressed.connect(self._open_sidebar_result)
+        self.sidebar.expandedChanged.connect(lambda expanded: self._set_preference("sidebar_expanded", expanded))
         self.stack = self.navigation.stack
-        layout.addWidget(self.navigation, 1)
 
         footer = QtWidgets.QFrame()
+        self._footer = footer
         footer.setObjectName("showcaseFooter")
+        footer.setAutoFillBackground(False)
         footer_row = QtWidgets.QHBoxLayout(footer)
         footer.setFixedHeight(32)
         footer_row.setContentsMargins(20, 4, 20, 4)
@@ -154,40 +242,64 @@ class Showcase(FluentWindow):
         footer_row.addSpacing(18)
         footer_row.addWidget(label(__version__, role="railCaption"))
         layout.addWidget(footer)
+        self.backdropChanged.connect(lambda _applied: self._apply_showcase_theme())
+        yield "shell"
 
         builders = {
             "overview": self._overview_page, "inputs": self._inputs_page, "drop": self._drop_page,
+            "tables": self._tables_page,
             "calendar": self._calendar_page, "wheels": self._wheels_page,
             "navigation": self._navigation_page, "shortcut": self._shortcut_page,
             "buttons": self._buttons_page,
+            "sliders": self._sliders_page,
             "cards": self._cards_page, "feedback": self._feedback_page,
+            "colors": self._colors_page,
             "code": self._code_page, "notes": self._notes_page,
+            "settings": self._settings_page,
         }
         for index, (key, title, icon) in enumerate(PAGES):
             self._route_buttons[key] = self.navigation.add_sub_interface(
                 builders[key](), fluent_icon(icon), title, key,
+                position="header" if key == "overview" else "bottom" if key == "settings" else "scroll",
             )
             self._page_indexes[key] = index
+            yield key
         self.navigation.currentChanged.connect(self._on_page_changed)
+        self.stack.setAnimationDuration(180 if state["page_animation"] else 0)
+        self.backend_badge.setVisible(state["show_backend"])
         self._apply_showcase_theme()
         theme.subscribe(self, self._apply_showcase_theme)
         self.set_page(page, animated=False)
         self._on_page_changed(self.navigation.current_route())
+        from workbench_context_menus import WorkbenchContextMenus
+        self.context_menus = WorkbenchContextMenus(self)
+        for key, title, _icon in PAGES:
+            self.context_menus.register(self._route_buttons[key],
+                lambda menu, point, route=key, name=title: self._page_context_menu(menu, route, name))
+        for card, _terms in self.catalog_cards:
+            self.context_menus.register(card,
+                lambda menu, point, route=card.property('componentRoute'), name=card.property('componentTitle'):
+                    self._page_context_menu(menu, route, name))
+        self.context_menus.register(self.document_tabs, self._document_context_menu)
 
-    def _page(self, title: str, subtitle: str) -> tuple[QtWidgets.QScrollArea, QtWidgets.QVBoxLayout]:
+    def _page(self, title: str, subtitle: str, *, header: bool = True) -> tuple[QtWidgets.QScrollArea, QtWidgets.QVBoxLayout]:
         scroll = QtWidgets.QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setVerticalScrollBar(FluentScrollBar(parent=scroll))
         scroll.setObjectName("showcaseScroll")
+        scroll.viewport().setBackgroundRole(QtGui.QPalette.ColorRole.Window)
         content = QtWidgets.QWidget()
         content.setObjectName("showcasePage")
+        content.setAutoFillBackground(True)
+        content.setBackgroundRole(QtGui.QPalette.ColorRole.Window)
         body = QtWidgets.QVBoxLayout(content)
         body.setContentsMargins(28, 25, 28, 28)
         body.setSpacing(18)
-        body.addWidget(label(title, role="pageTitle"))
-        body.addWidget(label(subtitle, role="muted", wrap=True))
+        if header:
+            body.addWidget(label(title, role="pageTitle"))
+            body.addWidget(label(subtitle, role="muted", wrap=True))
         scroll.setWidget(content)
         return scroll, body
 
@@ -199,8 +311,33 @@ class Showcase(FluentWindow):
         self.button_examples = ButtonExamples(panel)
         panel.body.addWidget(self.button_examples)
         body.addWidget(panel)
+        from menus import MenuExamples
+        menu_panel = Panel('右键菜单', '在预览区域点击鼠标右键，测试多级、勾选与控件混排。')
+        self.menu_examples = MenuExamples(menu_panel)
+        menu_panel.body.addWidget(self.menu_examples)
+        body.addWidget(menu_panel)
         body.addStretch(1)
         return scroll
+
+    def _sliders_page(self):
+        from sliders import SliderExamples
+        page, body = self._page("滑块", "拖动查看当前数值；切换标准、数值提示、区间选择及水平／竖直方向。")
+        panel = Panel("自定义与测试")
+        self.slider_examples = SliderExamples(panel)
+        panel.body.addWidget(self.slider_examples)
+        body.addWidget(panel)
+        body.addStretch(1)
+        return page
+
+    def _tables_page(self):
+        from tables import TableExamples
+        page, body = self._page("表格", "搜索、排序、编辑与多选复制；切换行样式，直接测试原生 Qt 模型和项目接口。")
+        panel = Panel("自定义与测试")
+        self.table_examples = TableExamples(panel)
+        panel.body.addWidget(self.table_examples)
+        body.addWidget(panel)
+        body.addStretch(1)
+        return page
 
     def _cards_page(self):
         from workbench_cards import WorkbenchCards
@@ -209,6 +346,61 @@ class Showcase(FluentWindow):
         body.addWidget(self.cards_content)
         body.addStretch()
         return page
+
+    def _settings_page(self):
+        page, body = self._page("设置", "调整当前工作台的外观、导航与交互。设置立即生效，并自动保存在本机。")
+        self.settings_content = WorkbenchSettings(self._preferences, page)
+        self.settings_content.preferenceChanged.connect(self._set_preference)
+        self.settings_content.resetRequested.connect(self._reset_preferences)
+        body.addWidget(self.settings_content)
+        body.addStretch()
+        return page
+
+    def _colors_page(self):
+        from colors import ColorExamples
+        page, body = self._page("颜色与取色", "从主题色板到精确的 RGBA／HSV 编辑，使用屏幕取色器选取已有颜色。")
+        self.color_examples = ColorExamples(page)
+        body.addWidget(self.color_examples)
+        body.addStretch()
+        return page
+
+    def _set_preference(self, name, value):
+        if self._preferences.get(name) == value:
+            return
+        self._preferences[name] = value
+        if name in ("theme", "accent"):
+            theme.set_theme(self._preferences["theme"], accent=accent_color(self._preferences))
+        elif name == "sidebar_expanded":
+            self.set_navigation_mode("expanded" if value else "compact")
+        elif name == "sidebar_width":
+            self.set_navigation_width(value)
+        elif name == "page_animation":
+            self.stack.setAnimationDuration(180 if value else 0)
+        elif name == "show_backend":
+            self.backend_badge.setVisible(value)
+        elif name == "mica_enabled":
+            self.set_backdrop_enabled(value)
+        if hasattr(self, "settings_content"):
+            self.settings_content.set_preferences(self._preferences)
+        if self._preference_store is not None:
+            self._preference_store.setValue("workbench/" + name, value)
+
+    def _reset_preferences(self):
+        for name, value in DEFAULT_PREFERENCES.items():
+            self._set_preference(name, value)
+        self.settings_content.result.setText("已恢复默认设置。")
+        if self._preference_store is not None:
+            self._preference_store.sync()
+
+    def _open_sidebar_result(self):
+        query = self.sidebar_search.text().strip().casefold()
+        if not query:
+            return
+        for key, title, _icon in PAGES:
+            item = self._route_buttons.get(key)
+            if query in title.casefold() and item is not None and not item.isHidden():
+                self.set_page(key)
+                return
 
     def _date_picker(self, parent: QtWidgets.QWidget | None = None):
         if DatePicker is None:
@@ -226,18 +418,40 @@ class Showcase(FluentWindow):
         route = {"dates": "wheels", "date": "wheels", "performance": "code"}.get(route, route)
         if route not in self._page_indexes:
             route = "overview"
-        self.navigation.set_current_route(route, animated=animated)
+        self.switch_to(route, animated=animated)
 
     def _on_page_changed(self, route: str) -> None:
         if route != "notes":
             self._pause_notes()
-        self.activity.setText("" + dict((key, text) for key, text, _icon in PAGES)[route])
+        self.activity.setText(dict((key, text) for key, text, _icon in PAGES).get(route, "就绪"))
+
+    def _page_context_menu(self, menu, route, title):
+        menu.add_action("查看示例", icon=FluentIcon.DOCUMENT, callback=lambda: self.set_page(route))
+        menu.add_separator()
+        menu.add_action("复制分类名称", icon=FluentIcon.COPY,
+                        callback=lambda: self._copy(title, "分类名称已复制"))
+
+    def _document_context_menu(self, menu, point):
+        tab = self.document_tabs.childAt(point)
+        while tab is not None and tab is not self.document_tabs and not hasattr(tab, 'route_key'):
+            tab = tab.parentWidget()
+        key = getattr(tab, 'route_key', None)
+        title = tab.text() if key in self._documents else ""
+        menu.add_action("新建文档", icon=FluentIcon.DOCUMENT, callback=self._add_document)
+        if key in self._documents:
+            menu.add_action("切换到此文档", callback=lambda: self.document_tabs.set_current_tab(key))
+            menu.add_separator()
+            menu.add_action("复制文档标题", icon=FluentIcon.COPY,
+                            callback=lambda: self._copy(title, "文档标题已复制"))
+            menu.add_action("关闭此文档", icon=FluentIcon.DISMISS,
+                            callback=lambda: self.document_tabs.close_tab(key))
 
     def _toast(self, title: str, detail: str = "", placement: str = "target", *, target=None) -> None:
-        if self._active_toast is not None:
+        if placement == "target" and self._active_toast is not None:
             try:
-                self._active_toast.hide()
-                self._active_toast.close()
+                if self._active_toast._target is not None:
+                    self._active_toast.hide()
+                    self._active_toast.close()
             except RuntimeError:  # A timed message may already be deleted by Qt.
                 pass
         sender = self.sender()
@@ -250,51 +464,99 @@ class Showcase(FluentWindow):
         self.activity.setText(title + (" · " + detail if detail else ""))
 
     def _overview_page(self):
-        from cards import FluentPicture
-        page, body = self._page("组件概览", "按分类查看控件外观、状态与操作方式。所有示例均使用库内的原生 Qt 控件。")
-        self.component_filter = SearchLineEdit("搜索组件名称或分类")
-        self.component_filter.setMaximumWidth(360)
-        body.addWidget(self.component_filter)
-        self.catalog_grid = QtWidgets.QGridLayout()
-        self.catalog_grid.setSpacing(12)
+        from workbench_home import CatalogArea, ComponentCard, HomeBanner
+        from gallery_home import caption
+        page, body = self._page("", "", header=False)
+        page.widget().setMaximumWidth(1480)
+        page.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop | QtCore.Qt.AlignmentFlag.AlignHCenter)
+        self.home_banner = HomeBanner()
+        self.home_banner.activated.connect(self._open_home_resource)
+        body.addWidget(self.home_banner)
+        section = QtWidgets.QHBoxLayout()
+        section.setSpacing(12)
+        section.addWidget(caption("探索组件", 20, bold=True))
+        self.catalog_count = label("14 个分类", role="muted")
+        section.addWidget(self.catalog_count)
+        section.addStretch(1)
+        self.component_filter = SearchLineEdit("搜索名称或 API")
+        self.component_filter.setAccessibleName("搜索组件名称或 API")
+        self.component_filter.setMinimumWidth(180)
+        self.component_filter.setMaximumWidth(300)
+        section.addWidget(self.component_filter)
+        body.addLayout(section)
+        self.catalog_host = CatalogArea()
+        self.catalog_grid = self.catalog_host.grid
         self.catalog_cards = []
         summaries = {
             "buttons": "Button · ToggleButton · ActionMenu",
-            "inputs": "LineEdit · ComboBox · CheckBox",
+            "inputs": "LineEdit · AffixLineEdit · PinCodeEdit · ComboBox · CheckBox",
+            "sliders": "Slider · ToolTipSlider · RangeSlider",
+            "tables": "TableView · TableWidget · 排序 / 编辑 / 多选",
             "wheels": "DatePicker · TimePicker",
             "calendar": "CalendarPicker · DateRangePicker · DateTimePicker",
             "drop": "FileDropWidget · FolderDropWidget",
+            "colors": "ColorPickerButton · ColorPaletteButton · ColorDialog · EyeDropperButton · ColorPickerPanel · ColorSwatchGroup",
             "shortcut": "ShortcutPicker · ShortcutDialog",
-            "cards": "CardWidget · HeaderCardWidget",
-            "navigation": "NavigationView · Pivot · TabBar",
-            "feedback": "Toast · ProgressToast · MaskedDialog",
+            "cards": "CardWidget · ExpandableCardWidget",
+            "navigation": "FluentWindow · SplashScreen · NavigationView · Pivot · TabBar",
+            "feedback": "Toast · ColorToast · ProgressToast · MaskedDialog",
             "code": "CodeEdit · JSON / Plain text",
             "notes": "NoteTimeline · NoteEvent",
         }
-        for index, (key, title, icon) in enumerate(PAGES[1:]):
-            card = CardWidget()
-            card.setMinimumHeight(142)
-            box = QtWidgets.QVBoxLayout(card)
-            box.setContentsMargins(16, 14, 16, 14)
-            box.setSpacing(8)
-            title_row = QtWidgets.QHBoxLayout()
-            picture = FluentPicture(icon, 22, parent=card)
-            title_row.addWidget(picture)
-            title_row.addWidget(label(title, role="smallTitle"), 1)
-            box.addLayout(title_row)
-            box.addWidget(label(summaries[key], role="muted", wrap=True), 1)
-            action = TextButton("查看示例")
-            action.clicked.connect(lambda _checked=False, value=key: self.set_page(value))
-            box.addWidget(action, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-            self.catalog_grid.addWidget(card, index//3, index%3)
-            self.catalog_cards.append((card, title+" "+summaries[key]))
-        body.addLayout(self.catalog_grid)
-        self.catalog_empty = label("没有匹配的组件", role="muted")
+        for key, title, icon in PAGES[1:]:
+            if key == "settings":
+                continue
+            card = ComponentCard(key, title, icon)
+            card.setToolTip(summaries[key])
+            card.clicked.connect(lambda _checked=False, value=key: self.set_page(value))
+            search_terms = title + " " + summaries[key] + " " + card.detail.text()
+            if key == "cards":
+                search_terms += " HeaderCardWidget GroupHeaderCardWidget SimpleCardWidget ElevatedCardWidget AccordionWidget 折叠设置"
+            if key == "inputs":
+                search_terms += " ModelComboBox EditableModelComboBox MultiSelectionComboBox TreeComboBox MultiSelectionTreeComboBox TransparentComboBox FontComboBox 多选 树形 下拉 字体"
+            if key == "sliders":
+                search_terms += " 数值提示 区间选择 水平 垂直 竖直"
+            if key == "buttons":
+                search_terms += " SystemTrayMenu 子菜单 多级菜单 托盘 右键 控件混排"
+            self.catalog_cards.append((card, search_terms))
+        body.addWidget(self.catalog_host)
+        self.catalog_empty = QtWidgets.QWidget()
+        empty = QtWidgets.QVBoxLayout(self.catalog_empty)
+        empty.setContentsMargins(0, 20, 0, 20)
+        empty.addWidget(label("没有匹配的组件，试试其他名称或 API。", role="muted", wrap=True))
+        reset = TextButton("清空搜索")
+        reset.clicked.connect(self.component_filter.clear)
+        empty.addWidget(reset, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         self.catalog_empty.hide()
         body.addWidget(self.catalog_empty)
         body.addStretch()
         self.component_filter.textChanged.connect(self._filter_catalog)
+        self.catalog_host.resized.connect(lambda: self._filter_catalog(self.component_filter.text()))
+        self._filter_catalog("")
         return page
+
+    def _open_home_resource(self, target):
+        if target == "catalog":
+            self.component_filter.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
+            self.current_page().ensureWidgetVisible(self.component_filter, 0, 24)
+        elif not QtGui.QDesktopServices.openUrl(QtCore.QUrl(target)):
+            self._toast("链接未能打开", target, placement="top-right")
+
+    def _apply_theme(self):
+        super()._apply_theme()
+        # The root window refreshes child palettes on first show as well as on
+        # theme changes. Keep the authored banner/card text roles afterwards.
+        if hasattr(self, "home_banner"):
+            self.home_banner.refresh_theme()
+            for card, _terms in getattr(self, "catalog_cards", ()):
+                card.refresh_theme()
+
+    def _resolved_background_color(self):
+        # Inactive Mica belongs to the surrounding shell. Keep page surfaces
+        # steady when focus moves to a browser, popup or another application.
+        if getattr(self, "_background_colors", None) is not None:
+            return super()._resolved_background_color()
+        return QtGui.QColor(theme.tokens.background)
 
     def _drop_page(self):
         page, body = self._page("拖放文件", "把本地素材拖入区域，或通过浏览选择文件和文件夹。")
@@ -344,6 +606,30 @@ class Showcase(FluentWindow):
             memo.setFixedHeight(110)
             inputs.body.addWidget(memo)
             body.addWidget(inputs)
+
+            from combo_boxes import ComboBoxExamples
+            choices = Panel("下拉选择", "选择一种组件并直接调整参数；滑块已移到侧栏的独立“滑块”页面。")
+            self.combo_examples = ComboBoxExamples(page)
+            choices.body.addWidget(self.combo_examples)
+            body.addWidget(choices)
+
+            from advanced_inputs import AdvancedInputExamples
+            self.advanced_inputs=AdvancedInputExamples(page)
+            # Keep long segmented inputs local to their example instead of
+            # forcing the entire workbench page wider than the window.
+            pin=self.advanced_inputs.pin
+            pin_layout=pin.parentWidget().layout()
+            pin_scroll=QtWidgets.QScrollArea();pin_scroll.setObjectName('showcasePinScroll')
+            pin_scroll.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+            pin_scroll.setStyleSheet('QScrollArea#showcasePinScroll {background:transparent;border:none;} QScrollArea#showcasePinScroll > QWidget {background:transparent;}')
+            pin_scroll.viewport().setAutoFillBackground(False)
+            pin_scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            pin_scroll.setHorizontalScrollBar(FluentScrollBar(QtCore.Qt.Orientation.Horizontal,pin_scroll))
+            pin_scroll.setFixedHeight(max(54,pin.sizeHint().height()+18))
+            pin_layout.replaceWidget(pin,pin_scroll);pin_scroll.setWidget(pin);pin.setAutoFillBackground(False)
+            pin.resize(pin.maximumWidth(),pin.sizeHint().height())
+            self.pin_scroll=pin_scroll
+            body.addWidget(self.advanced_inputs)
 
             options = Panel("选择与数值")
             opt_grid = QtWidgets.QGridLayout()
@@ -400,42 +686,13 @@ class Showcase(FluentWindow):
 
 
     def _feedback_page(self):
-            page, body = self._page("消息与对话框", "短暂提示、任务进度与确认对话框。仅在操作对应按钮时显示。")
-            feedback = Panel("消息提示与对话框", "提示默认指向触发按钮，点击 × 关闭；也可以选择窗口四角。")
-            self.toast_position = ComboBox()
-            self.toast_position.addItems(["跟随按钮（带箭头）", "右上角", "右下角", "左上角", "左下角"])
-            toast_button = AccentButton("显示轻提示")
-            self.toast_button = toast_button
-            toast_button.clicked.connect(lambda: self._toast("操作已完成", "可以继续下一步，也可以点击右上角关闭提示。", ("target", "top-right", "bottom-right", "top-left", "bottom-left")[self.toast_position.currentIndex()], target=toast_button))
-            mask_button = Button("打开遮罩对话框")
-            mask_button.clicked.connect(self._show_masked)
-            frameless = Button("无边框对话框")
-            frameless.clicked.connect(self._show_frameless)
-            feedback.body.addLayout(button_row(self.toast_position, toast_button))
-            feedback.body.addLayout(button_row(mask_button, frameless))
-            self.feedback_result = label("对话框的确认与取消结果会显示在这里。", role="muted", wrap=True)
-            feedback.body.addWidget(self.feedback_result)
-            self.slider = Slider()
-            self.slider.setRange(0, 100)
-            self.slider.setValue(42)
-            progress = ProgressBar()
-            progress.setRange(0, 100)
-            progress.setValue(42)
-            progress_text = label("进度值 42%", role="muted")
-            self.slider.valueChanged.connect(progress.setValue)
-            self.slider.valueChanged.connect(lambda value: progress_text.setText(f"进度值 {value}%"))
-            feedback.body.addWidget(progress_text)
-            feedback.body.addWidget(self.slider)
-            feedback.body.addWidget(progress)
-            body.addWidget(feedback)
-            from progress_toast import ProgressToastExamples
-            task_feedback = Panel("任务进度提示", "选择四角位置，体验平滑进度、未知进度与完成／失败状态。悬停时暂停自动关闭。")
-            self.progress_toast_examples = ProgressToastExamples()
-            task_feedback.body.addWidget(self.progress_toast_examples)
-            body.addWidget(task_feedback)
-
-            body.addStretch()
-            return page
+        from workbench_feedback import FeedbackPlayground
+        page,body=self._page("消息与对话框","选择一个组件，修改内容，直接体验。")
+        self.feedback_playground=FeedbackPlayground(self._show_masked,self._show_frameless)
+        self.feedback_result=self.feedback_playground.dialog_result
+        self.embedded_info_bar_examples=self.feedback_playground.embedded_examples
+        body.addWidget(self.feedback_playground);body.addStretch()
+        return page
 
     def _register_document(self, key: str, title: str, editor: QtWidgets.QWidget,
                            icon: FluentIcon = FluentIcon.DOCUMENT) -> None:
@@ -656,6 +913,21 @@ class Showcase(FluentWindow):
         self._pause_notes()
         self.timeline.set_position(0.0)
 
+    def _install_showcase_styles(self) -> None:
+        # These rules stay fixed for the window lifetime. Colors inherit the
+        # explicit FluentWindow palette, including on dynamically shown pages.
+        styles = (
+            "QWidget#showcasePage, QScrollArea#showcaseScroll { border: none; }"
+            "QLabel#showcaseBrand { font-size: 19px; font-weight: 600; }"
+            "QLabel#pageTitle { font-size: 24px; font-weight: 600; }"
+            "QLabel#smallTitle { font-size: 15px; font-weight: 600; }"
+            "QLabel#dateValue { font-size: 14px; font-weight: 400; }"
+            "QLabel#railCaption, QLabel#backendBadge { font-size: 12px; }"
+        )
+        central = self.centralWidget()
+        if central.styleSheet() != styles:
+            central.setStyleSheet(styles)
+
     def _apply_showcase_theme(self) -> None:
         tokens = theme.tokens
         dark = tokens.mode.value == "dark"
@@ -663,23 +935,32 @@ class Showcase(FluentWindow):
         blocker = QtCore.QSignalBlocker(self.theme_toggle)
         self.theme_toggle.setChecked(dark)
         del blocker
-        styles = (
-            f"QFrame#showcaseHeader {{ background: {tokens.surface}; border-bottom: 1px solid {tokens.border}; }}"
-            f"QFrame#showcaseFooter {{ background: {tokens.surface}; border-top: 1px solid {tokens.border}; }}"
-            f"QWidget#showcasePage, QScrollArea#showcaseScroll {{ background: {tokens.background}; border: none; }}"
-            f"QScrollArea#showcaseScroll > QWidget > QWidget {{ background: {tokens.background}; }}"
-            f"QLabel#showcaseBrand {{ color: {tokens.text}; font-size: 19px; font-weight: 600; }}"
-            f"QLabel#pageTitle {{ color: {tokens.text}; font-size: 24px; font-weight: 600; }}"
-            f"QLabel#smallTitle {{ color: {tokens.text}; font-size: 15px; font-weight: 600; }}"
-            f"QLabel#dateValue {{ color: {tokens.text}; font-size: 14px; font-weight: 400; }}"
-            f"QLabel#railCaption {{ color: {tokens.text_muted}; font-size: 12px; }}"
-            f"QLabel#backendBadge {{ color: {tokens.text_muted}; font-size: 12px; }}"
-        )
-        central = self.centralWidget()
-        central.setStyleSheet(styles)
+        if hasattr(self, '_footer'):
+            background = 'transparent' if self.backdrop_applied() else self._resolved_shell_color().name()
+            self._footer.setStyleSheet(
+                f"QFrame#showcaseFooter {{ background:{background};border-top:1px solid {tokens.border}; }}")
+            self._footer.setAutoFillBackground(False)
+            # Replacing the local material sheet repolishes its labels and can
+            # restore Qt's default placeholder color. Reapply the current
+            # palette only within this small footer after that polish.
+            palette = getattr(self, '_theme_palette', self.palette())
+            self._footer.setPalette(palette)
+            for item in self._footer.findChildren(QtWidgets.QLabel):
+                item.setPalette(palette)
+                if item.objectName() in ('muted', 'railCaption', 'backendBadge'):
+                    item.setForegroundRole(QtGui.QPalette.ColorRole.PlaceholderText)
 
     def closeEvent(self, event) -> None:
+        self._startup_cancelled = True
+        self._startup_timer.stop()
+        if self._startup_steps is not None:
+            self._startup_steps.close()
+            self._startup_steps = None
+        if hasattr(self, "context_menus"):
+            self.context_menus.close()
         self._note_timer.stop()
+        if self._preference_store is not None:
+            self._preference_store.sync()
         super().closeEvent(event)
 
     def resizeEvent(self, event) -> None:
@@ -736,7 +1017,17 @@ class Showcase(FluentWindow):
             return page
 
     def _navigation_page(self):
-            page, body = self._page("页面导航", "面包屑、页内导航和可关闭的文档标签；切换时保留页面内容。")
+            page, body = self._page("页面导航", "体验完整多页窗口、页内导航和可关闭的文档标签；切换时保留页面内容。")
+            from fluent_window import WindowExamples
+            window_panel = Panel("流畅窗口", "选择布局，一键打开真正的多页窗口；底部设置、页面历史和标题栏搜索可以直接使用。")
+            self.window_examples = WindowExamples(window_panel)
+            window_panel.body.addWidget(self.window_examples)
+            body.addWidget(window_panel)
+            from splash_screen import SplashExamples
+            splash_panel = Panel("启动页面", "调整图标与加载提示，重播启动过程；全窗口预览保留现有标题栏。")
+            self.splash_examples = SplashExamples(splash_panel)
+            splash_panel.body.addWidget(self.splash_examples)
+            body.addWidget(splash_panel)
             navigation = Panel("面包屑与页内导航")
             breadcrumb = BreadcrumbBar()
             for key, title in (("workspace", "工作台"), ("projects", "我的项目"), ("current", "FluentPy")):
@@ -812,24 +1103,33 @@ class Showcase(FluentWindow):
     def _filter_catalog(self, query):
         while self.catalog_grid.count():
             self.catalog_grid.takeAt(0)
-        columns = 3 if self.width() >= 1080 else 2
+        available = self.catalog_host.width()
+        columns = 4 if available >= 1100 else 3 if available >= 740 else 2 if available >= 460 else 1
+        for column in range(4):
+            self.catalog_grid.setColumnStretch(column, 1 if column < columns else 0)
+        query = query.strip().casefold()
         visible = 0
         for card, terms in self.catalog_cards:
-            match = query.casefold() in terms.casefold()
+            match = query in terms.casefold()
             card.setVisible(match)
             if match:
                 self.catalog_grid.addWidget(card, visible//columns, visible%columns)
                 visible += 1
         self.catalog_empty.setVisible(visible == 0)
+        self.catalog_host.setVisible(visible > 0)
+        rows = (visible + columns - 1) // columns
+        self.catalog_host.setMinimumHeight(rows * 108 + max(0, rows - 1) * 12)
+        total = len(self.catalog_cards)
+        self.catalog_count.setText(f"{visible} / {total} 个分类" if query else f"{total} 个分类")
 
 
 def create_showcase_window(mode: str = "light", page: str = "overview") -> Showcase:
-    return Showcase(dark=mode == "dark", page=page)
+    return Showcase(dark=mode == "dark", page=page, restore_preferences=False, startup=False)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="FluentPy interactive showcase")
-    parser.add_argument("--dark", action="store_true")
+    parser.add_argument("--dark", action="store_const", const=True, default=None)
     parser.add_argument("--page", default="overview", choices=[key for key, _text, _icon in PAGES] + ["dates", "date", "navigation", "performance"])
     parser.add_argument("--screenshot", type=Path, metavar="ABSOLUTE_PATH")
     parser.add_argument("--quit-after-screenshot", action="store_true")
@@ -845,10 +1145,9 @@ def main() -> int:
     app.setOrganizationName("FluentPy")
     app.setLayoutDirection(QtCore.Qt.LayoutDirection.LeftToRight)
     QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.Language.Chinese, QtCore.QLocale.Country.China))
-    window = Showcase(dark=args.dark, page=args.page)
+    window = Showcase(dark=args.dark, page=args.page, restore_preferences=not args.screenshot)
     if args.quit_after_screenshot:
         window.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
-    window.show()
     if args.screenshot:
         def capture() -> None:
             try:
@@ -865,7 +1164,10 @@ def main() -> int:
             if args.quit_after_screenshot:
                 window.close()
                 app.quit()
-        QtCore.QTimer.singleShot(350, capture)
+        window.ready.connect(capture)
+        if args.quit_after_screenshot:
+            window.startupFailed.connect(lambda _error: (window.close(), app.exit(1)))
+    window.show()
     return app.exec()
 
 

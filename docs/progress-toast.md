@@ -14,9 +14,20 @@ notice.set_progress(35)  # 0–100；只有显示效果，不实际下载文件
 notice.finish("下载完成", timeout_ms=1800)
 ```
 
-`placement` 支持 `top-left`、`top-right`、`bottom-left`、`bottom-right`。传入父窗口后在窗口内部绘制，普通缩放和移动会跟随定位，不创建额外原生提示窗口。单行卡片默认可见最小约187×47逻辑像素，字体14px；文字较长时自动调整尺寸并换行。明暗主题和强调色实时生效。
+`placement` 支持 `top-left`、`top-center`、`top-right`、`bottom-left`、`bottom-center`、`bottom-right`。传入父窗口后在窗口内部绘制，普通缩放和移动会跟随定位，不创建额外原生提示窗口。单行卡片默认可见最小约187×47逻辑像素，字体14px；文字较长时自动调整尺寸并换行。明暗主题和强调色实时生效。
 
 ## 未知进度与失败
+
+同一窗口同一角落可连续创建多条提示，Toast 与 ProgressToast 混合排列：最新提示靠近锚定角落，底部向上、顶部向下延伸，关闭后以240ms平滑补位。各窗口与角落独立管理；空间不足时移除最旧条目，保留新消息。指定 target 的带箭头提示继续跟随目标，不加入角落堆叠。
+
+```python
+for index in range(4):
+    ProgressToast.start("正在下载文件中，请稍候…", parent=window,
+                        placement="bottom-right", indeterminate=True,
+                        severity="warning")
+```
+
+`severity="warning"` 显示琥珀色状态图标与进度线；默认 `info` 保留主题强调色。单段移动进度线、完成／失败和自动关闭的行为保持一致。
 
 ```python
 notice = ProgressToast.start("正在准备文件…", parent=window, indeterminate=True)
@@ -39,7 +50,7 @@ notice.fail("连接中断，请重试", timeout_ms=0)
 
 这是界面呈现组件，动画使用Qt原生动画系统；下载、解析和后端计算由应用执行，本组件不宣称增加C后端运算加速。
 
-独立Demo：`python examples/progress_toast.py`，或双击`examples/run_progress_toast.bat`。示例使用Qt时间轴模拟4.2秒任务，可以测试四角、未知进度、失败、重复触发和全部关闭。工作台的“导航与反馈”页复用同一演示。
+独立Demo：`python examples/progress_toast.py`，或双击`examples/run_progress_toast.bat`。示例使用Qt时间轴模拟4.2秒任务，可以测试四角、连续点击／连发三条、未知进度、失败和全部关闭。工作台的“消息与对话框”页复用同一演示。
 
 ![亮色四角示例](assets/progress-toast-light.png)
 

@@ -1,5 +1,6 @@
-include LICENSE THIRD_PARTY_NOTICES.md README.md pyproject.toml setup.py
+include LICENSE THIRD_PARTY_NOTICES.md README.md README-PyPI.md pyproject.toml setup.py
 include UPDATE_LOG.md AGENTS.md
+include 上传到PyPI.bat
 include .editorconfig .gitattributes
 recursive-include src *.py *.svg
 recursive-include native *.c *.h

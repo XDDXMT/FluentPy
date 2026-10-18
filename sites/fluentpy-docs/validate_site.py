@@ -5,6 +5,7 @@ import io
 import json
 import os
 import sys
+import traceback
 from pathlib import Path
 from PIL import Image, ImageChops, ImageStat
 
@@ -22,7 +23,10 @@ app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
 app.setQuitOnLastWindowClosed(False)
 retained = []
 errors = []
-sys.excepthook = lambda kind, error, traceback: errors.append(str(error))
+def report_error(kind, error, trace):
+    errors.append(str(error))
+    traceback.print_exception(kind, error, trace)
+sys.excepthook = report_error
 checked = 0
 animated_previews = data.get("animatedPreviews", {})
 for name, media in animated_previews.items():
@@ -86,7 +90,7 @@ for page in data["pages"]:
                 asset = SITE / "dist" / "assets" / "previews" / f"{preview}-light.png"
                 assert asset.exists() and asset.stat().st_size > 100, asset
         code = section["code"]
-        if not code or section.get("language") == "PowerShell" or code.startswith(("git ", "python ")):
+        if not code or section.get("language") in {"PowerShell", "Shell"} or code.startswith(("git ", "python ")):
             continue
         parsed = ast.parse(code)
         # The browser shows complete app setup; this check reuses one QApplication.

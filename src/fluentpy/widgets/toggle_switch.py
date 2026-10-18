@@ -13,7 +13,7 @@ class ToggleSwitch(QtWidgets.QAbstractButton):
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.setFixedSize(46, 24)
         self._hovered = False
-        self._knob_offset = 1.0
+        self._knob_offset = self._target_offset()
         self._animation = QtCore.QPropertyAnimation(self, b"knobOffset", self)
         self._animation.setDuration(theme.tokens.animation_ms)
         self.clicked.connect(self._animate_to_state)
@@ -42,6 +42,7 @@ class ToggleSwitch(QtWidgets.QAbstractButton):
     knobOffset = Property(float, get_knob_offset, set_knob_offset)
 
     def setChecked(self, checked: bool) -> None:
+        self._animation.stop()
         super().setChecked(checked)
         self._knob_offset = self._target_offset()
         self.update()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from importlib import resources
 from pathlib import Path
 import sys
 
@@ -10,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from fluentpy import AccentButton, Button, ComboBox, ProgressToast, ToggleSwitch, theme
-from fluentpy.qt import QtCore, QtWidgets, Slot
+from fluentpy.qt import QtCore, QtGui, QtWidgets, Slot
 from fluentpy.theme.fonts import ui_font
 
 
@@ -20,9 +21,8 @@ class ProgressToastExamples(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._tasks = {}
-        self._identities = {}
         self._serial = 0
-        self._pending = {}
+        self._last_placement = "bottom-right"
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(14)
@@ -34,17 +34,20 @@ class ProgressToastExamples(QtWidgets.QWidget):
         modes.addWidget(self.mode)
         modes.addStretch()
         layout.addLayout(modes)
-        corners = QtWidgets.QHBoxLayout()
-        for placement, caption in (("top-left", "左上角"), ("top-right", "右上角"),
-                                   ("bottom-left", "左下角"), ("bottom-right", "右下角")):
+        corners = QtWidgets.QGridLayout()
+        for index, (placement, caption) in enumerate((("top-left", "左上角"), ("top-center", "顶部居中"), ("top-right", "右上角"),
+                                   ("bottom-left", "左下角"), ("bottom-center", "底部居中"), ("bottom-right", "右下角"))):
             button = Button(caption, self)
             button.clicked.connect(lambda _checked=False, p=placement: self.start_task(p))
-            corners.addWidget(button)
+            corners.addWidget(button,index//3,index%3)
         layout.addLayout(corners)
-        self.caption = QtWidgets.QLabel("选择一个位置，体验进度更新 → 完成 → 自动收起。", self)
+        self.caption = QtWidgets.QLabel("可重复点击：底部向上叠放，顶部向下叠放；关闭后自动补位。", self)
         self.caption.setWordWrap(True)
         layout.addWidget(self.caption)
         actions = QtWidgets.QHBoxLayout()
+        repeat = Button("连发三条",self)
+        repeat.clicked.connect(self.start_batch)
+        actions.addWidget(repeat)
         failure = Button("模拟失败", self)
         failure.clicked.connect(self.fail_tasks)
         dismiss = Button("关闭全部", self)
@@ -55,37 +58,18 @@ class ProgressToastExamples(QtWidgets.QWidget):
         layout.addLayout(actions)
 
     def start_task(self, placement):
-        pending = self._pending.pop(placement, None)
-        if pending is not None:
-            pending.stop()
-            pending.deleteLater()
-        current = self._tasks.get(placement)
-        indeterminate = self.mode.currentIndex() == 1
-        if current is not None:
-            toast, timeline = current
-            timeline.stop()
-            toast.close()
-            timer = QtCore.QTimer(self)
-            timer.setSingleShot(True)
-            self._pending[placement] = timer
+        self._last_placement=placement
+        self._begin(placement,self.mode.currentIndex()==1)
 
-            def replace():
-                if self._pending.pop(placement, None) is timer:
-                    self._begin(placement, indeterminate)
-                timer.deleteLater()
-
-            timer.timeout.connect(replace)
-            timer.start(ProgressToast.HIDE_DURATION + 20)
-        else:
-            self._begin(placement, indeterminate)
+    def start_batch(self):
+        for _ in range(3):self.start_task(self._last_placement)
 
     def _begin(self, placement, indeterminate):
         toast = ProgressToast.start("正在下载文件，请稍候…", parent=self.window(),
-                                    placement=placement, indeterminate=indeterminate)
+                                    placement=placement, indeterminate=indeterminate,severity="warning")
         self._serial += 1
         toast.setProperty("demoPlacement", placement)
         toast.setProperty("demoIdentity", self._serial)
-        self._identities[placement] = self._serial
         timeline = QtCore.QTimeLine(4200, toast)
         timeline.setEasingCurve(QtCore.QEasingCurve.Type.Linear)
         timeline.setUpdateInterval(40)
@@ -93,7 +77,7 @@ class ProgressToastExamples(QtWidgets.QWidget):
         if not indeterminate:
             timeline.frameChanged.connect(toast.set_progress)
         timeline.finished.connect(lambda: toast.finish("下载完成", timeout_ms=2000))
-        self._tasks[placement] = (toast, timeline)
+        self._tasks[self._serial] = (toast, timeline)
 
         toast.destroyed.connect(self._task_released)
         timeline.start()
@@ -103,10 +87,7 @@ class ProgressToastExamples(QtWidgets.QWidget):
     def _task_released(self, destroyed):
         # Qt emits destroyed() with a QObject wrapper after the subclass has
         # been torn down; wrapper identity is not reliable at this point.
-        placement = destroyed.property("demoPlacement")
-        if self._identities.get(placement) == destroyed.property("demoIdentity"):
-            self._tasks.pop(placement, None)
-            self._identities.pop(placement, None)
+        self._tasks.pop(destroyed.property("demoIdentity"), None)
 
     def fail_tasks(self):
         for toast, timeline in list(self._tasks.values()):
@@ -114,10 +95,6 @@ class ProgressToastExamples(QtWidgets.QWidget):
             toast.fail("下载失败，请重试", timeout_ms=0)
 
     def dismiss_all(self):
-        for timer in self._pending.values():
-            timer.stop()
-            timer.deleteLater()
-        self._pending.clear()
         for toast, timeline in list(self._tasks.values()):
             timeline.stop()
             toast.close()
@@ -133,6 +110,7 @@ class ProgressToastDemo(QtWidgets.QWidget):
         theme.set_mode("dark" if dark else "light")
         self.setObjectName("progressToastDemo")
         self.setWindowTitle("FluentPy · 任务进度提示")
+        self.setWindowIcon(QtGui.QIcon(str(resources.files('fluentpy.assets').joinpath('brand/fluentpy.svg'))))
         self.resize(900, 600)
         self.setMinimumSize(640, 460)
         root = QtWidgets.QVBoxLayout(self)
@@ -145,7 +123,7 @@ class ProgressToastDemo(QtWidgets.QWidget):
         top.addStretch()
         root.addLayout(top)
         root.addStretch()
-        note = QtWidgets.QLabel("一张小卡片，接住任务的整个过程。", self)
+        note = QtWidgets.QLabel("多条任务可同时显示，关闭后自动补位。", self)
         note.setObjectName("demoSubtitle")
         root.addWidget(note)
         root.addSpacing(12)
@@ -160,7 +138,7 @@ class ProgressToastDemo(QtWidgets.QWidget):
         appearance.addWidget(toggle)
         root.addLayout(appearance)
         root.addStretch()
-        footer = QtWidgets.QLabel("平滑进度 · 状态切换 · 四角定位 · 悬停暂停 · 明暗主题", self)
+        footer = QtWidgets.QLabel("四角堆叠 · 平滑补位 · 单段循环条 · 完成／失败 · 悬停暂停", self)
         footer.setObjectName("demoFooter")
         footer.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         root.addWidget(footer)

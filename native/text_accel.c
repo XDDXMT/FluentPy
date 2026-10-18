@@ -11,6 +11,8 @@
 #include "shortcut_accel.h"
 #include "time_accel.h"
 #include "calendar_accel.h"
+#include "color_accel.h"
+#include "input_accel.h"
 
 typedef struct {
     int kind;
@@ -334,6 +336,14 @@ PyInit__native(void)
         return NULL;
     }
     if (fluentpy_add_calendar_methods(result) < 0) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    if (fluentpy_add_color_methods(result) < 0) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    if (fluentpy_add_input_methods(result) < 0) {
         Py_DECREF(result);
         return NULL;
     }

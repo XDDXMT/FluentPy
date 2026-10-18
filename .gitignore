@@ -9,6 +9,7 @@ build/
 /dist/
 .idea/
 .vscode/
+/piptest/
 *.log
 *.tmp
 *.exe

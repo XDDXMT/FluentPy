@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 320" fill="none">
+  <!-- Original curves authored for the FluentPy gallery and workbench. -->
+  <defs>
+    <linearGradient id="ribbon" x1="70" y1="390" x2="1030" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14c3cb"/><stop offset=".45" stop-color="#2c7be1"/><stop offset="1" stop-color="#996fe6"/>
+    </linearGradient>
+    <radialGradient id="glow"><stop stop-color="#5568d8" stop-opacity=".26"/><stop offset="1" stop-color="#5568d8" stop-opacity="0"/></radialGradient>
+    <path id="wave" d="M-90 330C140 100 282 450 550 182C755-24 900 105 1160 192V245C875 163 758 56 570 244C320 495 103 215-90 402Z"/>
+  </defs>
+  <ellipse cx="730" cy="82" rx="420" ry="250" fill="url(#glow)"/>
+  <g transform="scale(1 .58)" fill="url(#ribbon)">
+    <use href="#wave" transform="translate(0 70)" opacity=".22"/>
+    <use href="#wave" transform="translate(0 24)" opacity=".39"/>
+    <use href="#wave" opacity=".82"/>
+    <path d="M-90 330C140 100 282 450 550 182C755-24 900 105 1160 192" stroke="#ace2ff" stroke-opacity=".67" stroke-width="1.4"/>
+  </g>
+</svg>

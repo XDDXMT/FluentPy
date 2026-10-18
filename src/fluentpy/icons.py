@@ -85,6 +85,7 @@ class FluentIcon(str, Enum):
     DOCUMENT_SEARCH = "ic_fluent_document_search_24_regular.svg"
     DOCUMENT_TEXT = "ic_fluent_document_text_24_regular.svg"
     EDIT = "ic_fluent_edit_24_regular.svg"
+    EYEDROPPER = "ic_fluent_eyedropper_24_regular.svg"
     EYE = "ic_fluent_eye_24_regular.svg"
     EYE_OFF = "ic_fluent_eye_off_24_regular.svg"
     FILTER = "ic_fluent_filter_24_regular.svg"

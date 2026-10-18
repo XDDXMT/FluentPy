@@ -5,6 +5,7 @@ from fluentpy import (Button, CardWidget, SimpleCardWidget, ElevatedCardWidget,
     FluentIcon, fluent_icon, theme)
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 from cards import FluentPicture
+from expandable_cards import ExpandableSettings
 
 
 class WorkbenchCards(QtWidgets.QWidget):
@@ -46,6 +47,14 @@ class WorkbenchCards(QtWidgets.QWidget):
         self.settings.add_group(FluentIcon.SETTINGS,"显示模式","下拉选择示例",self.appearance)
         self.settings.add_group(FluentIcon.FOLDER,"缓存目录","文本输入示例",self.directory)
         root.addWidget(self.settings)
+        expandable=HeaderCardWidget("折叠设置")
+        hint=QtWidgets.QLabel("点击标题展开或收起；卡片内的设置会保留。")
+        hint.setObjectName("muted");hint.setWordWrap(True)
+        expandable.body_layout.addWidget(hint)
+        self.expandable_settings=ExpandableSettings()
+        self.expandable_settings.setMaximumWidth(350)
+        expandable.body_layout.addWidget(self.expandable_settings)
+        root.addWidget(expandable)
         theme.subscribe(self,self._apply_theme);self._apply_theme()
 
     def _apply_theme(self):

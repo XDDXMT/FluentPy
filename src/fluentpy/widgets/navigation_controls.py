@@ -213,6 +213,13 @@ class Pivot(QtWidgets.QWidget):
     def addItem(self, routeKey: str, text: str) -> None:
         self.add_item(routeKey, text)
 
+    def set_item_enabled(self, route_key: str, enabled: bool) -> None:
+        """Enable a navigation entry without changing the selected page."""
+        for item in self._items:
+            if item.route_key == route_key:
+                item.widget.setEnabled(bool(enabled))
+                return
+
     def set_current_item(self, route_key: str, animated: bool = True) -> None:
         if route_key == self._current:
             return
@@ -460,6 +467,10 @@ class TabBar(QtWidgets.QWidget):
     def setCurrentTab(self, routeKey: str) -> None:
         self.set_current_tab(routeKey)
 
+    def close_tab(self, route_key: str) -> None:
+        """Close a document tab through the same signal path as its close button."""
+        self._close_tab(route_key)
+
     def _close_tab(self, route_key: str) -> None:
         for index, item in enumerate(list(self._items)):
             if item.route_key != route_key:
@@ -525,7 +536,7 @@ class _TabButton(QtWidgets.QAbstractButton):
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         close_rect = QtCore.QRect(self.width() - 30, 6, 24, 24)
-        if close_rect.contains(event.position().toPoint()):
+        if event.button() == QtCore.Qt.MouseButton.LeftButton and close_rect.contains(event.position().toPoint()):
             self.closeRequested.emit()
             return
         super().mouseReleaseEvent(event)

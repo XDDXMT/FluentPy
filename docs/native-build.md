@@ -4,7 +4,7 @@ FluentPy的界面、信号和Qt对象由Python与Qt管理，`fluentpy._native`�
 
 日期日历、时制换算与时间滚轮、文件拖放策略、快捷键校验和文本扫描都优先使用同一扩展中的对应接口。缺失、不兼容或旧版二进制缺少某组接口时，仅该组切换到兼容实现，不禁用组件；可用的其他C接口继续使用。构建成功后重启应用即可恢复C加速。
 
-构建脚本编译`native/text_accel.c`、`native/date_accel.c`、`native/time_accel.c`、`native/calendar_accel.c`、`native/drop_accel.c`和`native/shortcut_accel.c`六份源文件。Python兼容策略位于`src/fluentpy/backends/`，与C实现保持返回值、输入校验和拒绝原因一致。Qt仍负责界面、原生文件信息、按键事件及QKeySequence转换。模式与诊断见[后端选择与回退](backends.md)。
+构建脚本编译`native/`中的文本、日期、时间、日历、拖放、快捷键、颜色和输入八份源文件。Python兼容策略位于`src/fluentpy/backends/`，与C实现保持返回值、输入校验和拒绝原因一致。Qt仍负责界面、原生文件信息、按键事件及QKeySequence转换。模式与诊断见[后端选择与回退](backends.md)。
 
 ## 当前支持范围
 
@@ -38,6 +38,8 @@ python -B scripts/build_native.py
 独立编译命令失败时会返回非零退出码，不会把失败当作“成功启用 C”。
 
 ## 构建 wheel
+
+PyPI 安装名为 `fluentpy-qt`，wheel／sdist 文件名前缀为 `fluentpy_qt`；导入名与 C 扩展名仍是 `fluentpy` 和 `fluentpy._native`。正式发布请使用[发布说明](publishing.md)中的隔离构建与校验流程，避免原生构建缓存混入通用 wheel。
 
 项目使用 setuptools 构建。一般开发环境可先安装标准构建前端：
 

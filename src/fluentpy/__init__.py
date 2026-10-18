@@ -1,11 +1,18 @@
 """FluentPy public API."""
 
-__version__ = "0.6.9"
+__version__ = "0.7.0"
 
 from .qt import QT_API
 from .theme import ThemeMode, ThemeTokens, theme
 from .icons import FluentIcon, fluent_icon, fluent_icon_name
 from .widgets import (
+    TableView, TableWidget, TableItemDelegate,
+    SplashScreen,
+    ColorToast,
+    InfoBar, ProgressInfoBar,
+    AffixLineEdit, PinCodeEdit,
+    ColorSwatchButton, ColorSwatchGroup, ColorPickerPanel, ColorPalette,
+    ColorDialog, ColorPickerButton, ColorPaletteButton, ScreenColorPicker, EyeDropperButton,
     AccentButton,
     AnimatedStackedWidget,
     Button,
@@ -16,6 +23,8 @@ from .widgets import (
     ElevatedCardWidget,
     HeaderCardWidget,
     GroupHeaderCardWidget,
+    ExpandableCardWidget,
+    AccordionWidget,
     CheckBox,
     CodeEdit,
     DatePicker,
@@ -27,6 +36,8 @@ from .widgets import (
     FileDropWidget,
     FolderDropWidget,
     ComboBox,
+    ModelComboBox, EditableModelComboBox, MultiSelectionComboBox, TreeComboBox,
+    MultiSelectionTreeComboBox, TransparentComboBox, FontComboBox,
     DoubleSpinBox,
     EditableComboBox,
     ExamplePanel,
@@ -34,6 +45,7 @@ from .widgets import (
     FramelessDialog,
     FluentScrollBar,
     FluentWindow,
+    FluentTitleBar,
     HyperlinkButton,
     IconButton,
     LineEdit,
@@ -52,7 +64,8 @@ from .widgets import (
     ProgressToast,
     ShortcutPicker,
     ShortcutDialog,
-    ActionMenu, ToggleButton, ToggleIconButton, PillToggleButton, AccentIconButton, TransparentIconButton,
+    ActionMenu, SystemTrayMenu, ToolTipSlider, RangeSlider,
+    ToggleButton, ToggleIconButton, PillToggleButton, AccentIconButton, TransparentIconButton,
     DropDownButton, AccentDropDownButton, SplitButton, AccentSplitButton, LoadingButton,
     RadioButton,
     RichTextEdit,
@@ -71,6 +84,13 @@ from .widgets import (
 )
 
 __all__ = [
+    "TableView", "TableWidget", "TableItemDelegate",
+    "SplashScreen",
+    "InfoBar", "ProgressInfoBar",
+    "ColorToast",
+    "AffixLineEdit", "PinCodeEdit",
+    "ColorSwatchButton", "ColorSwatchGroup", "ColorPickerPanel", "ColorPalette",
+    "ColorDialog", "ColorPickerButton", "ColorPaletteButton", "ScreenColorPicker", "EyeDropperButton",
     "AccentButton",
     "AnimatedStackedWidget",
     "Button",
@@ -81,6 +101,8 @@ __all__ = [
     "ElevatedCardWidget",
     "HeaderCardWidget",
     "GroupHeaderCardWidget",
+    "ExpandableCardWidget",
+    "AccordionWidget",
     "CheckBox",
     "CodeEdit",
     "DatePicker",
@@ -92,12 +114,15 @@ __all__ = [
     "FileDropWidget",
     "FolderDropWidget",
     "ComboBox",
+    "ModelComboBox", "EditableModelComboBox", "MultiSelectionComboBox", "TreeComboBox",
+    "MultiSelectionTreeComboBox", "TransparentComboBox", "FontComboBox",
     "DoubleSpinBox",
     "EditableComboBox",
     "ExamplePanel",
     "FilledButton",
     "FramelessDialog",
     "FluentWindow",
+    "FluentTitleBar",
     "FluentIcon",
     "FluentScrollBar",
     "HyperlinkButton",
@@ -119,6 +144,7 @@ __all__ = [
     "ShortcutPicker",
     "ShortcutDialog",
     "ActionMenu",
+    "SystemTrayMenu", "ToolTipSlider", "RangeSlider",
     "ToggleButton",
     "ToggleIconButton",
     "PillToggleButton",

@@ -15,7 +15,7 @@ README = '''# FluentPy Docs
 
 [官网](https://fluentpy.mcxmcl.cn/) · [组件库源码](https://github.com/XDDXMT/FluentPy) · [文档问题](https://github.com/XDDXMT/FluentPy-Docs/issues)
 
-FluentPy 官方中文文档的独立开源仓库。包含网站 HTML、CSS、JavaScript、全部静态页面数据、106 个 Fluent 图标、真实 Qt 控件截图和 GIF，以及内容生成、媒体录制、校验和打包脚本。项目采用 [MIT 许可证](LICENSE)。
+FluentPy 0.7.0 中文文档的独立开源仓库。首页采用与新版工作台一致的欢迎横幅、半透明入口与可搜索分类。包含网站 HTML、CSS、JavaScript、全部静态页面数据、107 个 Fluent 图标、真实 Qt 控件截图和 GIF，以及内容生成、媒体录制、校验和打包脚本。项目采用 [MIT 许可证](LICENSE)。
 
 ## 直接预览
 
@@ -126,7 +126,7 @@ def main():
 
 - Source: https://github.com/microsoft/fluentui-system-icons
 - Copyright (c) 2020 Microsoft Corporation. MIT licensed.
-- Bundled resources: 106 SVG icons in `dist/assets/icons/`.
+- Bundled resources: 107 SVG icons in `dist/assets/icons/`.
 - Complete license: `dist/assets/icons-LICENSE.txt`.
 - FluentPy's own brand mark is in `dist/assets/mark.svg`.
 

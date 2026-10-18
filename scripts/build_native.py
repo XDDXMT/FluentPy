@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import sysconfig
+import uuid
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +28,7 @@ def build_with_zig(zig: Path, output: Path) -> Path:
     zig = zig.expanduser().resolve()
     if not zig.is_file():
         raise FileNotFoundError(f"Zig executable not found: {zig}")
-    sources = [ROOT / "native" / name for name in ("text_accel.c", "date_accel.c", "drop_accel.c", "shortcut_accel.c", "time_accel.c", "calendar_accel.c")]
+    sources = [ROOT / "native" / name for name in ("text_accel.c", "date_accel.c", "drop_accel.c", "shortcut_accel.c", "time_accel.c", "calendar_accel.c", "color_accel.c", "input_accel.c")]
     for source in sources:
         if not source.is_file():
             raise FileNotFoundError(f"Native source not found: {source}")
@@ -63,8 +64,30 @@ def build_with_zig(zig: Path, output: Path) -> Path:
     subprocess.run(command, cwd=ROOT, env=env, check=True)
     if not compiled.is_file():
         raise RuntimeError("Compiler exited successfully but did not produce the extension.")
-    shutil.copy2(compiled, output)
+    _publish_extension(compiled, output, build_dir)
     return output
+
+
+def _publish_extension(compiled: Path, output: Path, build_dir: Path) -> None:
+    """Preserve a binary held by a running Windows app, and restore on failure."""
+    try:
+        shutil.copy2(compiled, output)
+    except PermissionError:
+        # Windows allows an in-use extension to be renamed while its existing
+        # process retains the old mapping. Preserve it rather than killing apps.
+        if not output.is_relative_to(ROOT):
+            raise
+        retained = build_dir / "in-use"
+        retained.mkdir(exist_ok=True)
+        backup = retained / (uuid.uuid4().hex + "-" + output.name)
+        output.rename(backup)
+        try:
+            shutil.copy2(compiled, output)
+        except BaseException:
+            if output.exists():
+                output.unlink()
+            backup.rename(output)
+            raise
 
 
 def main() -> None:

@@ -1,0 +1,57 @@
+/* Original workbench composition, shared in spirit with the native Qt example. */
+body[data-page=introduction] .workspace{max-width:1716px}
+.welcome-banner{isolation:isolate;position:relative;overflow:hidden;padding:28px;border-radius:16px;background:linear-gradient(120deg,#eff6fb,#dce9f3);margin-bottom:28px}
+.welcome-banner:before{content:"";position:absolute;inset:0;z-index:-1;background:url("assets/home-aurora.svg") center/cover no-repeat;opacity:.72;pointer-events:none}
+.welcome-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:28px}
+.welcome-heading h1{font-size:32px;line-height:1.25;letter-spacing:-.7px;margin:0;font-weight:650}
+.welcome-heading p{font-size:14px;margin:10px 0 0;color:#4a5c70;line-height:1.6}
+.welcome-version{font-size:11px;white-space:nowrap;color:#53677e;padding-top:8px}
+.welcome-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.welcome-link{display:flex;min-width:0;flex-direction:column;gap:8px;padding:16px;border:1px solid #c3d3e268;border-radius:11px;background:#ffffffbd;color:#182631;transition:background-color .16s,border-color .16s,transform .16s}
+.welcome-link:hover{background:#fffffff0;border-color:#7ca6c5;transform:translateY(-2px);color:#152a36}
+.welcome-link-top{display:flex;justify-content:space-between;align-items:center;height:28px;margin-bottom:3px}
+.welcome-link-top>span{font-size:16px;opacity:.65}
+.welcome-link strong{font-size:15px;font-weight:600;line-height:1.5}
+.welcome-link-detail{font-size:11px;line-height:1.6;color:#516174}
+.home-symbol{width:24px;height:24px;display:block}
+.home-components{margin:0 0 28px}
+.home-component-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.home-component-head h2{font-size:21px;white-space:nowrap;margin:0;font-weight:600}
+#home-topic-count{font-size:12px;color:var(--muted);white-space:nowrap}
+.home-search{display:flex;align-items:center;gap:9px;border:1px solid var(--field-border);background:var(--field);border-radius:6px;padding:0 12px;margin-left:auto;width:260px;min-width:0;height:36px}
+.home-search:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+.home-search>span{flex:0 0 16px;opacity:.65}.home-search .home-symbol{width:16px;height:16px}
+.home-search svg{display:block;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5}
+.home-search input{border:0;background:none;padding:0;outline:none;min-width:0;width:100%;height:100%;font:inherit;font-size:13px;color:var(--text)}
+.home-search input::placeholder{color:var(--muted)}
+.home-topic-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.home-topic{display:flex;gap:14px;align-items:center;min-width:0;min-height:106px;padding:18px 16px;border:1px solid var(--line);border-radius:10px;background:var(--raised);color:var(--text);transition:background-color .16s,border-color .16s,transform .16s}
+.home-topic:hover{background:var(--panel);border-color:var(--accent);color:var(--text);transform:translateY(-1px)}
+.home-topic-icon{flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;border-radius:9px;background:var(--accent-bg)}
+.home-topic-icon img{width:22px;height:22px}
+.home-topic-copy{display:flex;min-width:0;flex-direction:column;gap:7px;flex:1}
+.home-topic-copy strong{font-size:14px;font-weight:600;line-height:1.6}
+.home-topic-copy>span{font-size:12px;line-height:1.7;color:var(--muted);overflow-wrap:anywhere}
+.home-topic-arrow{font-size:22px;line-height:1;color:var(--dim)}
+.home-empty{grid-column:1/-1;padding:24px 0}.home-empty p{font-size:14px}
+.home-install{display:flex;align-items:center;gap:20px;padding:20px 24px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.home-install strong{font-size:14px;font-weight:600}.home-install p{font-size:12px;margin:4px 0 0}
+.home-install-command{margin-left:auto;display:flex;align-items:center;gap:16px;min-width:0}
+.home-install-command code{font-size:12px;overflow-wrap:anywhere;background:none;padding:0}
+.home-install-command button{flex-shrink:0;border:0;background:transparent;color:var(--muted);padding:6px;cursor:pointer;display:grid;place-items:center;border-radius:4px}
+.home-install-command svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.5;fill:none}
+.home-install>a{white-space:nowrap;font-size:12px;color:var(--accent)}
+.home-workbench-preview .intro-cover{margin-top:6px}.home-workbench-preview .intro-cover img{background:var(--panel)}
+.welcome-link:focus-visible,.home-topic:focus-visible,.home-install-command button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+:root[data-theme=dark] .welcome-banner{background:linear-gradient(120deg,#0b111e,#202d42)}
+:root[data-theme=dark] .welcome-banner:before{opacity:1}
+:root[data-theme=dark] .welcome-heading p,:root[data-theme=dark] .welcome-version{color:#b6c2d4}
+:root[data-theme=dark] .welcome-link{background:#1e2632c3;border-color:#ffffff20;color:#edf3fb}
+:root[data-theme=dark] .welcome-link:hover{background:#303b4be6;border-color:#98bcc96b;color:#fff}
+:root[data-theme=dark] .welcome-link-detail{color:#c7ccd8}
+:root[data-theme=dark] .home-symbol{filter:invert(1)}
+@media(min-width:1620px){.home-topic-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:1160px){.welcome-links{grid-template-columns:repeat(2,minmax(0,1fr))}.home-topic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-install{flex-wrap:wrap}.home-install-command{margin-left:0}}
+@media(max-width:780px){.welcome-banner{padding:24px;margin-bottom:24px}.welcome-heading h1{font-size:29px}.home-topic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-component-head{flex-wrap:wrap}.home-search{flex-basis:100%;margin:0;width:100%;height:38px}.welcome-heading{gap:12px}.home-install{padding:18px}}
+@media(max-width:480px){.welcome-banner{padding:20px}.welcome-heading{flex-wrap:wrap;gap:4px;margin-bottom:20px}.welcome-heading h1{font-size:27px}.welcome-version{padding:0}.welcome-link{padding:13px;gap:7px}.welcome-link strong{font-size:14px}.welcome-link-detail{font-size:11px}.home-topic-grid{grid-template-columns:1fr}.home-topic{min-height:92px}.home-install-command{gap:8px}}
+@media(prefers-reduced-motion:reduce){.welcome-link,.home-topic{transition:none}.welcome-link:hover,.home-topic:hover{transform:none}}

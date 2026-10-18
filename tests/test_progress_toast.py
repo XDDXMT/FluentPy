@@ -82,8 +82,11 @@ class ProgressToastTests(unittest.TestCase):
                     self.assertNotEqual(toast.pos(), toast._rest_pos)
                     self.assertTrue(self.parent.rect().contains(toast.geometry()))
                     self.settle(toast)
-                    edge = toast.x() if placement.endswith("left") else toast.geometry().right() + 1
-                    self.assertEqual(edge, 18 if placement.endswith("left") else self.parent.width()-18)
+                    if placement.endswith("center"):
+                        self.assertLessEqual(abs(toast.x()*2+toast.width()-self.parent.width()),1)
+                    else:
+                        edge = toast.x() if placement.endswith("left") else toast.geometry().right() + 1
+                        self.assertEqual(edge, 18 if placement.endswith("left") else self.parent.width()-18)
                     self.assertEqual(toast.y() if placement.startswith("top") else toast.geometry().bottom()+1,
                                      18 if placement.startswith("top") else self.parent.height()-18)
                     toast.hide()
@@ -183,8 +186,11 @@ class ProgressToastTests(unittest.TestCase):
                 self.assertGreater(toast.width(), 220)
                 self.assertGreater(toast._icon.mix, 0)
                 self.assertLess(toast._icon.mix, 1)
-                self.assertEqual(toast.x() if placement.endswith("left") else toast.x()+toast.width(),
-                                 18 if placement.endswith("left") else self.parent.width()-18)
+                if placement.endswith("center"):
+                    self.assertLessEqual(abs(toast.x()*2+toast.width()-self.parent.width()),1)
+                else:
+                    self.assertEqual(toast.x() if placement.endswith("left") else toast.x()+toast.width(),
+                                     18 if placement.endswith("left") else self.parent.width()-18)
                 self.settle_state(toast)
                 self.assertEqual(toast.width(), 220)
                 toast.set_progress(10)
@@ -327,8 +333,7 @@ class ProgressToastTests(unittest.TestCase):
             for _ in range(5):
                 demo.start_task(placement)
         QTest.qWait(ProgressToast.HIDE_DURATION + 70)
-        self.assertEqual(len(demo._tasks), 4)
-        self.assertEqual(demo._pending, {})
+        self.assertEqual(len(demo._tasks), 6*len(Toast.PLACEMENTS))
         demo.fail_tasks()
         self.assertTrue(all(toast.state() == "error" for toast, _timeline in demo._tasks.values()))
         demo.hide()

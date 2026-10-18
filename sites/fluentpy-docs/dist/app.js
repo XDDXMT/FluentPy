@@ -91,7 +91,7 @@
     const metrics=section.metrics?`<dl class="native-metrics" aria-label="一万行 JSON 的本机 C 后端实测">${section.metrics.map(metric=>`<div><dt>${escape(metric.label)}</dt><dd><strong>${escape(metric.value)}</strong><span>${escape(metric.detail)}</span></dd></div>`).join('')}</dl>`:'';
     const table=section.table?`<div class="native-table" role="region" aria-label="${escape(section.table.caption)}" tabindex="0"><table><caption>${escape(section.table.caption)}</caption><thead><tr>${section.table.headers.map(label=>`<th scope="col">${escape(label)}</th>`).join('')}</tr></thead><tbody>${section.table.rows.map(row=>`<tr>${row.map((cell,index)=>index===0?`<th scope="row">${escape(cell)}</th>`:`<td>${escape(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'';
     const items=section.items?`<ul class="doc-list">${section.items.map(item=>`<li><strong>${escape(item.title)}</strong>：${escape(item.text)}</li>`).join('')}</ul>`:'';
-    const links=section.links?`<div class="doc-links">${section.links.map(link=>`<a href="${escape(link.page?route(link.page):link.href)}"${link.page?'':' target="_blank" rel="noopener"'}>${escape(link.label)}</a>`).join('')}</div>`:'';
+    const links=section.links?`<div class="doc-links">${section.links.map(link=>`<a href="${escape(link.page?route(link.page,link.anchor):link.href)}"${link.page?'':' target="_blank" rel="noopener"'}>${escape(link.label)}</a>`).join('')}</div>`:'';
     const gallery=section.gallery?`<div class="intro-gallery">${section.gallery.map((card,index)=>`<a class="intro-card" href="${route(card.page)}"><div class="intro-card-image"><img src="assets/previews/${escape(card.image)}-light.png?v=${previewVersion}" alt="${escape(card.title)}的 FluentPy 亮色控件截图" loading="lazy"></div><div class="intro-card-copy"><span class="intro-card-number">0${index+1}</span><h3>${escape(card.title)}<span aria-hidden="true">↗</span></h3><p>${escape(card.text)}</p><small>${escape(card.tag)}</small></div></a>`).join('')}</div>`:'';
     const migration=section.migration&&window.FluentMigration?window.FluentMigration.markup(section.migration,previewVersion):'';
     const steps=section.steps?`<div class="intro-steps">${section.steps.map((step,index)=>`<a class="intro-step" href="${route(step.page)}"><span class="intro-step-number">${index+1}</span><h3>${escape(step.title)}</h3><p>${escape(step.text)}</p><span class="intro-step-link">${escape(step.label)} →</span></a>`).join('')}</div>`:'';
@@ -111,6 +111,10 @@
     $('#theme-toggle').setAttribute('title',`主题：${name}，点击切换为${next}`);
     $('#theme-toggle').innerHTML=preference==='system'?'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>':light?'<svg viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></svg>':'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>';
     $('meta[name="theme-color"]').content=light?'#ffffff':'#161616';
+    $$('[data-home-preview]').forEach(image=>{
+      image.src=`assets/previews/showcase-home-${mode}.png?v=${previewVersion}`;
+      image.closest('figure').querySelector('a').href=image.src;
+    });
   }
   const searchEntries=[];
   for(const page of pages){
@@ -149,11 +153,14 @@
   $('#menu-toggle').addEventListener('click',()=>{const open=$('#sidebar').classList.toggle('open');$('#sidebar-shade').classList.toggle('visible',open);$('#menu-toggle').setAttribute('aria-expanded',String(open));});
   $('#sidebar-shade').addEventListener('click',closeMenu);
   main.addEventListener('input',e=>{
+    if(e.target.id==='home-component-filter')renderHomeTopics();
     if(e.target.id==='icon-filter')renderIcons(e.target.value);
     if(e.target.id==='api-filter')renderIndex(e.target.value);
   });
   main.addEventListener('click',async e=>{
     const button=e.target.closest('button');if(!button)return;
+    if(button.hasAttribute('data-home-reset')){$('#home-component-filter').value='';renderHomeTopics();$('#home-component-filter').focus();return;}
+    if(button.hasAttribute('data-home-install')){await copyText('python -m pip install fluentpy-qt');return;}
     if(button.hasAttribute('data-preview-toggle')){const box=button.closest('[data-animated-preview]');setPreviewPaused(box,box.dataset.paused!=='true',true);return;}
     if(button.hasAttribute('data-copy')){if(await copyText(codeSnippets[Number(button.dataset.copy)])){button.innerHTML=copyIcon+'已复制';setTimeout(()=>{if(button.isConnected)button.innerHTML=copyIcon+'复制';},1800);}}
     if(button.dataset.icon)await copyText('FluentIcon.'+button.dataset.icon);
@@ -168,6 +175,50 @@
     if(!cover)return '';
     const source=`assets/previews/${escape(cover.image)}-light.png?v=${previewVersion}`;
     return `<figure class="intro-cover"><div class="intro-cover-top"><span>FluentPy 组件示例 · Qt 原生界面</span><a href="${source}" target="_blank" rel="noopener">查看原图 ↗</a></div><img src="${source}" width="${cover.width||1120}" height="${cover.height||780}" alt="${escape(cover.alt||'FluentPy 组件示例程序')}" fetchpriority="high"><figcaption>${escape(cover.caption)}</figcaption></figure>`;
+  }
+
+  const homeTopics=[
+    ['buttons','按钮与菜单','触发动作，展开菜单与右键操作。','TOOLBOX',['menus']],
+    ['inputs','文本与选择','输入文字，选择、组合与验证内容。','TEXT_FONT',['selection','combo-boxes']],
+    ['tables','表格','展示数据，体验排序、编辑与多选。','TABLE',[]],
+    ['sliders','滑块','拖动调节数值，选择连续区间。','FILTER',[]],
+    ['date-picker','日期与时间滚轮','滚动选择日期、小时与分钟。','CLOCK',['time-picker']],
+    ['calendar-picker','日历选择','挑选日期，设定范围与时间。','CALENDAR_LTR',[]],
+    ['drag-drop','文件拖放','拖入文件或文件夹，查看处理结果。','FOLDER_OPEN',[]],
+    ['colors','颜色与取色','搭配颜色，从屏幕拾取灵感。','COLOR',[]],
+    ['shortcut-picker','快捷键','录入组合键，处理快捷键冲突。','KEY',[]],
+    ['cards','卡片容器','组织内容，展开和收起设置。','TABLE',[]],
+    ['fluent-window','页面导航','切换页面，体验窗口与启动页。','NAVIGATION',['navigation','navigation-controls','splash-screen']],
+    ['feedback','消息与对话框','显示通知、任务进度和对话框。','ALERT',['dialogs']],
+    ['code-editor','代码编辑器','编写文本，体验代码高亮与编辑。','CODE',[]],
+    ['note-timeline','音符时间轴','编辑音符，播放与定位时间轴。','MUSIC_NOTE_2',[]],
+  ];
+  function homeIcon(name, className=''){
+    const icon=icons.find(item=>item.name===name);
+    return icon?`<img class="${className}" src="${escape(icon.file)}" alt="" width="24" height="24">`:'';
+  }
+  function homeMarkup(page, sections, footer){
+    const shortcuts=[
+      ['开始使用','安装与第一个窗口',route('getting-started'),'brand'],
+      ['项目源码','实现细节与开源协作','https://github.com/XDDXMT/FluentPy','CODE'],
+      ['组件示例','浏览全部组件分类',route('introduction','home-components'),'GRID'],
+      ['交流反馈','分享想法与报告问题','https://github.com/XDDXMT/FluentPy/issues','CHAT'],
+    ];
+    const mode=document.documentElement.dataset.theme;
+    const shot=`assets/previews/showcase-home-${mode}.png?v=${previewVersion}`;
+    return `<header class="welcome-banner"><div class="welcome-heading"><div><h1>FluentPy 工作台</h1><p>挑选一个组件，开始构建你的桌面界面。</p></div><span class="welcome-version">${escape(version)} / MIT</span></div><nav class="welcome-links" aria-label="常用入口">${shortcuts.map(([title,detail,target,icon])=>`<a class="welcome-link" href="${target}"${target.startsWith('https:')?' target="_blank" rel="noopener"':''}><span class="welcome-link-top">${icon==='brand'?'<img src="assets/mark.svg" width="25" height="28" alt="">':homeIcon(icon,'home-symbol')}<span aria-hidden="true">${icon==='GRID'?'↓':'↗'}</span></span><strong>${title}</strong><span class="welcome-link-detail">${detail}</span></a>`).join('')}</nav></header><section class="home-components" id="home-components" aria-labelledby="home-components-title"><div class="home-component-head"><h2 id="home-components-title">探索组件</h2><span id="home-topic-count" role="status" aria-live="polite"></span><label class="home-search"><span aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></span><input id="home-component-filter" type="search" placeholder="搜索名称或 API" aria-label="搜索组件名称或 API"></label></div><div class="home-topic-grid" id="home-topic-grid"></div></section><div class="home-install"><div><strong>从第一个窗口开始</strong><p>PyPI 当前为 0.6.9；本页对应 0.7.0 源码。</p></div><div class="home-install-command"><code>python -m pip install fluentpy-qt</code><button type="button" data-home-install aria-label="复制安装命令">${copyIcon}</button></div><a href="https://pypi.org/project/fluentpy-qt/" target="_blank" rel="noopener">PyPI ↗</a></div><details class="home-details home-workbench-preview"><summary>看看实际运行的 Qt 工作台</summary><figure class="intro-cover"><div class="intro-cover-top"><span>FluentPy · 组件示例</span><a href="${shot}" target="_blank" rel="noopener">查看原图 ↗</a></div><img data-home-preview src="${shot}" alt="新版 FluentPy 工作台主页实际运行画面" width="1120" height="780" loading="lazy"><figcaption>在源码目录运行 python examples/showcase.py，或双击 examples/run_showcase.bat。</figcaption></figure></details><details class="home-details"><summary>了解 FluentPy 与运行方式</summary><div id="examples-pane">${sections}</div></details>${footer}`;
+  }
+  function renderHomeTopics(){
+    const query=($('#home-component-filter')?.value||'').trim().toLowerCase();
+    const matches=homeTopics.filter(([id,title,detail,_icon,related])=>{
+      const topics=[id,...related].map(key=>pages.find(page=>page.id===key)).filter(Boolean);
+      return `${title} ${detail} ${topics.map(page=>page.english+' '+page.classes.join(' ')).join(' ')}`.toLowerCase().includes(query);
+    });
+    $('#home-topic-grid').innerHTML=matches.map(([id,title,detail,icon,related])=>{
+      const target=query&&[id,...related].map(key=>pages.find(page=>page.id===key)).find(page=>page?.classes.some(name=>name.toLowerCase().includes(query)));
+      return `<a class="home-topic" href="${route(target?target.id:id)}"><span class="home-topic-icon">${homeIcon(icon,'home-symbol')}</span><span class="home-topic-copy"><strong>${title}</strong><span>${detail}</span></span><span class="home-topic-arrow" aria-hidden="true">›</span></a>`;
+    }).join('')||'<div class="home-empty"><p>没有匹配的组件，试试其他名称或 API。</p><button type="button" class="button-link" data-home-reset>清空搜索</button></div>';
+    $('#home-topic-count').textContent=query?`${matches.length} / ${homeTopics.length} 个分类`:`${homeTopics.length} 个分类`;
   }
 
   const catalogIcons={'buttons':'TOOLBOX','inputs':'TEXT_FONT','selection':'CHECKBOX_CHECKED','date-picker':'CALENDAR_LTR','time-picker':'CLOCK','calendar-picker':'CALENDAR_LTR','drag-drop':'FOLDER_OPEN','shortcut-picker':'KEY','navigation':'NAVIGATION','navigation-controls':'LAYOUT_ROW_THREE','cards':'TABLE','dialogs':'CHAT','feedback':'ALERT','code-editor':'CODE','note-timeline':'MUSIC_NOTE_2','icons':'ICONS'};
@@ -233,7 +284,7 @@
     const footer=`<div class="page-footer"><span>FluentPy ${escape(version)} · <a href="assets/FluentPy-LICENSE.txt" target="_blank">MIT License</a></span><span>文档更新 ${sourceDate}</span></div>`;
     const pager=page.id==='introduction'||page.catalog?'':`<nav class="pager" aria-label="前后文档">${previous?`<a href="${route(previous.id)}"><small>← 上一页</small>${escape(previous.title)}</a>`:''}${next?`<a href="${route(next.id)}"><small>下一页 →</small>${escape(next.title)}</a>`:''}</nav>`;
     if(page.id==='introduction'){
-      main.innerHTML=`<header class="home-head"><div class="home-title"><h1>FluentPy</h1><p>用于 Qt for Python 的 Fluent 风格桌面组件库。</p><div class="home-meta"><span>Python 3.10+</span><span>PySide6 / Qt 6</span><span>MIT License</span></div></div><div class="home-actions"><a class="button-link primary" href="${route('getting-started')}">快速开始</a><a class="button-link" href="${route('components')}">浏览组件</a></div></header>${introCover(page.cover)}<div class="home-facts"><div><h2>原生 Qt 组件</h2><p>控件、布局与信号由 Qt 驱动，保留常用的 Qt 使用方式。</p></div><div><h2>统一外观</h2><p>支持明暗主题、强调色与交互状态，按需组合到现有应用。</p></div><div><h2>C 可选加速</h2><p>已接入的后端优先使用 C，扩展不可用时自动回退 Python。</p></div></div><div id="examples-pane">${sections}</div>${footer}`;
+      main.innerHTML=homeMarkup(page,sections,footer);
     }else{
       const header=`<div class="breadcrumb"><a href="${route('introduction')}">文档</a><span>/</span><b>${escape(page.group)}</b></div><h1>${escape(page.title)}<span>${escape(page.english)}</span></h1><p class="lead">${escape(page.intro)}</p>`;
       const tabs=page.classes.length?`<div class="page-tabs" role="tablist" aria-label="文档内容"><a role="tab" aria-controls="examples-pane" aria-selected="true" data-view="examples" href="${route(page.id)}">示例与用法</a><a role="tab" aria-controls="reference-pane" aria-selected="false" data-view="api" href="${route(page.id,'api')}">API 参考</a></div>`:page.catalog?'':'<div style="height:28px"></div>';
@@ -243,6 +294,7 @@
     const migrationRoot=$('[data-api-migration]',main);if(migrationRoot&&window.FluentMigration)migrationCleanup=window.FluentMigration.mount(migrationRoot);
     if($('#icon-grid'))renderIcons();if($('#api-index-grid'))renderIndex();
     if(page.catalog){catalogCategory='all';renderCatalog();}
+    if(page.id==='introduction')renderHomeTopics();
     closeMenu();updateDocumentView(page,anchor);
   }
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from ..qt import QtCore, QtGui, QtWidgets
 from ..theme import theme
 from ..theme.fonts import ui_font
+from .toast_stack import _ToastStack
 
 
 class _SuccessIcon(QtWidgets.QWidget):
@@ -66,7 +67,7 @@ class Toast(QtWidgets.QFrame):
 
     SHOW_DURATION = 280
     HIDE_DURATION = 180
-    PLACEMENTS = ("top-left", "top-right", "bottom-left", "bottom-right")
+    PLACEMENTS = ("top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right")
 
     def __init__(
         self,
@@ -86,6 +87,12 @@ class Toast(QtWidgets.QFrame):
         super().__init__(parent, flags)
         self.setObjectName("fluentToast")
         self._placement: str | None = None
+        self._stack = None
+        self._stack_target = QtCore.QPoint()
+        self._stack_motion = QtCore.QVariantAnimation(self)
+        self._stack_motion.setDuration(240)
+        self._stack_motion.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
+        self._stack_motion.valueChanged.connect(self._set_stack_position)
         self._compact = not bool(detail)
         self._target = target
         self._arrow_edge: str | None = None
@@ -202,7 +209,11 @@ class Toast(QtWidgets.QFrame):
         self._allow_close = False
         self._reveal_progress = 1.0 if was_visible else 0.0
         self._placement = placement
+        if self._stack is not None and self._stack.placement != placement:
+            self._stack.remove(self)
         self._position()
+        if self._target is None:
+            _ToastStack.for_toast(self, placement).add(self)
         self._set_reveal_progress(self._reveal_progress)
         self.show()
         self.raise_()
@@ -233,17 +244,26 @@ class Toast(QtWidgets.QFrame):
                     y, self._arrow_edge = below, "top"
             else:
                 placement = self._placement or "top-right"
-                x = base.right() + 1 - self.width() - 18 if placement.endswith("right") else base.left() + 18
+                x = ((base.width() - self.width()) // 2 + base.left() if placement.endswith("center")
+                     else base.right() + 1 - self.width() - 18 if placement.endswith("right") else base.left() + 18)
                 y = base.bottom() + 1 - self.height() - 18 if placement.startswith("bottom") else base.top() + 18
             x = max(base.left(), min(x, base.right() + 1 - self.width()))
             y = max(base.top(), min(y, base.bottom() + 1 - self.height()))
-            self._rest_pos = QtCore.QPoint(x, y)
             self._base_rect = QtCore.QRect(base)
-            self._motion = QtCore.QPoint(0, -1 if self._arrow_edge == "top" else 1) if self._target is not None else QtCore.QPoint(
-                1 if (self._placement or "top-right").endswith("right") else -1, 0)
+            if self._target is not None:
+                self._motion = QtCore.QPoint(0, -1 if self._arrow_edge == "top" else 1)
+            elif (self._placement or "top-right").endswith("center"):
+                self._motion = QtCore.QPoint(0, -1 if self._placement.startswith("top") else 1)
+            else:
+                self._motion = QtCore.QPoint(1 if (self._placement or "top-right").endswith("right") else -1, 0)
             if self._target is not None:
                 self._arrow_x = max(34, min(anchor.center().x() - x, self.width() - 34))
             self.layout().activate()
+            if self._stack is not None:
+                self._stack.reflow(animated=False)
+            else:
+                self._rest_pos = QtCore.QPoint(x, y)
+                self._stack_target = QtCore.QPoint(x, y)
             self._set_reveal_progress(self._reveal_progress)
             self.update()
         finally:
@@ -269,6 +289,29 @@ class Toast(QtWidgets.QFrame):
         if not self._closing:
             self._closing = True
             self._animate_reveal(0.0, self.HIDE_DURATION)
+
+    def hideEvent(self, event) -> None:
+        self._stack_motion.stop()
+        if self._stack is not None:
+            self._stack.remove(self)
+        self._placement = None
+        super().hideEvent(event)
+
+    def _set_stack_target(self, position, *, animated=True):
+        if position == self._stack_target and animated:
+            return
+        self._stack_motion.stop()
+        self._stack_target = QtCore.QPoint(position)
+        if animated and self._rest_pos != position:
+            self._stack_motion.setStartValue(self._rest_pos)
+            self._stack_motion.setEndValue(position)
+            self._stack_motion.start()
+        else:
+            self._set_stack_position(position)
+
+    def _set_stack_position(self, position):
+        self._rest_pos = QtCore.QPoint(position)
+        self._set_reveal_progress(self._reveal_progress)
 
     def _target_destroyed(self) -> None:
         self._target = None

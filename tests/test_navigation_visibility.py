@@ -47,7 +47,9 @@ class NavigationVisibilityTests(unittest.TestCase):
         self.settle()
         self.assertLess(self.items['solo'].y(), self.items['room'].y())
         self.assertLess(self.items['room'].y(), self.items['ai'].y())
-        self.assertLess(self.items['ai'].y(), self.items['settings'].y())
+        sidebar = self.view.sidebar
+        self.assertLess(self.items['ai'].mapTo(sidebar, QtCore.QPoint()).y(),
+                        self.items['settings'].mapTo(sidebar, QtCore.QPoint()).y())
 
     def test_hidden_routes_reject_navigation_and_click_signals(self):
         self.view.set_route_visible('room', False)

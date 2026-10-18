@@ -10,12 +10,14 @@ from ..theme import theme
 from .toast import Toast
 
 
-def _state_color(state):
+def _state_color(state, severity="info"):
     dark = theme.mode.value == "dark"
     if state == "success":
         return QtGui.QColor("#6ccb5f" if dark else "#0f7b0f")
     if state == "error":
         return QtGui.QColor("#ff99a4" if dark else "#c42b1c")
+    if severity == "warning":
+        return QtGui.QColor("#fce100" if dark else "#9d5d00")
     return QtGui.QColor(theme.tokens.accent)
 
 
@@ -27,10 +29,11 @@ def _timeout_milliseconds(value):
 
 
 class _TaskIcon(QtWidgets.QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, severity="info"):
         super().__init__(parent)
         self.setFixedSize(20, 20)
         self.state = self.previous = "running"
+        self.severity = severity
         self.phase, self.mix = 0.0, 1.0
         self.setAccessibleName("进行中")
 
@@ -45,8 +48,15 @@ class _TaskIcon(QtWidgets.QWidget):
     def _draw(self, painter, state, opacity):
         painter.save()
         painter.setOpacity(opacity)
-        color = _state_color(state)
-        if state == "running":
+        color = _state_color(state,self.severity)
+        if state == "running" and self.severity == "warning":
+            painter.setPen(QtCore.Qt.PenStyle.NoPen)
+            painter.setBrush(color)
+            painter.drawEllipse(QtCore.QRectF(2,2,16,16))
+            painter.setPen(QtGui.QPen(QtGui.QColor("#201900" if theme.mode.value=="dark" else "white"),1.4,QtCore.Qt.PenStyle.SolidLine,QtCore.Qt.PenCapStyle.RoundCap))
+            painter.drawLine(QtCore.QPointF(10,6),QtCore.QPointF(10,10.5))
+            painter.drawPoint(QtCore.QPointF(10,14))
+        elif state == "running":
             faint = QtGui.QColor(color)
             faint.setAlpha(40)
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
@@ -87,7 +97,10 @@ class ProgressToast(Toast):
     SHOW_DURATION = 340
     HIDE_DURATION = 220
 
-    def __init__(self, title: str, detail: str = "", parent=None, *, target=None, indeterminate=False):
+    def __init__(self, title: str, detail: str = "", parent=None, *, target=None, indeterminate=False, severity="info"):
+        if severity not in ("info","warning"):
+            raise ValueError("severity must be info or warning")
+        self._severity=severity
         self._width_override = None
         super().__init__(title, detail, parent, target=target)
         self._slide_distance = 20
@@ -99,7 +112,7 @@ class ProgressToast(Toast):
         self._hovering = False
         self._icon_mix = 1.0
         previous_icon = self._icon
-        self._icon = _TaskIcon(self)
+        self._icon = _TaskIcon(self,severity)
         self.layout().replaceWidget(previous_icon, self._icon)
         previous_icon.hide()
         previous_icon.deleteLater()
@@ -127,11 +140,11 @@ class ProgressToast(Toast):
         self._state_motion.finished.connect(self._stop_completed_activity)
 
     @classmethod
-    def start(cls, title: str, *, detail: str = "", parent=None, placement="bottom-right", indeterminate=False):
+    def start(cls, title: str, *, detail: str = "", parent=None, placement="bottom-right", indeterminate=False, severity="info"):
         """Create and show an owned toast. Close it or report completion."""
         if placement not in cls.PLACEMENTS:
             raise ValueError(f"placement must be one of {cls.PLACEMENTS}")
-        toast = cls(title, detail, parent or QtWidgets.QApplication.activeWindow(), indeterminate=indeterminate)
+        toast = cls(title, detail, parent or QtWidgets.QApplication.activeWindow(), indeterminate=indeterminate, severity=severity)
         toast.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
         toast.show_at(placement)
         return toast
@@ -329,7 +342,7 @@ class ProgressToast(Toast):
         painter.setClipPath(self._card_path())
         rect = self._card_rect()
         # Blend the accent into green/red while the status icon crossfades.
-        source, target = _state_color("running"), _state_color(self._state)
+        source, target = _state_color("running",self._severity), _state_color(self._state,self._severity)
         color = QtGui.QColor.fromRgbF(*(a + (b-a) * self._icon_mix for a, b in zip(source.getRgbF(), target.getRgbF())))
         track = QtGui.QColor(color)
         track.setAlpha(30 if theme.mode.value == "light" else 45)

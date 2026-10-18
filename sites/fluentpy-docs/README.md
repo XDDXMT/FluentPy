@@ -9,6 +9,7 @@
 ## 页面结构
 
 - 简介先展示当前组件示例程序，之后直接展示 Qt → FluentPy 输入框过渡与 Python → C → Qt 流程两组 JS 动画，保留简短的项目说明与许可入口。
+- 安装统一使用 `python -m pip install fluentpy-qt`，导入名保留 `fluentpy`。开始使用页提供 Windows／macOS／Linux 虚拟环境命令，并说明 wheel 与源码示例、C 加速包与通用包的区别；首页和常见问题提供 PyPI 入口。
 - 组件目录 `#/components` 按用途分组，可按名称、类名和用途搜索，也可筛选分类。
 - 组件页分为“示例与用法”和“API 参考”；配图后的代码默认收起，交互动图按需展开、播放或暂停。
 - 侧栏按七组组织，当前分组默认展开；窄屏使用可收起的导航。常见问题 `#/faq` 按问题展开。
@@ -37,7 +38,7 @@ python -m http.server 8767 --bind 0.0.0.0 --directory sites/fluentpy-docs/dist
 | `dist/migration.js`、`dist/migration.css` | Qt → FluentPy 输入框过渡 |
 | `validate_site.py` | 资源、导航、接口、可执行示例和 GIF 验证 |
 
-修改后重新生成内容并验证；`dist/data.js` 是生成文件，不直接编辑。当前组件库版本 0.6.9，网页从组件库源码读取版本号。
+修改后重新生成内容并验证；`dist/data.js` 是生成文件，不直接编辑。当前组件库源码版本 0.7.0，网页从组件库源码读取版本号。PyPI 已发布版本为 0.6.9。
 
 ## 更新真实 Qt 配图
 
@@ -49,7 +50,7 @@ python sites/fluentpy-docs/build_content.py
 python sites/fluentpy-docs/validate_site.py
 ```
 
-该脚本在隐藏的 Qt 窗口中捕获 12 个页面的明暗主题，检查常规尺寸和最小窗口布局；检查结果及配图在 `build/workbench-redesign/`。实际控件交互来自本库，截图不是网页模拟。
+该脚本在隐藏的 Qt 窗口中捕获当前工作台各页的明暗主题，检查常规尺寸和最小窗口布局；检查结果及配图在 `build/workbench-redesign/`。实际控件交互来自本库，截图不是网页模拟。
 
 独立组件媒体由同目录的 `capture_previews.py`、`capture_animations.py`、`capture_card_previews.py`、`capture_button_previews.py`、`capture_drop_previews.py`、`capture_shortcut_previews.py`、`capture_progress_toasts.py`、`capture_time_previews.py` 和 `capture_calendar_previews.py` 维护。录制前查看脚本说明；需要本地 Qt 与 Pillow，服务器不需要这些依赖。基础批次可用默认 Python 回退；展示 C 模式时先构建扩展。
 
