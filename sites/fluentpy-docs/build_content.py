@@ -684,7 +684,7 @@ ANIMATED_PREVIEWS = {
 
 
 pages = [
-    page("introduction", "工作台", "Workbench", "快速入门", "FluentPy 是一个独立实现的 Python 桌面组件库，为 Qt 应用带来简洁、一致的 Fluent 风格。", [], [
+    page("introduction", "简介", "Introduction", "快速入门", "FluentPy 是一个独立实现的 Python 桌面组件库，为 Qt 应用带来简洁、一致的 Fluent 风格。", [], [
         section("about", "从一个组件，到自己的桌面应用", "FluentPy 基于 Qt for Python，将常见控件、页面导航和主题管理组合在一起。你可以先放下一个按钮，再逐步搭出项目工作台、编辑工具或设置页面。", paragraphs=[
             "项目以 PySide6 为主要后端，组件实现独立编写。我们希望让桌面界面的搭建更直观，同时提供开放的源码和清晰的 MIT 授权。运行示例工作台，可以直接体验侧栏、卡片、输入与标签等真实组件。",
         ], links=[{"label": "查看工作台与运行方式 →", "page": "getting-started"}]),
