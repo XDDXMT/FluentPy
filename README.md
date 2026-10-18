@@ -4,7 +4,7 @@
 
 FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小馒头** 独立开发，采用 [MIT 许可证](LICENSE)。从输入框、卡片和日期滚轮，到带动画的导航、代码编辑器和消息浮层，可以逐个使用，也可以组合成完整工作台。
 
-界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前源码版本为 **0.7.0**，仍处于早期开发阶段。
+界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前源码版本为 **0.7.1**，仍处于早期开发阶段。
 
 [官方文档](https://fluentpy.mcxmcl.cn/) · [文档源码](https://github.com/XDDXMT/FluentPy-Docs) · [快速开始](#快速开始) · [组件与示例](#组件与示例) · [C 后端与性能](#c-后端与性能) · [问题反馈](https://github.com/XDDXMT/FluentPy/issues)
 
@@ -47,7 +47,7 @@ FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小
 
 需要 **Python 3.10+**。PyPI 安装名为 **`fluentpy-qt`**，代码导入名仍是 **`fluentpy`**。PyPI 上的 `fluentpy` 属于其他项目，不要用它安装本组件库，也不要将两个项目装在同一环境。
 
-**0.7.0 已在 [PyPI](https://pypi.org/project/fluentpy-qt/0.7.0/) 发布**。已有虚拟环境时，以下命令安装或升级到最新发布版本：
+**0.7.1 已在 [PyPI](https://pypi.org/project/fluentpy-qt/0.7.1/) 发布**，修复窗口通知覆盖自定义标题栏的问题。已有虚拟环境时，以下命令安装或升级到最新发布版本：
 
 ```console
 python -m pip install --upgrade fluentpy-qt

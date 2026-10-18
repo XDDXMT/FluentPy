@@ -3,7 +3,7 @@ from __future__ import annotations
 from ..qt import QtCore, QtGui, QtWidgets
 from ..theme import theme
 from ..theme.fonts import ui_font
-from .toast_stack import _ToastStack
+from .toast_stack import _ToastStack, _notification_rect
 
 
 class _SuccessIcon(QtWidgets.QWidget):
@@ -98,6 +98,7 @@ class Toast(QtWidgets.QFrame):
         self._arrow_edge: str | None = None
         self._arrow_x = 0.0
         self._positioning = False
+        self._position_host = None
         self._closing = False
         self._allow_close = False
         self._reveal_progress = 1.0
@@ -227,8 +228,18 @@ class Toast(QtWidgets.QFrame):
         try:
             parent = self.parentWidget()
             screen = self.screen() or QtGui.QGuiApplication.primaryScreen()
-            base = parent.rect() if parent is not None else (
+            base = _notification_rect(parent) if parent is not None else (
                 screen.availableGeometry() if screen is not None else QtCore.QRect(0, 0, 1280, 800))
+            content = parent.centralWidget() if isinstance(parent, QtWidgets.QMainWindow) else None
+            if content is not self._position_host:
+                if self._position_host is not None:
+                    try:
+                        self._position_host.removeEventFilter(self)
+                    except RuntimeError:
+                        pass  # A replaced central widget may already be deleted.
+                self._position_host = content
+                if content is not None:
+                    content.installEventFilter(self)
             self.ensurePolished()
             width = min(max(0, base.width()), self.sizeHint().width())
             self.resize(width, min(max(0, base.height()), self.heightForWidth(width)))
@@ -271,9 +282,10 @@ class Toast(QtWidgets.QFrame):
 
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
         if self._placement is not None:
-            if event.type() in (QtCore.QEvent.Type.Resize, QtCore.QEvent.Type.Move):
+            if event.type() in (QtCore.QEvent.Type.Resize, QtCore.QEvent.Type.Move,
+                                QtCore.QEvent.Type.LayoutRequest, QtCore.QEvent.Type.Show):
                 self._position()
-            elif event.type() == QtCore.QEvent.Type.Hide:
+            elif event.type() == QtCore.QEvent.Type.Hide and watched is not self._position_host:
                 self._allow_close = True
                 self.close()
         return super().eventFilter(watched, event)

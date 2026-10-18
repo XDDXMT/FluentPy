@@ -1,6 +1,6 @@
 # Windows 便携工作台
 
-[下载 FluentPy 工作台 0.7.0 · Windows x64](https://github.com/XDDXMT/FluentPy/releases/download/v0.7.0/FluentPy-Workbench-0.7.0-windows-x64.zip)
+[下载 FluentPy 工作台 0.7.1 · Windows x64](https://github.com/XDDXMT/FluentPy/releases/download/v0.7.1/FluentPy-Workbench-0.7.1-windows-x64.zip)
 
 解压整个压缩包，双击 `FluentPy-Workbench/FluentPy-Workbench.exe`。无需安装 Python、PySide6 或编译器，不需要管理员权限。请保留同目录的 `_internal` 文件夹。
 
@@ -16,7 +16,7 @@
 python -B scripts/build_workbench.py
 ```
 
-输出位于 `dist/workbench/0.7.0/`，包含程序文件夹、便携压缩包、`SHA256SUMS.txt` 和构建清单。已有程序目录不会覆盖；重新构建时先保留或移动之前的输出。
+输出位于 `dist/workbench/0.7.1/`，包含程序文件夹、便携压缩包、`SHA256SUMS.txt` 和构建清单。已有程序目录不会覆盖；重新构建时先保留或移动之前的输出。
 
 对解压后的 EXE 执行安装自检：
 

@@ -2,6 +2,8 @@
 
 `ColorToast` 继承现有 `Toast`，复用窗口内表面、关闭按钮、淡入淡出、堆叠与补位。标题、正文使用 Qt 标签，操作按钮直接使用库内 `Button`。
 
+从 0.7.1 起，窗口级吐司在 `FluentWindow`／`QMainWindow` 的中央内容区定位，避免覆盖自定义标题栏；普通吐司、色条通知、任务吐司和消息条共用此定位规则。
+
 独立示例：`python examples/color_toast.py`，或双击 `examples/run_color_toast.bat`。工作台入口：消息与对话框 → 自定义测试 → 组件选择“顶部色条吐司”。工作台以实时预览、简化参数和折叠高级选项为主，下文的完整逐项操作也可在独立示例中测试。
 
 ```python

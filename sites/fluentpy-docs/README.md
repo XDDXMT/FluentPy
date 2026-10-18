@@ -38,7 +38,7 @@ python -m http.server 8767 --bind 0.0.0.0 --directory sites/fluentpy-docs/dist
 | `dist/migration.js`、`dist/migration.css` | Qt → FluentPy 输入框过渡 |
 | `validate_site.py` | 资源、导航、接口、可执行示例和 GIF 验证 |
 
-修改后重新生成内容并验证；`dist/data.js` 是生成文件，不直接编辑。当前组件库源码及 PyPI 发布版本均为 0.7.0，网页从组件库源码读取版本号。
+修改后重新生成内容并验证；`dist/data.js` 是生成文件，不直接编辑。当前组件库源码及 PyPI 发布版本均为 0.7.1，网页从组件库源码读取版本号。
 
 ## 更新真实 Qt 配图
 

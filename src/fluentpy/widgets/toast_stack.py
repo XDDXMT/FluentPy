@@ -3,6 +3,18 @@ import weakref
 from ..qt import QtCore, QtWidgets
 
 
+def _notification_rect(owner):
+    """Return notification bounds in the owner's coordinates, below its chrome."""
+    if isinstance(owner, QtWidgets.QMainWindow):
+        layout = owner.layout()
+        if layout is not None:
+            layout.activate()
+        content = owner.centralWidget()
+        if content is not None:
+            return QtCore.QRect(content.mapTo(owner, QtCore.QPoint()), content.size()).intersected(owner.rect())
+    return owner.rect()
+
+
 class _ToastStack(QtCore.QObject):
     MARGIN=18
     # Share only the empty shadow allowance: painted cards stay 19px apart.
@@ -56,7 +68,7 @@ class _ToastStack(QtCore.QObject):
             items=self.members()
             if not items:return
             owner=self.parent()
-            base=owner.rect() if isinstance(owner,QtWidgets.QWidget) else items[-1]._base_rect
+            base=_notification_rect(owner) if isinstance(owner,QtWidgets.QWidget) else items[-1]._base_rect
             for toast in items:
                 width=min(max(0,base.width()),toast.sizeHint().width())
                 toast.resize(width,min(max(0,base.height()),toast.heightForWidth(width)))
