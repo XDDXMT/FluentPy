@@ -5,10 +5,11 @@ from __future__ import annotations
 import argparse
 from importlib import resources
 import json
+import os
 from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(ROOT / "src"))
 
 from fluentpy import (  # noqa: E402
@@ -783,7 +784,7 @@ class Showcase(FluentWindow):
         body.addWidget(code)
 
         performance = Panel("性能对照", "载入、完整高亮、编辑和滚动分别测量。C 分词提速不等于所有界面操作都会等比例提速。")
-        report_path = ROOT / "benchmarks" / "text-performance.json"
+        report_path = Path(os.environ.get("FLUENTPY_BENCHMARK_REPORT", str(ROOT / "benchmarks" / "text-performance.json")))
         try:
             report = json.loads(report_path.read_text(encoding="utf-8"))
             native = report["summary"]["native"]
@@ -811,11 +812,13 @@ class Showcase(FluentWindow):
 
     def _open_example(self, filename: str) -> None:
         executable = Path(sys.executable)
-        if sys.platform == "win32" and executable.with_name("pythonw.exe").exists():
+        frozen = getattr(sys, "frozen", False)
+        if not frozen and sys.platform == "win32" and executable.with_name("pythonw.exe").exists():
             executable = executable.with_name("pythonw.exe")
         process = QtCore.QProcess(self)
         process.setProgram(str(executable))
-        process.setArguments(["-B", str(ROOT / "examples" / filename)] + (["--dark"] if theme.mode.value == "dark" else []))
+        arguments = ["--example", Path(filename).stem] if frozen else ["-B", str(ROOT / "examples" / filename)]
+        process.setArguments(arguments + (["--dark"] if theme.mode.value == "dark" else []))
         process.setWorkingDirectory(str(ROOT))
         launch_result = process.startDetached()
         started = launch_result[0] if isinstance(launch_result, tuple) else launch_result

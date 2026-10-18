@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
@@ -143,7 +143,7 @@ class TextPerformanceDemo(FluentWindow):
         self._load_previous_report()
 
     def _load_previous_report(self) -> None:
-        path = ROOT / "benchmarks" / "text-performance.json"
+        path = Path(os.environ.get("FLUENTPY_BENCHMARK_REPORT", str(ROOT / "benchmarks" / "text-performance.json")))
         if not path.is_file():
             return
         try:
@@ -205,7 +205,8 @@ class TextPerformanceDemo(FluentWindow):
         self.process.setProcessEnvironment(env)
         self.process.setWorkingDirectory(str(ROOT))
         self.process.setProgram(str(executable))
-        self.process.setArguments(["-B", str(script), "--lines", str(lines), "--repeat", "3", "--json"])
+        command = ["--benchmark"] if getattr(sys, "frozen", False) else ["-B", str(script)]
+        self.process.setArguments(command + ["--lines", str(lines), "--repeat", "3", "--json"])
         self.elapsed.start()
         self.clock.start()
         self.process.start()
@@ -297,7 +298,7 @@ class TextPerformanceDemo(FluentWindow):
         self.progress.setRange(0, 100)
         self.progress.setValue(100)
         self.status.setText("对照完成。下方为独立可编辑示例，完整数据与测量明细已写入报告。")
-        self.report_button.setEnabled((ROOT / "benchmarks" / "text-performance.json").is_file())
+        self.report_button.setEnabled(Path(os.environ.get("FLUENTPY_BENCHMARK_REPORT", str(ROOT / "benchmarks" / "text-performance.json"))).is_file())
 
     def _tick(self) -> None:
         self.time_label.setText(f"已用 {self.elapsed.elapsed() / 1000:.1f} 秒 · 窗口可继续操作")
@@ -321,7 +322,7 @@ class TextPerformanceDemo(FluentWindow):
             detail = self._stderr.strip().splitlines()[-1] if self._stderr.strip() else f"退出状态 {exit_code}"
             self.status.setText("测试未完成：" + detail)
             self.progress.setValue(0)
-        self.report_button.setEnabled((ROOT / "benchmarks" / "text-performance.json").is_file())
+        self.report_button.setEnabled(Path(os.environ.get("FLUENTPY_BENCHMARK_REPORT", str(ROOT / "benchmarks" / "text-performance.json"))).is_file())
 
     def _process_error(self, error) -> None:
         if error == QtCore.QProcess.ProcessError.FailedToStart:
@@ -334,7 +335,7 @@ class TextPerformanceDemo(FluentWindow):
             self.status.setText("无法启动测试进程：" + self.process.errorString())
 
     def open_report(self) -> None:
-        path = ROOT / "benchmarks" / "text-performance.json"
+        path = Path(os.environ.get("FLUENTPY_BENCHMARK_REPORT", str(ROOT / "benchmarks" / "text-performance.json")))
         if path.is_file():
             QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(path)))
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 from fluentpy import (
     Button, ComboBox, ExpandableCardWidget, FluentIcon, GroupHeaderCardWidget,
@@ -30,7 +31,7 @@ ISSUES_URL = REPOSITORY_URL + "/issues"
 
 def _local_declarations() -> str:
     """Read repository notices as text, without opening an external program."""
-    root = Path(__file__).resolve().parents[1]
+    root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
     documents = []
     for name in ("LICENSE", "THIRD_PARTY_NOTICES.md"):
         path = root / name

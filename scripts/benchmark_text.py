@@ -18,7 +18,7 @@ import sys
 import time
 import types
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from benchmark_baseline import dataset_metadata, generate_json
@@ -210,7 +210,8 @@ def run(args):
             environment = dict(os.environ)
             environment["FLUENTPY_BACKEND"] = "python" if backend == "legacy" else backend
             environment["PYTHONIOENCODING"] = "utf-8"
-            completed = subprocess.run([sys.executable, "-B", str(Path(__file__).resolve()), "--worker", backend, "--lines", str(args.lines)], cwd=ROOT, env=environment, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=args.timeout)
+            command = [sys.executable, "--benchmark"] if getattr(sys, "frozen", False) else [sys.executable, "-B", str(Path(__file__).resolve())]
+            completed = subprocess.run(command + ["--worker", backend, "--lines", str(args.lines)], cwd=ROOT, env=environment, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=args.timeout)
             if completed.returncode:
                 raise RuntimeError(f"{backend} failed: {completed.stderr[-4000:]}")
             sample = json.loads(completed.stdout.strip().splitlines()[-1])
@@ -252,7 +253,7 @@ def main():
     parser.add_argument("--repeat", type=int, default=3)
     parser.add_argument("--timeout", type=float, default=45)
     parser.add_argument("--json", action="store_true")
-    parser.add_argument("--output", default=str(ROOT / "benchmarks" / "text-performance.json"))
+    parser.add_argument("--output", default=os.environ.get("FLUENTPY_BENCHMARK_REPORT", str(ROOT / "benchmarks" / "text-performance.json")))
     args = parser.parse_args()
     if not 8 <= args.lines <= 1000000 or not 1 <= args.repeat <= 20 or args.timeout <= 0:
         parser.error("lines must be 8..1000000; repeat 1..20; timeout must be positive")
