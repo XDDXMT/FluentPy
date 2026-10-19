@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluentpy-qt"
-version = "0.7.2"
+version = "0.7.3"
 description = "Independent MIT-licensed Fluent-inspired UI toolkit for Qt for Python."
 readme = "README-PyPI.md"
 requires-python = ">=3.10"

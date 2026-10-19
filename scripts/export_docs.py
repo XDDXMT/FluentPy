@@ -23,7 +23,7 @@ README = """# FluentPy Docs
 
 [官网](https://fluentpy.mcxmcl.cn/) · [组件库源码](https://github.com/XDDXMT/FluentPy) · [文档问题](https://github.com/XDDXMT/FluentPy-Docs/issues)
 
-FluentPy 0.7.2 中文文档的独立开源仓库。首页保留项目简介、Qt 接口演示和 C 流程说明，并展示新版工作台截图。包含网站 HTML、CSS、JavaScript、全部静态页面数据、107 个 Fluent 图标、真实 Qt 控件截图和 GIF，以及内容生成、校验和打包脚本。项目采用 [MIT 许可证](LICENSE)。
+FluentPy 0.7.3 中文文档的独立开源仓库。首页保留项目简介、Qt 接口演示和 C 流程说明，并展示新版工作台截图。包含网站 HTML、CSS、JavaScript、全部静态页面数据、107 个 Fluent 图标、真实 Qt 控件截图和 GIF，以及内容生成、校验和打包脚本。项目采用 [MIT 许可证](LICENSE)。
 
 ## 直接预览
 
