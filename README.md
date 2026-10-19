@@ -4,7 +4,7 @@
 
 FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小馒头** 独立开发，采用 [MIT 许可证](LICENSE)。从输入框、卡片和日期滚轮，到带动画的导航、代码编辑器和消息浮层，可以逐个使用，也可以组合成完整工作台。
 
-界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前源码版本为 **0.7.1**，仍处于早期开发阶段。
+界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前源码版本为 **0.7.2**，仍处于早期开发阶段。
 
 [官方文档](https://fluentpy.mcxmcl.cn/) · [文档源码](https://github.com/XDDXMT/FluentPy-Docs) · [快速开始](#快速开始) · [组件与示例](#组件与示例) · [C 后端与性能](#c-后端与性能) · [问题反馈](https://github.com/XDDXMT/FluentPy/issues)
 
@@ -47,7 +47,7 @@ FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小
 
 需要 **Python 3.10+**。PyPI 安装名为 **`fluentpy-qt`**，代码导入名仍是 **`fluentpy`**。PyPI 上的 `fluentpy` 属于其他项目，不要用它安装本组件库，也不要将两个项目装在同一环境。
 
-**0.7.1 已在 [PyPI](https://pypi.org/project/fluentpy-qt/0.7.1/) 发布**，修复窗口通知覆盖自定义标题栏的问题。已有虚拟环境时，以下命令安装或升级到最新发布版本：
+**0.7.2 新增双行分体按钮**：主区域执行操作，右侧箭头展开选项，第二行可自定义版本或说明。0.7.1 对窗口通知定位的修复继续保留。已有虚拟环境时，以下命令安装或升级到最新发布版本：
 
 ```console
 python -m pip install --upgrade fluentpy-qt
@@ -132,7 +132,7 @@ sys.exit(app.exec())
 
 | 类别 | 主要组件与能力 |
 | --- | --- |
-| 按钮 | 普通／强调／透明图标、状态切换与胶囊筛选、下拉／拆分操作、`LoadingButton` 与动画 `ActionMenu` |
+| 按钮 | 普通／强调／透明图标、状态切换与胶囊筛选、下拉／拆分操作、可显示版本说明的双行 `SplitButton`、`LoadingButton` 与动画 `ActionMenu` |
 | 输入与选择 | `LineEdit`、`AffixLineEdit` 前后缀、`PinCodeEdit` 分格密码／验证码、搜索／密码／多行输入、下拉框、数值输入、复选框和单选按钮 |
 | 日期与时间 | `DatePicker`与`TimePicker`日期／时间滚轮；`CalendarPicker`日历、`DateRangePicker`日期区间、`DateTimePicker`日历与时分秒，支持禁用日期、页内动画与C／Python双后端 |
 | 拖放 | `FileDropWidget`、`FolderDropWidget`、`DropArea`：浏览与拖入本地路径、类型过滤、多选和后台校验 |

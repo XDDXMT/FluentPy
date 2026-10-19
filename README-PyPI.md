@@ -47,6 +47,20 @@ sys.exit(app.exec())
 - 高级右键菜单、消息条、吐司、进度提示和对话框。
 - 拖放、快捷键录制、代码编辑器和音符时间轴。
 
+0.7.2 起，`SplitButton` / `AccentSplitButton` 可同时显示动作文字和自定义说明：
+
+```python
+from fluentpy import AccentSplitButton, ActionMenu
+
+launch = AccentSplitButton("启动游戏", window, description="1.0 · 正式版")
+versions = ActionMenu(window)
+versions.add_action("1.1 · 预览版", callback=lambda: launch.set_description("1.1 · 预览版"))
+launch.set_menu(versions)
+launch.clicked.connect(lambda: print("启动：", launch.description()))
+```
+
+主区域执行操作，箭头独立展开菜单；选择选项仅更新说明。两行内容自动增高，支持主题、鼠标和键盘反馈；不传 `description` 时保持原有单行用法。
+
 工作台和独立示例在源码仓库的 `examples/` 中，可从源码运行 `python examples/showcase.py`。
 wheel 安装的是组件库，不包含示例工作台。
 

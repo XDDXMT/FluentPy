@@ -48,8 +48,8 @@ DESCRIPTIONS = {
     "TransparentIconButton": "32px 透明图标按钮。",
     "DropDownButton": "点击或按方向下键展开页内菜单，箭头随展开状态旋转。",
     "AccentDropDownButton": "强调色下拉操作按钮。",
-    "SplitButton": "左侧触发默认动作，右侧独立展开菜单。",
-    "AccentSplitButton": "强调色拆分按钮。",
+    "SplitButton": "左侧触发默认动作，右侧独立展开菜单；可选第二行显示版本或自定义说明。",
+    "AccentSplitButton": "强调色拆分按钮，可显示动作标题与自定义说明。",
     "LoadingButton": "旋转加载图标与重复点击保护，完成后恢复文本和可用状态。",
     "ActionMenu": "QAction 驱动的窗口内菜单，支持多级子菜单、勾选与互斥、原生控件混排、右键定位和动画。",
     "SystemTrayMenu": "真正的 QMenu，可交给 QSystemTrayIcon，沿用 Qt 托盘菜单行为并跟随 FluentPy 主题。",
@@ -640,6 +640,11 @@ ANIMATED_PREVIEWS = {
         "width": 620, "height": 300,
         "alt": "下拉菜单在窗口内淡入并轻移，箭头旋转；拆分按钮左侧执行保存，右侧独立展开更多动作。",
     },
+    "split-button": {
+        "image": "split-button-light.gif", "poster": "split-button-light.png",
+        "width": 640, "height": 300,
+        "alt": "双行分体按钮：主区域执行启动，箭头展开版本菜单，选择版本后只更新第二行，再次点击主区域执行新版本。",
+    },
     "shortcut-recording": {
         "image": "shortcut-recording-light.gif", "poster": "shortcut-recording-light.png",
         "width": 720, "height": 480,
@@ -964,6 +969,15 @@ menu.add_action("发布到云端", enabled=False)
 export = DropDownButton("导出为", window, menu=menu)
 split = AccentSplitButton("保存", window, menu=menu)
 split.clicked.connect(lambda: print("执行默认保存"))''', "button-menus", note="ActionMenu 在窗口内部展开并支持多级子菜单。shortcut参数显示快捷键提示；实际快捷键注册由应用负责。"),
+        section("split-description", "主操作与选项合体", "SplitButton 和 AccentSplitButton 支持可自定义的第二行文字，用于显示当前版本、导出格式或说明。主区域执行动作，右侧箭头展开已有的高级菜单；选择选项不会触发主动作。省略 description 保持原有单行尺寸。", '''from fluentpy import AccentSplitButton, ActionMenu
+
+launch = AccentSplitButton("启动游戏", window, description="1.0 · 正式版")
+versions = ActionMenu(window)
+for version in ("1.0 · 正式版", "1.1 · 预览版", "本地开发版"):
+    versions.add_action(version, callback=lambda checked=False, value=version:
+                        launch.set_description(value))
+launch.set_menu(versions)
+launch.clicked.connect(lambda: print("启动所选版本：", launch.description()))''', "split-button", note="0.7.2 起提供，可使用 python -m pip install -U fluentpy-qt 升级。set_description / setDescription 更新第二行，空字符串恢复单行；setText 更新主文字。支持图标、亮暗主题、独立悬浮与按压反馈、箭头旋转和键盘操作。工作台“按钮与菜单”包含版本及导出格式示例。"),
         section("loading", "加载与重复点击保护", "LoadingButton 处于加载状态时保持强调色并显示旋转指示，同时使用 Qt 禁用机制阻止鼠标、键盘和程序化 click 再次触发。应用负责真实任务与完成通知；隐藏或父容器禁用时暂停动画。", '''task = LoadingButton("保存更改", window)
 task.set_loading(True, text="正在保存…")
 # 在任务完成后，于Qt界面线程恢复：
@@ -1970,7 +1984,7 @@ for cls in tree.body:
 
 preview_assets = sorted(p for p in (SITE / "dist" / "assets" / "previews").iterdir() if p.suffix.lower() in (".png", ".gif") and p.name != "showcase-light.gif")
 preview_version = hashlib.sha256(b"".join(p.name.encode("utf-8") + b"\0" + p.read_bytes() for p in preview_assets)).hexdigest()[:10]
-data = {"pages": pages, "groups": groups, "api": api, "icons": icons, "sourceDate": "2026-10-18", "version": VERSION, "previewVersion": preview_version, "animatedPreviews": ANIMATED_PREVIEWS}
+data = {"pages": pages, "groups": groups, "api": api, "icons": icons, "sourceDate": "2026-10-19", "version": VERSION, "previewVersion": preview_version, "animatedPreviews": ANIMATED_PREVIEWS}
 (SITE / "dist" / "data.js").write_text("window.DOCS_DATA = " + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8", newline="\n")
 index_path = SITE / "dist" / "index.html"
 index = index_path.read_text(encoding="utf-8")

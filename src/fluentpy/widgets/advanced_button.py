@@ -180,6 +180,17 @@ class _SplitPartMixin:
         rect = super()._paint_rect()
         return rect.adjusted(0, 0, 7, 0) if self._side == "left" else rect.adjusted(-7, 0, 0, 0)
 
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self._side == "right":
+            painter = QtGui.QPainter(self)
+            color = QtGui.QColor("#ffffff" if self._kind == "accent" and theme.mode.value == "light" else theme.tokens.text)
+            color.setAlpha(60 if self._kind == "accent" else 28)
+            if not self.isEnabled():
+                color.setAlpha(18)
+            painter.setPen(QtGui.QPen(color, 1))
+            painter.drawLine(QtCore.QLineF(0.5, 8, 0.5, self.height()-8))
+
     def keyPressEvent(self, event):
         if self._side == "left" and event.key() == QtCore.Qt.Key.Key_Down:
             self.parentWidget().show_menu()
@@ -188,11 +199,103 @@ class _SplitPartMixin:
             super().keyPressEvent(event)
 
 
-class _SplitMain(_SplitPartMixin, Button):
+class _SplitContentMixin:
+    """Optional secondary text shares the main button's native hit target."""
+
+    def __init__(self, text="", parent=None, *, description=""):
+        super().__init__(text, parent)
+        self._description = ""
+        self.set_description(description)
+
+    def description(self):
+        return self._description
+
+    def set_description(self, text):
+        self._description = str(text)
+        self.setAccessibleDescription(self._description)
+        self._update_content_size()
+
+    def _description_font(self):
+        font = QtGui.QFont(self.font())
+        font.setPixelSize(max(10, self.font().pixelSize()-2))
+        return font
+
+    def _title_font(self):
+        font = QtGui.QFont(self.font())
+        font.setWeight(QtGui.QFont.Weight.DemiBold)
+        return font
+
+    def _content_height(self):
+        if not self._description:
+            return 32
+        return max(52, QtGui.QFontMetrics(self._title_font()).height()
+                   + QtGui.QFontMetrics(self._description_font()).height()+18)
+
+    def _update_content_size(self):
+        self.setMinimumHeight(self._content_height())
+        self.updateGeometry()
+        self.update()
+
+    def sizeHint(self):
+        if not getattr(self, "_description", ""):
+            return super().sizeHint()
+        title = QtGui.QFontMetrics(self._title_font()).horizontalAdvance(self.text())
+        description = QtGui.QFontMetrics(self._description_font()).horizontalAdvance(self._description)
+        icon = self.iconSize().width()+10 if not self.icon().isNull() else 0
+        return QtCore.QSize(max(96, max(title, description)+icon+32), self._content_height())
+
+    def minimumSizeHint(self):
+        if not getattr(self, "_description", ""):
+            return super().minimumSizeHint()
+        icon = self.iconSize().width()+10 if not self.icon().isNull() else 0
+        return QtCore.QSize(80+icon, self._content_height())
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() == QtCore.QEvent.Type.FontChange and hasattr(self, "_description"):
+            self._update_content_size()
+
+    def _draw_content(self, painter, rect, color):
+        # The surface extends across the seam to remove the inner corners;
+        # the text remains centered inside the actual main hit target.
+        rect = rect.adjusted(0, 0, -7, 0)
+        if not self._description:
+            super()._draw_content(painter, rect, color)
+            return
+        title_font, description_font = self._title_font(), self._description_font()
+        title_metrics, description_metrics = QtGui.QFontMetrics(title_font), QtGui.QFontMetrics(description_font)
+        content = rect.adjusted(16, 0, -16, 0)
+        icon_width = self.iconSize().width()+10 if not self.icon().isNull() else 0
+        width = max(0, min(content.width()-icon_width,
+                           max(title_metrics.horizontalAdvance(self.text()),
+                               description_metrics.horizontalAdvance(self._description))))
+        left = content.center().x()-(width+icon_width)/2
+        if icon_width:
+            icon_rect = QtCore.QRect(round(left), round(rect.center().y()-self.iconSize().height()/2),
+                                     self.iconSize().width(), self.iconSize().height())
+            self._draw_tinted_icon(painter, icon_rect, color)
+            left += icon_width
+        top = rect.center().y()-(title_metrics.height()+description_metrics.height()+2)/2
+        alignment = QtCore.Qt.AlignmentFlag.AlignCenter
+        painter.setFont(title_font)
+        painter.setPen(color)
+        painter.drawText(QtCore.QRectF(left, top, width, title_metrics.height()), alignment,
+                         title_metrics.elidedText(self.text(), QtCore.Qt.TextElideMode.ElideRight, round(width)))
+        secondary = QtGui.QColor(color if self._kind == "accent" else
+                                theme.tokens.text_muted if self.isEnabled() else theme.tokens.disabled)
+        secondary.setAlphaF(color.alphaF() * (0.82 if self._kind == "accent" else 1.0))
+        painter.setFont(description_font)
+        painter.setPen(secondary)
+        painter.drawText(QtCore.QRectF(left, top+title_metrics.height()+2, width, description_metrics.height()),
+                         alignment, description_metrics.elidedText(self._description,
+                         QtCore.Qt.TextElideMode.ElideRight, round(width)))
+
+
+class _SplitMain(_SplitContentMixin, _SplitPartMixin, Button):
     pass
 
 
-class _AccentSplitMain(_SplitPartMixin, AccentButton):
+class _AccentSplitMain(_SplitContentMixin, _SplitPartMixin, AccentButton):
     pass
 
 
@@ -212,12 +315,13 @@ class SplitButton(QtWidgets.QWidget):
     clicked = Signal()
     _accent = False
 
-    def __init__(self, text="", parent=None, *, menu=None):
+    def __init__(self, text="", parent=None, *, menu=None, description=""):
         super().__init__(parent)
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
-        self.main_button = (_AccentSplitMain if self._accent else _SplitMain)(text, self)
+        self.main_button = (_AccentSplitMain if self._accent else _SplitMain)(text, self, description=description)
         self.menu_button = (_AccentSplitArrow if self._accent else _SplitArrow)(parent=self, menu=menu)
-        self.menu_button.setFixedSize(32, 32)
+        self.main_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.menu_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Expanding)
         self.menu_button._menu_anchor = self
         self.menu_button.setAccessibleName("更多操作")
         self.main_button.clicked.connect(self._clicked)
@@ -227,7 +331,10 @@ class SplitButton(QtWidgets.QWidget):
         row.addWidget(self.main_button, 1)
         row.addWidget(self.menu_button)
         self.setFocusProxy(self.main_button)
-        theme.subscribe(self, self.update)
+        self.setAccessibleName(text)
+        self.setAccessibleDescription(str(description))
+        self._sync_parts()
+        theme.subscribe(self, self._sync_parts)
 
     @Slot()
     def _clicked(self):
@@ -235,6 +342,7 @@ class SplitButton(QtWidgets.QWidget):
 
     def setText(self, text):  # noqa: N802
         self.main_button.setText(text)
+        self.setAccessibleName(text)
         self.updateGeometry()
 
     def text(self):
@@ -246,6 +354,31 @@ class SplitButton(QtWidgets.QWidget):
 
     def icon(self):
         return self.main_button.icon()
+
+    def setIconSize(self, size):  # noqa: N802
+        self.main_button.setIconSize(size)
+        self.updateGeometry()
+
+    def iconSize(self):  # noqa: N802
+        return self.main_button.iconSize()
+
+    def description(self):
+        """Return the optional secondary line, e.g. the selected version."""
+        return self.main_button.description()
+
+    def set_description(self, text):
+        """Change the secondary line without activating either button region."""
+        self.main_button.set_description(text)
+        self.setAccessibleDescription(self.main_button.description())
+        self._sync_parts()
+
+    def setDescription(self, text):  # noqa: N802
+        self.set_description(text)
+
+    def _sync_parts(self):
+        self.menu_button.setFixedWidth(40 if self.description() else 32)
+        self.updateGeometry()
+        self.update()
 
     def set_menu(self, menu):
         self.menu_button.set_menu(menu)
@@ -260,15 +393,10 @@ class SplitButton(QtWidgets.QWidget):
         self.menu_button.show_menu()
 
     def sizeHint(self):
-        return self.main_button.sizeHint()+QtCore.QSize(32, 0)
+        return self.main_button.sizeHint()+QtCore.QSize(self.menu_button.width(), 0)
 
-    def paintEvent(self, event):
-        painter = QtGui.QPainter(self)
-        color = QtGui.QColor("#ffffff" if self._accent and theme.mode.value == "light" else theme.tokens.text)
-        color.setAlpha(70 if self._accent else 30)
-        painter.setPen(QtGui.QPen(color, 1))
-        x = self.main_button.width()
-        painter.drawLine(x, 7, x, self.height()-7)
+    def minimumSizeHint(self):
+        return self.main_button.minimumSizeHint()+QtCore.QSize(self.menu_button.width(), 0)
 
 
 class AccentSplitButton(SplitButton):

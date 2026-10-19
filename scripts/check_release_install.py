@@ -17,7 +17,8 @@ def main():
     os.environ['FLUENTPY_BACKEND'] = 'auto'
     import fluentpy
     from fluentpy import (FluentWindow, AccentButton, AffixLineEdit, PinCodeEdit,
-                          TableView, DatePicker, CodeEdit, InfoBar, FluentIcon, fluent_icon, theme)
+                          TableView, DatePicker, CodeEdit, InfoBar, FluentIcon, fluent_icon, theme,
+                          AccentSplitButton, ActionMenu)
     from fluentpy.backends import text, date, time, calendar, drop, shortcut, color
     from fluentpy.backends import input as segmented
     from fluentpy.qt import QtCore, QtGui, QtWidgets
@@ -79,7 +80,22 @@ def main():
     editor.setPlainText('{"installed":true}')
     window.content_layout.addWidget(editor)
     window.content_layout.addWidget(InfoBar('Installed package', 'Inline message', window))
+    split = AccentSplitButton('Launch', window, description='1.0')
+    versions = ActionMenu(window)
+    choice = versions.add_action('1.1', callback=lambda: split.set_description('1.1'))
+    split.set_menu(versions)
+    split_calls = []
+    split.clicked.connect(lambda: split_calls.append(split.description()))
+    window.content_layout.addWidget(split)
     window.show()
+    split.show_menu()
+    assert versions.isVisible()
+    choice.trigger()
+    versions.dismiss(immediate=True)
+    assert split.description() == '1.1' and not split_calls
+    split.main_button.click()
+    assert split_calls == ['1.1']
+    assert split.menu_button.height() == split.main_button.height() >= 52
     for mode in ('light', 'dark'):
         theme.set_mode(mode)
         app.processEvents()
@@ -91,7 +107,8 @@ def main():
     app.processEvents()
     assert not errors, errors
     report = {'distribution': 'fluentpy-qt', 'version': version, 'package_path': str(package_path),
-              'qt': QtCore.qVersion(), 'backends': backends, 'icons': len(icons), 'qt_errors': errors}
+              'qt': QtCore.qVersion(), 'backends': backends, 'icons': len(icons),
+              'split_button_description': split.description(), 'qt_errors': errors}
     args.report.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(report), flush=True)
 

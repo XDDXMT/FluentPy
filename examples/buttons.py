@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT / 'src'))
 from fluentpy import (ActionMenu, Button, AccentButton, AccentIconButton, TransparentIconButton,
     ToggleButton, ToggleIconButton, PillToggleButton, DropDownButton, AccentDropDownButton,
     SplitButton, AccentSplitButton, LoadingButton, FluentIcon, ToggleSwitch, theme)
-from fluentpy.qt import QtCore, QtWidgets
+from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.theme.fonts import ui_font
 
 
@@ -63,6 +63,17 @@ class ButtonExamples(QtWidgets.QWidget):
             menus.addWidget(widget)
         menus.addStretch()
 
+        compound = self._row('双行分体按钮：主操作 + 选项')
+        self.launch_split = AccentSplitButton('启动游戏', self, description='1.0 · 正式版', menu=self._version_menu())
+        self.launch_split.setMinimumWidth(216)
+        self.launch_split.clicked.connect(lambda: self.result.setText('主操作：启动游戏（'+self.launch_split.description()+'）'))
+        self.format_split = SplitButton('导出文档', self, description='PDF · 当前页面', menu=self._format_menu())
+        self.format_split.setMinimumWidth(216)
+        self.format_split.clicked.connect(lambda: self.result.setText('主操作：导出文档（'+self.format_split.description()+'）'))
+        compound.addWidget(self.launch_split)
+        compound.addWidget(self.format_split)
+        compound.addStretch()
+
         busy = self._row('任务加载与重复点击保护')
         self.loading = LoadingButton('保存更改', self)
         self.loading.clicked.connect(self.start_loading)
@@ -108,6 +119,34 @@ class ButtonExamples(QtWidgets.QWidget):
         menu.add_action('另存为…', icon=FluentIcon.DOCUMENT_SAVE, callback=lambda: self.result.setText('更多操作：另存为'))
         menu.add_action('保存副本', icon=FluentIcon.COPY, callback=lambda: self.result.setText('更多操作：保存副本'))
         return menu
+
+    def _version_menu(self):
+        menu = ActionMenu(self)
+        choices = QtGui.QActionGroup(menu)
+        choices.setExclusive(True)
+        for version in ('1.0 · 正式版', '1.1 · 预览版', '本地开发版'):
+            action = menu.add_action(version, checkable=True, checked=version.startswith('1.0'),
+                                     callback=lambda _checked=False, value=version: self._select_version(value))
+            choices.addAction(action)
+        return menu
+
+    def _select_version(self, version):
+        self.launch_split.set_description(version)
+        self.result.setText('已选择：'+version+'。点击主按钮才会执行启动操作。')
+
+    def _format_menu(self):
+        menu = ActionMenu(self)
+        choices = QtGui.QActionGroup(menu)
+        choices.setExclusive(True)
+        for format_name in ('PDF · 当前页面', 'PNG · 当前页面', 'HTML · 完整文档'):
+            action = menu.add_action(format_name, checkable=True, checked=format_name.startswith('PDF'),
+                callback=lambda _checked=False, value=format_name: self._select_format(value))
+            choices.addAction(action)
+        return menu
+
+    def _select_format(self, format_name):
+        self.format_split.set_description(format_name)
+        self.result.setText('已选择：'+format_name+'。点击主按钮才会执行导出操作。')
 
     def start_loading(self):
         self.loading.set_loading(True, text='正在保存…')

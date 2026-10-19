@@ -50,6 +50,13 @@ def main(destination: Path) -> int:
                     app.processEvents()
                     assert not window.grab().isNull(), route
                     checked.append(mode + ":" + route)
+                    if route == "buttons":
+                        examples = window.button_examples
+                        examples.launch_split.menu().actions()[1].trigger()
+                        assert examples.launch_split.description() == '1.1 · 预览版'
+                        examples.launch_split.main_button.click()
+                        assert '1.1 · 预览版' in examples.result.text()
+                        assert examples.launch_split.menu_button.height() == examples.launch_split.height()
                     if route in ("overview", "tables", "settings"):
                         assert window.grab().save(str(destination.parent / ("frozen-" + route + "-" + mode + ".png")))
             for icon in FluentIcon:
