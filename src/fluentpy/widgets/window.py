@@ -8,12 +8,12 @@ import weakref
 from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..theme import ThemeMode, theme
 from ..theme.fonts import ui_font
-from ..window_effects import apply_system_backdrop, apply_integrated_window_frame
+from ..window_effects import apply_integrated_window_frame, apply_system_backdrop
 
 
 class _NavigationShell(QtWidgets.QWidget):
     def paintEvent(self, event):
-        paint = getattr(self.window(), '_paint_shell_surface', None)
+        paint = getattr(self.window(), "_paint_shell_surface", None)
         if callable(paint):
             painter = QtGui.QPainter(self)
             paint(painter, self)
@@ -23,6 +23,7 @@ class _NavigationShell(QtWidgets.QWidget):
 
 class _ContentCornerClipper(QtCore.QObject):
     """Clip only a child page stack; the native window keeps its system frame."""
+
     def __init__(self, stack):
         super().__init__(stack)
         self._stack_ref = weakref.ref(stack)
@@ -45,8 +46,10 @@ class _ContentCornerClipper(QtCore.QObject):
         stack.setMask(QtGui.QRegion(path.toFillPolygon().toPolygon()))
 
     def eventFilter(self, watched, event):
-        if self.__dict__.get('_stack_ref') is not None and event.type() in (
-                QtCore.QEvent.Type.Resize, QtCore.QEvent.Type.Show):
+        if self.__dict__.get("_stack_ref") is not None and event.type() in (
+            QtCore.QEvent.Type.Resize,
+            QtCore.QEvent.Type.Show,
+        ):
             self._fit()
         return False
 
@@ -102,6 +105,7 @@ class FluentWindow(QtWidgets.QMainWindow):
         self._apply_theme()
         theme.subscribe(self, self._apply_theme)
         from ..theme.transition import WindowThemeTransition
+
         self._theme_transition = WindowThemeTransition(self, theme)
 
     def showEvent(self, event: QtGui.QShowEvent) -> None:
@@ -121,7 +125,11 @@ class FluentWindow(QtWidgets.QMainWindow):
         if self._backdrop_applied:
             painter = QtGui.QPainter(self)
             painter.setCompositionMode(QtGui.QPainter.CompositionMode.CompositionMode_Source)
-            color = self._resolved_shell_color() if self._backdrop_snapshot_depth else QtGui.QColor('transparent')
+            color = (
+                self._resolved_shell_color()
+                if self._backdrop_snapshot_depth
+                else QtGui.QColor("transparent")
+            )
             painter.fillRect(self.rect(), color)
             return
         super().paintEvent(event)
@@ -131,7 +139,9 @@ class FluentWindow(QtWidgets.QMainWindow):
             self._active = self.isActiveWindow()
             theme.set_active(self._active)
             self._apply_backdrop()
-        if event.type() == QtCore.QEvent.Type.WindowStateChange and hasattr(self, "_native_caption"):
+        if event.type() == QtCore.QEvent.Type.WindowStateChange and hasattr(
+            self, "_native_caption"
+        ):
             self._sync_native_caption_area()
             if self._native_windows_platform():
                 self._apply_backdrop()
@@ -155,6 +165,7 @@ class FluentWindow(QtWidgets.QMainWindow):
         """Create and return the window's optional NavigationView."""
         if self._navigation_view is None:
             from .navigation import NavigationView
+
             self._navigation_shell = _NavigationShell(self._root)
             self._navigation_shell.setAttribute(QtCore.Qt.WidgetAttribute.WA_NoSystemBackground)
             layout = QtWidgets.QVBoxLayout(self._navigation_shell)
@@ -164,10 +175,17 @@ class FluentWindow(QtWidgets.QMainWindow):
             self._top_scroll.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
             self._top_scroll.setWidgetResizable(True)
             self._top_scroll.setFixedHeight(54)
-            self._top_scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            self._top_scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            self._top_scroll.setVerticalScrollBarPolicy(
+                QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+            )
+            self._top_scroll.setHorizontalScrollBarPolicy(
+                QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
             from .scroll_bar import FluentScrollBar
-            self._top_scroll.setHorizontalScrollBar(FluentScrollBar(QtCore.Qt.Orientation.Horizontal, self._top_scroll))
+
+            self._top_scroll.setHorizontalScrollBar(
+                FluentScrollBar(QtCore.Qt.Orientation.Horizontal, self._top_scroll)
+            )
             self._top_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
             self._top_scroll.viewport().setAutoFillBackground(False)
             self._top_scroll.hide()
@@ -188,13 +206,21 @@ class FluentWindow(QtWidgets.QMainWindow):
             self._sync_navigation_mode()
         return self._navigation_view
 
-    def add_page(self, widget: QtWidgets.QWidget, text: str, icon: QtGui.QIcon | None = None,
-                 route: str | None = None, position: str = "scroll"):
+    def add_page(
+        self,
+        widget: QtWidgets.QWidget,
+        text: str,
+        icon: QtGui.QIcon | None = None,
+        route: str | None = None,
+        position: str = "scroll",
+    ):
         if not isinstance(widget, QtWidgets.QWidget):
             raise TypeError("page must be a QWidget")
         if widget is self or widget is self._root or widget.isAncestorOf(self):
             raise ValueError("a window or its ancestor cannot be a page")
-        return self.navigation_view().add_sub_interface(widget, icon or QtGui.QIcon(), text, route, position)
+        return self.navigation_view().add_sub_interface(
+            widget, icon or QtGui.QIcon(), text, route, position
+        )
 
     def add_sub_interface(self, widget, icon, text, route_key=None, position="scroll"):
         return self.add_page(widget, text, icon, route_key, position)
@@ -218,8 +244,11 @@ class FluentWindow(QtWidgets.QMainWindow):
     def switch_to(self, widget_or_route, animated: bool = True) -> bool:
         if self._navigation_view is None:
             return False
-        key = (self._navigation_view.route_for_widget(widget_or_route)
-               if isinstance(widget_or_route, QtWidgets.QWidget) else str(widget_or_route))
+        key = (
+            self._navigation_view.route_for_widget(widget_or_route)
+            if isinstance(widget_or_route, QtWidgets.QWidget)
+            else str(widget_or_route)
+        )
         if not key or not self._navigation_view.is_route_visible(key):
             return False
         self._navigation_view.set_current_route(key, animated)
@@ -230,7 +259,7 @@ class FluentWindow(QtWidgets.QMainWindow):
     def _on_route_changed(self, route: str) -> None:
         if route and not self._history_switch:
             if self._history_index < 0 or self._route_history[self._history_index] != route:
-                del self._route_history[self._history_index + 1:]
+                del self._route_history[self._history_index + 1 :]
                 self._route_history.append(route)
                 self._history_index = len(self._route_history) - 1
         if self._top_navigation is not None:
@@ -243,14 +272,16 @@ class FluentWindow(QtWidgets.QMainWindow):
     def _on_routes_changed(self) -> None:
         # Route deletion/hiding must not leave dead entries in the history.
         current = self.current_route()
-        before = self._route_history[:self._history_index + 1]
-        after = self._route_history[self._history_index + 1:]
+        before = self._route_history[: self._history_index + 1]
+        after = self._route_history[self._history_index + 1 :]
         available = self._navigation_view.is_route_visible
         before = [key for key in before if available(key)]
         after = [key for key in after if available(key)]
         self._route_history = before + after
         self._history_index = len(before) - 1
-        if current and (self._history_index < 0 or self._route_history[self._history_index] != current):
+        if current and (
+            self._history_index < 0 or self._route_history[self._history_index] != current
+        ):
             self._route_history = before + [current]
             self._history_index = len(before)
         self._rebuild_top_navigation()
@@ -259,9 +290,11 @@ class FluentWindow(QtWidgets.QMainWindow):
     def _history_target(self, direction: int) -> int:
         index = self._history_index + direction
         while 0 <= index < len(self._route_history):
-            if (self._route_history[index] != self.current_route()
-                    and self._navigation_view is not None
-                    and self._navigation_view.is_route_visible(self._route_history[index])):
+            if (
+                self._route_history[index] != self.current_route()
+                and self._navigation_view is not None
+                and self._navigation_view.is_route_visible(self._route_history[index])
+            ):
                 return index
             index += direction
         return -1
@@ -333,8 +366,11 @@ class FluentWindow(QtWidgets.QMainWindow):
             if self._top_navigation is None:
                 self._rebuild_top_navigation()
             return
-        expanded = (self.width() >= self._navigation_breakpoint
-                    if self._navigation_mode == "auto" else self._navigation_mode == "expanded")
+        expanded = (
+            self.width() >= self._navigation_breakpoint
+            if self._navigation_mode == "auto"
+            else self._navigation_mode == "expanded"
+        )
         if self._navigation_mode != "auto" or expanded != self._last_auto_expanded:
             self._navigation_view.sidebar.set_expanded(expanded)
             self._last_auto_expanded = expanded
@@ -343,6 +379,7 @@ class FluentWindow(QtWidgets.QMainWindow):
         if self._navigation_view is None:
             return
         from .navigation_controls import Pivot
+
         container = QtWidgets.QWidget()
         layout = QtWidgets.QHBoxLayout(container)
         layout.setContentsMargins(16, 0, 16, 0)
@@ -384,6 +421,7 @@ class FluentWindow(QtWidgets.QMainWindow):
             return
         if enabled and self._title_bar is None:
             from .title_bar import FluentTitleBar
+
             self._title_bar = FluentTitleBar(self)
             self._title_bar.destroyed.connect(self._title_bar_destroyed)
             self.setMenuWidget(self._title_bar)
@@ -394,8 +432,8 @@ class FluentWindow(QtWidgets.QMainWindow):
         flags = self.windowFlags()
         frameless = QtCore.Qt.WindowType.FramelessWindowHint
         flags = QtCore.Qt.WindowType(
-            int(flags) | int(frameless) if enabled
-            else int(flags) & ~int(frameless))
+            int(flags) | int(frameless) if enabled else int(flags) & ~int(frameless)
+        )
         self.setWindowFlags(flags)
         if self._title_bar is not None:
             self._title_bar.setVisible(enabled)
@@ -419,8 +457,11 @@ class FluentWindow(QtWidgets.QMainWindow):
     @staticmethod
     def _native_windows_platform() -> bool:
         application = QtWidgets.QApplication.instance()
-        return (sys.platform == "win32" and application is not None
-                and application.platformName().lower() == "windows")
+        return (
+            sys.platform == "win32"
+            and application is not None
+            and application.platformName().lower() == "windows"
+        )
 
     def uses_native_caption_buttons(self) -> bool:
         """True for the default OS frame; an integrated caption is Qt-rendered."""
@@ -438,11 +479,14 @@ class FluentWindow(QtWidgets.QMainWindow):
         visible, geometry, state = self.isVisible(), self.geometry(), self.windowState()
         flags = self.windowFlags()
         flags |= QtCore.Qt.WindowType.CustomizeWindowHint
-        for flag, enabled in ((QtCore.Qt.WindowType.WindowMinimizeButtonHint, minimize),
-                              (QtCore.Qt.WindowType.WindowMaximizeButtonHint, maximize),
-                              (QtCore.Qt.WindowType.WindowCloseButtonHint, close)):
-            flags = QtCore.Qt.WindowType(int(flags) | int(flag) if enabled
-                                        else int(flags) & ~int(flag))
+        for flag, enabled in (
+            (QtCore.Qt.WindowType.WindowMinimizeButtonHint, minimize),
+            (QtCore.Qt.WindowType.WindowMaximizeButtonHint, maximize),
+            (QtCore.Qt.WindowType.WindowCloseButtonHint, close),
+        ):
+            flags = QtCore.Qt.WindowType(
+                int(flags) | int(flag) if enabled else int(flags) & ~int(flag)
+            )
         self.setWindowFlags(flags)
         self.setGeometry(geometry)
         self.setWindowState(state)
@@ -474,26 +518,46 @@ class FluentWindow(QtWidgets.QMainWindow):
         return edges
 
     def eventFilter(self, watched, event):
-        if (event.type() == QtCore.QEvent.Type.Show
-                and self.property('fluentLazyThemeRefresh') is True
-                and isinstance(watched, QtWidgets.QWidget) and watched.window() is self
-                and hasattr(self, '_theme_palette')):
+        if (
+            event.type() == QtCore.QEvent.Type.Show
+            and self.property("fluentLazyThemeRefresh") is True
+            and isinstance(watched, QtWidgets.QWidget)
+            and watched.window() is self
+            and hasattr(self, "_theme_palette")
+        ):
             self._set_widget_theme_palette(watched, self._theme_palette)
-        if (self._title_bar_enabled and not self._native_caption
-                and event.type() in (QtCore.QEvent.Type.MouseMove, QtCore.QEvent.Type.MouseButtonPress)
-                and isinstance(watched, QtWidgets.QWidget) and watched.window() is self):
+        if (
+            self._title_bar_enabled
+            and not self._native_caption
+            and event.type() in (QtCore.QEvent.Type.MouseMove, QtCore.QEvent.Type.MouseButtonPress)
+            and isinstance(watched, QtWidgets.QWidget)
+            and watched.window() is self
+        ):
             point = self.mapFromGlobal(event.globalPosition().toPoint())
             edges = self._resize_edges(point)
             if edges:
                 horizontal = bool(edges & (QtCore.Qt.Edge.LeftEdge | QtCore.Qt.Edge.RightEdge))
                 vertical = bool(edges & (QtCore.Qt.Edge.TopEdge | QtCore.Qt.Edge.BottomEdge))
                 if horizontal and vertical:
-                    same = bool(edges & QtCore.Qt.Edge.LeftEdge) == bool(edges & QtCore.Qt.Edge.TopEdge)
-                    cursor = QtCore.Qt.CursorShape.SizeFDiagCursor if same else QtCore.Qt.CursorShape.SizeBDiagCursor
+                    same = bool(edges & QtCore.Qt.Edge.LeftEdge) == bool(
+                        edges & QtCore.Qt.Edge.TopEdge
+                    )
+                    cursor = (
+                        QtCore.Qt.CursorShape.SizeFDiagCursor
+                        if same
+                        else QtCore.Qt.CursorShape.SizeBDiagCursor
+                    )
                 else:
-                    cursor = QtCore.Qt.CursorShape.SizeHorCursor if horizontal else QtCore.Qt.CursorShape.SizeVerCursor
+                    cursor = (
+                        QtCore.Qt.CursorShape.SizeHorCursor
+                        if horizontal
+                        else QtCore.Qt.CursorShape.SizeVerCursor
+                    )
                 self.setCursor(cursor)
-                if event.type() == QtCore.QEvent.Type.MouseButtonPress and event.button() == QtCore.Qt.MouseButton.LeftButton:
+                if (
+                    event.type() == QtCore.QEvent.Type.MouseButtonPress
+                    and event.button() == QtCore.Qt.MouseButton.LeftButton
+                ):
                     handle = self.windowHandle()
                     if handle is not None and handle.startSystemResize(edges):
                         return True
@@ -502,12 +566,14 @@ class FluentWindow(QtWidgets.QMainWindow):
         return super().eventFilter(watched, event)
 
     def nativeEvent(self, event_type, message):
-        if (getattr(self, '_backdrop_enabled', False) and self._native_windows_platform()):
+        if getattr(self, "_backdrop_enabled", False) and self._native_windows_platform():
             backdrop_message = ctypes.wintypes.MSG.from_address(int(message))
             if backdrop_message.message == 0x0086 and self._backdrop_applied:
                 return True, self._forward_nonclient_activation(
-                    backdrop_message.hWnd, backdrop_message.wParam,
-                    -1 if self._integrated_windows_frame else backdrop_message.lParam)
+                    backdrop_message.hWnd,
+                    backdrop_message.wParam,
+                    -1 if self._integrated_windows_frame else backdrop_message.lParam,
+                )
             if backdrop_message.message in (0x001A, 0x031A, 0x031E, 0x0320, 0x0218):
                 self._backdrop_refresh.start(80)
         if getattr(self, "_integrated_windows_frame", False):
@@ -516,15 +582,25 @@ class FluentWindow(QtWidgets.QMainWindow):
                 # Keep the native styles and DWM shadow, remove only the
                 # separately drawn caption. The Qt bar is the sole caption.
                 if self.isMaximized() and not self.isFullScreen():
+
                     class _MonitorInfo(ctypes.Structure):
-                        _fields_ = [("size", ctypes.wintypes.DWORD),
-                                    ("monitor", ctypes.wintypes.RECT),
-                                    ("work", ctypes.wintypes.RECT),
-                                    ("flags", ctypes.wintypes.DWORD)]
+                        _fields_ = [
+                            ("size", ctypes.wintypes.DWORD),
+                            ("monitor", ctypes.wintypes.RECT),
+                            ("work", ctypes.wintypes.RECT),
+                            ("flags", ctypes.wintypes.DWORD),
+                        ]
+
                     user32 = ctypes.windll.user32
-                    user32.MonitorFromWindow.argtypes = [ctypes.wintypes.HWND, ctypes.wintypes.DWORD]
+                    user32.MonitorFromWindow.argtypes = [
+                        ctypes.wintypes.HWND,
+                        ctypes.wintypes.DWORD,
+                    ]
                     user32.MonitorFromWindow.restype = ctypes.wintypes.HANDLE
-                    user32.GetMonitorInfoW.argtypes = [ctypes.wintypes.HANDLE, ctypes.POINTER(_MonitorInfo)]
+                    user32.GetMonitorInfoW.argtypes = [
+                        ctypes.wintypes.HANDLE,
+                        ctypes.POINTER(_MonitorInfo),
+                    ]
                     monitor = user32.MonitorFromWindow(msg.hWnd, 2)
                     info = _MonitorInfo()
                     info.size = ctypes.sizeof(info)
@@ -534,17 +610,26 @@ class FluentWindow(QtWidgets.QMainWindow):
                         target.right, target.bottom = info.work.right, info.work.bottom
                 return True, 0
             if msg.message == 0x0084:  # WM_NCHITTEST; coordinates are physical.
-                sx = ctypes.c_short(msg.lParam & 0xffff).value
-                sy = ctypes.c_short((msg.lParam >> 16) & 0xffff).value
+                sx = ctypes.c_short(msg.lParam & 0xFFFF).value
+                sy = ctypes.c_short((msg.lParam >> 16) & 0xFFFF).value
                 user32 = ctypes.windll.user32
                 native_point = ctypes.wintypes.POINT(sx, sy)
-                user32.ScreenToClient.argtypes = [ctypes.wintypes.HWND, ctypes.POINTER(ctypes.wintypes.POINT)]
+                user32.ScreenToClient.argtypes = [
+                    ctypes.wintypes.HWND,
+                    ctypes.POINTER(ctypes.wintypes.POINT),
+                ]
                 user32.ScreenToClient(msg.hWnd, ctypes.byref(native_point))
                 ratio = self.devicePixelRatioF()
                 point = QtCore.QPoint(round(native_point.x / ratio), round(native_point.y / ratio))
                 edges = self._resize_edges(point)
-                left, right = bool(edges & QtCore.Qt.Edge.LeftEdge), bool(edges & QtCore.Qt.Edge.RightEdge)
-                top, bottom = bool(edges & QtCore.Qt.Edge.TopEdge), bool(edges & QtCore.Qt.Edge.BottomEdge)
+                left, right = (
+                    bool(edges & QtCore.Qt.Edge.LeftEdge),
+                    bool(edges & QtCore.Qt.Edge.RightEdge),
+                )
+                top, bottom = (
+                    bool(edges & QtCore.Qt.Edge.TopEdge),
+                    bool(edges & QtCore.Qt.Edge.BottomEdge),
+                )
                 if top:
                     return True, 13 if left else 14 if right else 12
                 if bottom:
@@ -555,15 +640,21 @@ class FluentWindow(QtWidgets.QMainWindow):
                 if bar is not None and not bar.isHidden():
                     local = bar.mapFrom(self, point)
                     if bar.rect().contains(local):
-                        if hasattr(bar, "_is_drag_area") and bar._is_drag_area(QtCore.QPointF(local)):
+                        if hasattr(bar, "_is_drag_area") and bar._is_drag_area(
+                            QtCore.QPointF(local)
+                        ):
                             return True, 2  # HTCAPTION: OS move, double click, system menu.
                 return True, 1  # HTCLIENT: normal Qt input and caption buttons.
             if msg.message == 0x00A3 and msg.wParam == 2:  # WM_NCLBUTTONDBLCLK
                 bar = self._title_bar
                 if bar is not None and hasattr(bar, "double_click_enabled"):
                     maximum = getattr(bar, "maximize_button", None)
-                    if (not bar.double_click_enabled() or maximum is None
-                            or maximum.isHidden() or not maximum.isEnabled()):
+                    if (
+                        not bar.double_click_enabled()
+                        or maximum is None
+                        or maximum.isHidden()
+                        or not maximum.isEnabled()
+                    ):
                         return True, 0
         return super().nativeEvent(event_type, message)
 
@@ -602,12 +693,12 @@ class FluentWindow(QtWidgets.QMainWindow):
         """Shared caption/navigation surface, distinct from page content."""
         if self._background_colors is not None:
             return self._resolved_background_color()
-        return QtGui.QColor('#f3f3f3' if theme.mode is ThemeMode.LIGHT else '#202020')
+        return QtGui.QColor("#f3f3f3" if theme.mode is ThemeMode.LIGHT else "#202020")
 
     def _paint_shell_surface(self, painter, surface):
         if self._backdrop_applied and not self._backdrop_snapshot_depth:
             painter.setCompositionMode(QtGui.QPainter.CompositionMode.CompositionMode_Source)
-            painter.fillRect(surface.rect(), QtGui.QColor('transparent'))
+            painter.fillRect(surface.rect(), QtGui.QColor("transparent"))
             return
         painter.fillRect(surface.rect(), self._resolved_shell_color())
 
@@ -624,7 +715,7 @@ class FluentWindow(QtWidgets.QMainWindow):
     @staticmethod
     def _set_widget_theme_palette(widget, palette):
         widget.setPalette(palette)
-        if isinstance(widget, QtWidgets.QLabel) and widget.objectName() == 'muted':
+        if isinstance(widget, QtWidgets.QLabel) and widget.objectName() == "muted":
             widget.setForegroundRole(QtGui.QPalette.ColorRole.PlaceholderText)
 
     def _apply_theme(self) -> None:
@@ -632,17 +723,18 @@ class FluentWindow(QtWidgets.QMainWindow):
         background = self._resolved_background_color().name()
         palette = self.palette()
         for role, color in (
-                (QtGui.QPalette.ColorRole.Window, background),
-                (QtGui.QPalette.ColorRole.WindowText, tokens.text),
-                (QtGui.QPalette.ColorRole.Text, tokens.text),
-                (QtGui.QPalette.ColorRole.Base, tokens.surface),
-                (QtGui.QPalette.ColorRole.AlternateBase, tokens.surface_high),
-                (QtGui.QPalette.ColorRole.Button, tokens.surface),
-                (QtGui.QPalette.ColorRole.ButtonText, tokens.text),
-                (QtGui.QPalette.ColorRole.PlaceholderText, tokens.text_muted),
-                (QtGui.QPalette.ColorRole.Mid, tokens.border),
-                (QtGui.QPalette.ColorRole.Highlight, tokens.accent),
-                (QtGui.QPalette.ColorRole.HighlightedText, '#ffffff')):
+            (QtGui.QPalette.ColorRole.Window, background),
+            (QtGui.QPalette.ColorRole.WindowText, tokens.text),
+            (QtGui.QPalette.ColorRole.Text, tokens.text),
+            (QtGui.QPalette.ColorRole.Base, tokens.surface),
+            (QtGui.QPalette.ColorRole.AlternateBase, tokens.surface_high),
+            (QtGui.QPalette.ColorRole.Button, tokens.surface),
+            (QtGui.QPalette.ColorRole.ButtonText, tokens.text),
+            (QtGui.QPalette.ColorRole.PlaceholderText, tokens.text_muted),
+            (QtGui.QPalette.ColorRole.Mid, tokens.border),
+            (QtGui.QPalette.ColorRole.Highlight, tokens.accent),
+            (QtGui.QPalette.ColorRole.HighlightedText, "#ffffff"),
+        ):
             palette.setColor(role, QtGui.QColor(color))
         self.setPalette(palette)
         self._root.setPalette(palette)
@@ -651,10 +743,9 @@ class FluentWindow(QtWidgets.QMainWindow):
         # rules concern fonts/layout. Propagate colors explicitly without
         # replacing the ancestor sheet and repolishing its whole subtree.
         for widget in self.findChildren(QtWidgets.QWidget):
-            if self.property('fluentLazyThemeRefresh') is not True or widget.isVisible():
+            if self.property("fluentLazyThemeRefresh") is not True or widget.isVisible():
                 self._set_widget_theme_palette(widget, palette)
-        stylesheet = (
-            f"""
+        stylesheet = f"""
 QWidget {{
     font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI";
     font-size: {tokens.font_size}px;
@@ -664,7 +755,6 @@ QLabel {{
     border: none;
 }}
 """
-        )
         if self.styleSheet() != stylesheet:
             self.setStyleSheet(stylesheet)
         if self._title_bar is not None and hasattr(self._title_bar, "refresh_theme"):
@@ -673,13 +763,17 @@ QLabel {{
             self._apply_backdrop()
 
     def _apply_backdrop(self) -> None:
-        mapped = (self.isVisible() and self._native_windows_platform()
-                  and not self.testAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen))
+        mapped = (
+            self.isVisible()
+            and self._native_windows_platform()
+            and not self.testAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen)
+        )
         accepted = apply_system_backdrop(
-            self, theme.tokens.mode, theme.active, self._backdrop_enabled and mapped)
+            self, theme.tokens.mode, theme.active, self._backdrop_enabled and mapped
+        )
         applied = bool(accepted and self._backdrop_enabled and mapped)
         changed = applied != self._backdrop_applied
-        if changed and hasattr(self, '_theme_transition'):
+        if changed and hasattr(self, "_theme_transition"):
             self._theme_transition.finish()
         self._backdrop_applied = applied
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_NoSystemBackground, applied)
@@ -691,8 +785,10 @@ QLabel {{
             apply_integrated_window_frame(self, theme.tokens.mode)
         if applied and changed:
             self._forward_nonclient_activation(
-                int(self.winId()), int(self.isActiveWindow()),
-                -1 if self._integrated_windows_frame else 0)
+                int(self.winId()),
+                int(self.isActiveWindow()),
+                -1 if self._integrated_windows_frame else 0,
+            )
         if changed:
             self.update()
             self._root.update()
@@ -706,7 +802,11 @@ QLabel {{
         # notification to distinguish active wallpaper-tinted Mica from its
         # inactive neutral surface; normal WM_ACTIVATE still reaches Qt.
         procedure = ctypes.windll.user32.DefWindowProcW
-        procedure.argtypes = [ctypes.wintypes.HWND, ctypes.wintypes.UINT,
-                              ctypes.wintypes.WPARAM, ctypes.wintypes.LPARAM]
+        procedure.argtypes = [
+            ctypes.wintypes.HWND,
+            ctypes.wintypes.UINT,
+            ctypes.wintypes.WPARAM,
+            ctypes.wintypes.LPARAM,
+        ]
         procedure.restype = ctypes.c_ssize_t
         return int(procedure(hwnd, 0x0086, active, parameter))

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -55,15 +55,18 @@ class ToastDemo(QtWidgets.QWidget):
             except RuntimeError:
                 pass
         self.message = Toast.success(
-            "Lesson 4", detail="表达敬意吧，表达出敬意，然后迈向回旋的另一个全新阶段！",
-            parent=self, target=self.trigger, timeout_ms=0,
+            "Lesson 4",
+            detail="表达敬意吧，表达出敬意，然后迈向回旋的另一个全新阶段！",
+            parent=self,
+            target=self.trigger,
+            timeout_ms=0,
         )
 
     def _apply_theme(self):
         self.setFont(ui_font(14))
         self.setStyleSheet(
-            f'QWidget#toastDemo {{ background: {"#ffffff" if theme.mode.value == "light" else "#202020"}; }}'
-            f'QLabel {{ color: {theme.tokens.text}; background: transparent; font-size: 14px; }}'
+            f"QWidget#toastDemo {{ background: {'#ffffff' if theme.mode.value == 'light' else '#202020'}; }}"
+            f"QLabel {{ color: {theme.tokens.text}; background: transparent; font-size: 14px; }}"
         )
 
 
@@ -79,10 +82,12 @@ def main():
     if args.screenshot:
         window.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen)
     window.show()
+
     def ready():
         window.show_message()
         if args.screenshot:
             QtCore.QTimer.singleShot(Toast.SHOW_DURATION + 40, capture)
+
     def capture():
         if args.screenshot:
             app.processEvents()
@@ -91,6 +96,7 @@ def main():
                 raise RuntimeError("Unable to save message preview")
             if args.quit_after_screenshot:
                 app.quit()
+
     QtCore.QTimer.singleShot(150, ready)
     return app.exec()
 

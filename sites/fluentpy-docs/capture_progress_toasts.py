@@ -3,15 +3,24 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import sys
 import traceback
 
 from capture_animations import (
-    ROOT, SITE, LOOP_MS, SAMPLE_MS, QTest, QtCore, QtGui, QtWidgets,
-    _capture_font, _font_families, _image, _write_gif,
+    LOOP_MS,
+    ROOT,
+    SAMPLE_MS,
+    SITE,
+    QtCore,
+    QTest,
+    QtWidgets,
+    _capture_font,
+    _font_families,
+    _image,
+    _write_gif,
 )
 from PIL import ImageChops
+
 from fluentpy import Button, ProgressToast, theme
 
 
@@ -31,9 +40,12 @@ class Canvas(QtWidgets.QWidget):
         self.shows, self.orphans = 0, []
 
     def start(self):
-        self.message = ProgressToast.start("正在下载文件，请稍候…", parent=self,
+        self.message = ProgressToast.start(
+            "正在下载文件，请稍候…",
+            parent=self,
             placement="top-left" if self.indeterminate else "bottom-right",
-            indeterminate=self.indeterminate)
+            indeterminate=self.indeterminate,
+        )
         self.message.destroyed.connect(self.released)
 
     def released(self):
@@ -89,8 +101,16 @@ def capture(app, indeterminate):
                 if elapsed >= 2950 and "close" not in actions:
                     QTest.mouseClick(toast.close_button, QtCore.Qt.MouseButton.LeftButton)
                     actions.add("close")
-                states.append({"ms": elapsed, "state": toast.state(), "opacity": toast._opacity.opacity(),
-                    "progress": toast._display_value, "width": toast.width(), "closing": toast._closing})
+                states.append(
+                    {
+                        "ms": elapsed,
+                        "state": toast.state(),
+                        "opacity": toast._opacity.opacity(),
+                        "progress": toast._display_value,
+                        "width": toast.width(),
+                        "closing": toast._closing,
+                    }
+                )
             if elapsed >= 3300:
                 canvas.button.clearFocus()
             frame = _image(canvas)
@@ -120,9 +140,16 @@ def capture(app, indeterminate):
         output = SITE / "dist" / "assets" / "previews"
         poster.save(output / f"{name}.png", optimize=True)
         result = _write_gif(frames, times, output / f"{name}.gif")
-        result.update({"entry_intermediate_frames": len(entering), "exit_intermediate_frames": len(exiting),
-                       "show_events": canvas.shows, "orphan_labels": canvas.orphans, "fonts": fonts,
-                       "states": states})
+        result.update(
+            {
+                "entry_intermediate_frames": len(entering),
+                "exit_intermediate_frames": len(exiting),
+                "show_events": canvas.shows,
+                "orphan_labels": canvas.orphans,
+                "fonts": fonts,
+                "states": states,
+            }
+        )
         return result
     finally:
         timer.stop()
@@ -139,14 +166,28 @@ def main():
     theme.set_mode("light")
     errors = []
     previous_hook = sys.excepthook
-    sys.excepthook = lambda kind, error, tb: errors.append("".join(traceback.format_exception(kind, error, tb)))
+    sys.excepthook = lambda kind, error, tb: errors.append(
+        "".join(traceback.format_exception(kind, error, tb))
+    )
     try:
         results = [capture(app, mode) for mode in (False, True)]
         assert not errors, errors
         report = ROOT / "build" / "progress-toast-capture-validation.json"
         report.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(json.dumps([{key: value for key, value in result.items() if key not in {"states", "encoded_frame_durations_ms"}}
-                          for result in results], ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                [
+                    {
+                        key: value
+                        for key, value in result.items()
+                        if key not in {"states", "encoded_frame_durations_ms"}
+                    }
+                    for result in results
+                ],
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     finally:
         sys.excepthook = previous_hook
 

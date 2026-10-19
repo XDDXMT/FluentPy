@@ -3,30 +3,54 @@
 Run with --light for the light palette. No downloaded artwork is required.
 ResourceCard and GalleryHero are example-local compositions, not new library API.
 """
+
 from __future__ import annotations
 
 import argparse
+import sys
 from importlib import resources
 from pathlib import Path
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from fluentpy import Button, FluentIcon, FluentScrollBar, FluentWindow, ToggleSwitch, fluent_icon, theme
+from fluentpy import (
+    Button,
+    FluentIcon,
+    FluentScrollBar,
+    FluentWindow,
+    ToggleSwitch,
+    fluent_icon,
+    theme,
+)
 from fluentpy.qt import QtCore, QtGui, QtWidgets, Signal
 from fluentpy.theme.fonts import ui_font
 
-
 LINKS = (
-    ("开始使用", "安装组件库，创建你的第一个\nFluentPy 桌面窗口。", None,
-     "https://fluentpy.mcxmcl.cn/#/getting-started"),
-    ("项目源码", "了解实现，参与改进。\n每一处细节都可以由你掌握。", FluentIcon.CODE,
-     "https://github.com/XDDXMT/FluentPy"),
-    ("组件示例", "从按钮到表格，探索布局、\n交互与明暗主题。", FluentIcon.GRID,
-     "https://fluentpy.mcxmcl.cn/#/cards"),
-    ("交流反馈", "分享想法，报告问题，\n让下一次使用更顺手。", FluentIcon.CHAT,
-     "https://github.com/XDDXMT/FluentPy/issues"),
+    (
+        "开始使用",
+        "安装组件库，创建你的第一个\nFluentPy 桌面窗口。",
+        None,
+        "https://fluentpy.mcxmcl.cn/#/getting-started",
+    ),
+    (
+        "项目源码",
+        "了解实现，参与改进。\n每一处细节都可以由你掌握。",
+        FluentIcon.CODE,
+        "https://github.com/XDDXMT/FluentPy",
+    ),
+    (
+        "组件示例",
+        "从按钮到表格，探索布局、\n交互与明暗主题。",
+        FluentIcon.GRID,
+        "https://fluentpy.mcxmcl.cn/#/cards",
+    ),
+    (
+        "交流反馈",
+        "分享想法，报告问题，\n让下一次使用更顺手。",
+        FluentIcon.CHAT,
+        "https://github.com/XDDXMT/FluentPy/issues",
+    ),
 )
 
 
@@ -89,20 +113,30 @@ class Picture(QtWidgets.QWidget):
 
 class GlassButton(Button):
     """Existing Button interactions with a translucent, rounded surface."""
+
     def _radius(self, rect):
         return 12
 
     def _surface_color(self):
-        return (QtGui.QColor(30, 38, 50, 195) if theme.mode.value == "dark"
-                else QtGui.QColor(255, 255, 255, 192))
+        return (
+            QtGui.QColor(30, 38, 50, 195)
+            if theme.mode.value == "dark"
+            else QtGui.QColor(255, 255, 255, 192)
+        )
 
     def _surface_hover_color(self):
-        return (QtGui.QColor(48, 59, 75, 225) if theme.mode.value == "dark"
-                else QtGui.QColor(255, 255, 255, 232))
+        return (
+            QtGui.QColor(48, 59, 75, 225)
+            if theme.mode.value == "dark"
+            else QtGui.QColor(255, 255, 255, 232)
+        )
 
     def _surface_pressed_color(self):
-        return (QtGui.QColor(25, 32, 43, 235) if theme.mode.value == "dark"
-                else QtGui.QColor(235, 241, 248, 230))
+        return (
+            QtGui.QColor(25, 32, 43, 235)
+            if theme.mode.value == "dark"
+            else QtGui.QColor(235, 241, 248, 230)
+        )
 
     def _draw_content(self, painter, rect, color):
         # The ordinary Qt child layout draws the icon and text.
@@ -116,13 +150,13 @@ class GlassButton(Button):
         painter.drawRoundedRect(rect, radius, radius)
 
 
-
 class ResourceCard(GlassButton):
     """A normal keyboard-accessible Button with a translucent custom surface.
 
     The inherited hover/press animations and click semantics remain intact.
     Labels pass mouse events through, so the whole surface is one click target.
     """
+
     def __init__(self, title, description, icon, url, parent=None):
         super().__init__(title, parent)
         self.url = QtCore.QUrl(url)
@@ -130,13 +164,18 @@ class ResourceCard(GlassButton):
         self.setAccessibleDescription(description.replace("\n", " "))
         self.setToolTip(url)
         self.setFixedHeight(232)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         body = QtWidgets.QVBoxLayout(self)
         body.setContentsMargins(24, 24, 24, 20)
         body.setSpacing(0)
         brand = icon is None
-        art = (QtGui.QIcon(str(resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg")))
-               if brand else fluent_icon(icon))
+        art = (
+            QtGui.QIcon(str(resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg")))
+            if brand
+            else fluent_icon(icon)
+        )
         self.picture = Picture(art, 46, self, original=brand)
         body.addWidget(self.picture)
         body.addSpacing(20)
@@ -167,9 +206,9 @@ class ResourceCard(GlassButton):
         self.update()
 
 
-
 class AuroraSurface(QtWidgets.QWidget):
     """Cached original background shared by the landing-page examples."""
+
     def __init__(self, parent=None, *, art_scale=1.0, corner_radius=0):
         super().__init__(parent)
         self.art_scale = art_scale
@@ -215,8 +254,10 @@ class AuroraSurface(QtWidgets.QWidget):
             ribbon.cubicTo(320, 495 + offset, 103, 215 + offset, -90, 402 + offset)
             ribbon.closeSubpath()
             gradient = QtGui.QLinearGradient(70, 390, 1030, 80)
-            gradient.setColorAt(0, QtGui.QColor(20, 195, 203, alpha if dark else round(alpha * .65)))
-            gradient.setColorAt(.45, QtGui.QColor(44, 123, 225, alpha))
+            gradient.setColorAt(
+                0, QtGui.QColor(20, 195, 203, alpha if dark else round(alpha * 0.65))
+            )
+            gradient.setColorAt(0.45, QtGui.QColor(44, 123, 225, alpha))
             gradient.setColorAt(1, QtGui.QColor(153, 111, 230, alpha))
             painter.fillPath(ribbon, gradient)
         edge = QtGui.QPainterPath()
@@ -238,8 +279,10 @@ class AuroraSurface(QtWidgets.QWidget):
         self._background = pixmap
 
     def paintEvent(self, event):
-        if (self._background is None
-                or self._background.devicePixelRatioF() != self.devicePixelRatioF()):
+        if (
+            self._background is None
+            or self._background.devicePixelRatioF() != self.devicePixelRatioF()
+        ):
             self._make_background()
         painter = QtGui.QPainter(self)
         if self.corner_radius:
@@ -247,7 +290,6 @@ class AuroraSurface(QtWidgets.QWidget):
             clip.addRoundedRect(QtCore.QRectF(self.rect()), self.corner_radius, self.corner_radius)
             painter.setClipPath(clip)
         painter.drawPixmap(0, 0, self._background)
-
 
 
 class GalleryHero(AuroraSurface):
@@ -286,7 +328,9 @@ class GalleryHero(AuroraSurface):
         self.cards = []
         for title, detail, icon, url in LINKS:
             card = ResourceCard(title, detail, icon, url, self)
-            card.clicked.connect(lambda checked=False, destination=url: self.activated.emit(destination))
+            card.clicked.connect(
+                lambda checked=False, destination=url: self.activated.emit(destination)
+            )
             self.cards.append(card)
         self.body.addLayout(self.grid)
         self.body.addSpacing(26)
@@ -340,12 +384,13 @@ class GalleryHero(AuroraSurface):
         self.update()
 
 
-
 class GalleryHomeDemo(FluentWindow):
     def __init__(self, *, dark=True):
         theme.set_mode("dark" if dark else "light")
         super().__init__("FluentPy · 欢迎页")
-        self.setWindowIcon(QtGui.QIcon(str(resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg"))))
+        self.setWindowIcon(
+            QtGui.QIcon(str(resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg")))
+        )
         self.resize(1060, 610)
         self.setMinimumSize(380, 420)
         self.set_title_bar_enabled(True)
@@ -395,6 +440,7 @@ def main():
     window.show()
     failures = []
     if args.screenshot:
+
         def capture():
             try:
                 target = args.screenshot.resolve()
@@ -408,6 +454,7 @@ def main():
             finally:
                 if args.quit_after_screenshot or failures:
                     app.quit()
+
         QtCore.QTimer.singleShot(260, capture)
     result = app.exec()
     return 1 if failures else result

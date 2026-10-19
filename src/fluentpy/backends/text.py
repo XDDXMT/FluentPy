@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import re
 from importlib import import_module
+
 from ._compat import select_backend
 
 try:
@@ -29,14 +30,18 @@ else:
         _native_import_error = "The installed fluentpy._native extension has no JSON scanner."
 
 __all__ = [
-    "backend_name", "json_spans", "json_spans_native", "json_spans_python",
-    "native_available", "native_error",
+    "backend_name",
+    "json_spans",
+    "json_spans_native",
+    "json_spans_python",
+    "native_available",
+    "native_error",
 ]
 
 _TOKENS = re.compile(
     r'"(?:\\.|[^"\\])*"'
-    r'|\b(?:true|false|null)\b'
-    r'|(?<![\w.])-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?(?![\w.])'
+    r"|\b(?:true|false|null)\b"
+    r"|(?<![\w.])-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?(?![\w.])"
 )
 
 

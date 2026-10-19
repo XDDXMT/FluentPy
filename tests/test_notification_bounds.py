@@ -1,5 +1,7 @@
 """Window notifications must never cover title bars or other window chrome."""
+
 import os
+
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 import sys
@@ -61,10 +63,12 @@ class NotificationBoundsTests(unittest.TestCase):
                 with self.subTest(notification=notification.__name__, placement=placement):
                     toast = notification("通知", "操作已完成。", parent=window)
                     toast.show_at(placement)
-                    for fraction in (0, .4, 1):
+                    for fraction in (0, 0.4, 1):
                         toast._reveal.setCurrentTime(round(toast.SHOW_DURATION * fraction))
                         self.app.processEvents()
-                        self.assertTrue(self.content_bounds(window).contains(toast.geometry()), toast.geometry())
+                        self.assertTrue(
+                            self.content_bounds(window).contains(toast.geometry()), toast.geometry()
+                        )
                     self.discard(toast)
 
     def test_existing_notification_reflows_when_title_height_or_window_size_changes(self):

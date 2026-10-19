@@ -39,7 +39,9 @@ class _DateWheel(QtWidgets.QWidget):
         self.setFixedHeight(self.ROW_HEIGHT * (2 * self.RADIUS + 1))
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.setAccessibleName("日期滚轮：年、月、日")
-        self.setAccessibleDescription("左右切换列，上下选择，Enter 确认，Escape 取消。也可滚动、拖动或点击日期。")
+        self.setAccessibleDescription(
+            "左右切换列，上下选择，Enter 确认，Escape 取消。也可滚动、拖动或点击日期。"
+        )
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         theme.subscribe(self, self._refresh_theme)
         self._refresh_theme()
@@ -60,10 +62,16 @@ class _DateWheel(QtWidgets.QWidget):
         self._refresh_values()
 
     def _refresh_values(self) -> None:
-        self._values = tuple(calendar.column_values(
-            *self.value, column, radius=self.RADIUS + 1,
-            minimum=self.minimum, maximum=self.maximum,
-        ) for column in range(3))
+        self._values = tuple(
+            calendar.column_values(
+                *self.value,
+                column,
+                radius=self.RADIUS + 1,
+                minimum=self.minimum,
+                maximum=self.maximum,
+            )
+            for column in range(3)
+        )
         self.setAccessibleDescription(
             f"当前 {self.value[0]}年{self.value[1]}月{self.value[2]}日。"
             "左右切换列，上下选择，Enter 确认，Escape 取消。"
@@ -74,7 +82,11 @@ class _DateWheel(QtWidgets.QWidget):
         self.column = column
         previous = self.value
         self.value = calendar.step_date(
-            *self.value, column, steps, minimum=self.minimum, maximum=self.maximum,
+            *self.value,
+            column,
+            steps,
+            minimum=self.minimum,
+            maximum=self.maximum,
         )
         self._refresh_values()
         if animate and self.value != previous:
@@ -167,7 +179,9 @@ class _DateWheel(QtWidgets.QWidget):
         elif key == QtCore.Qt.Key.Key_Escape:
             self.cancelRequested.emit()
         elif key in (QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Right):
-            self.column = (self.column + (1 if key == QtCore.Qt.Key.Key_Right else -1)) % self._column_count()
+            self.column = (
+                self.column + (1 if key == QtCore.Qt.Key.Key_Right else -1)
+            ) % self._column_count()
             self.update()
         elif key in (QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down):
             self.step(self.column, -1 if key == QtCore.Qt.Key.Key_Up else 1)
@@ -186,7 +200,9 @@ class _DateWheel(QtWidgets.QWidget):
         width = self.width() / self._column_count()
         painter.setPen(QtGui.QPen(QtGui.QColor(tokens.border), 1))
         for column in range(1, self._column_count()):
-            painter.drawLine(QtCore.QPointF(column * width, 0), QtCore.QPointF(column * width, self.height()))
+            painter.drawLine(
+                QtCore.QPointF(column * width, 0), QtCore.QPointF(column * width, self.height())
+            )
         selected = QtCore.QRectF(0, self.RADIUS * self.ROW_HEIGHT, self.width(), self.ROW_HEIGHT)
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         accent = QtGui.QColor(tokens.accent)
@@ -202,11 +218,15 @@ class _DateWheel(QtWidgets.QWidget):
                 y = (index - 1) * self.ROW_HEIGHT + self._offsets[column]
                 row_rect = QtCore.QRectF(column * width, y, width, self.ROW_HEIGHT)
                 painter.setPen(QtGui.QColor(tokens.text))
-                painter.drawText(row_rect, QtCore.Qt.AlignmentFlag.AlignCenter, self._format_value(column, value))
+                painter.drawText(
+                    row_rect, QtCore.Qt.AlignmentFlag.AlignCenter, self._format_value(column, value)
+                )
                 painter.save()
                 painter.setClipRect(selected, QtCore.Qt.ClipOperation.IntersectClip)
                 painter.setPen(selected_text)
-                painter.drawText(row_rect, QtCore.Qt.AlignmentFlag.AlignCenter, self._format_value(column, value))
+                painter.drawText(
+                    row_rect, QtCore.Qt.AlignmentFlag.AlignCenter, self._format_value(column, value)
+                )
                 painter.restore()
             painter.restore()
 
@@ -244,7 +264,15 @@ class _DateAction(QtWidgets.QAbstractButton):
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(QtGui.QColor(theme.tokens.surface_high))
             painter.drawRoundedRect(QtCore.QRectF(self.rect()).adjusted(4, 5, -4, -5), 5, 5)
-        painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.text), 1.6, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap, QtCore.Qt.PenJoinStyle.RoundJoin))
+        painter.setPen(
+            QtGui.QPen(
+                QtGui.QColor(theme.tokens.text),
+                1.6,
+                QtCore.Qt.PenStyle.SolidLine,
+                QtCore.Qt.PenCapStyle.RoundCap,
+                QtCore.Qt.PenJoinStyle.RoundJoin,
+            )
+        )
         center = QtCore.QPointF(self.rect().center())
         if self.confirm:
             path = QtGui.QPainterPath(center + QtCore.QPointF(-8, 0))
@@ -263,9 +291,12 @@ class _DatePanel(QtWidgets.QFrame):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         painter.setBrush(QtGui.QColor(theme.tokens.surface))
         painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.border), 1))
-        rect = QtCore.QRectF(self.rect()).adjusted(.5, .5, -.5, -.5)
+        rect = QtCore.QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
         painter.drawRoundedRect(rect, 8, 8)
-        painter.drawLine(QtCore.QPointF(1, self.height() - 48), QtCore.QPointF(self.width() - 1, self.height() - 48))
+        painter.drawLine(
+            QtCore.QPointF(1, self.height() - 48),
+            QtCore.QPointF(self.width() - 1, self.height() - 48),
+        )
 
 
 class _DatePopup(QtWidgets.QFrame):
@@ -273,7 +304,12 @@ class _DatePopup(QtWidgets.QFrame):
     closed = Signal()
 
     def __init__(self, parent) -> None:
-        super().__init__(parent, QtCore.Qt.WindowType.Popup | QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.NoDropShadowWindowHint)
+        super().__init__(
+            parent,
+            QtCore.Qt.WindowType.Popup
+            | QtCore.Qt.WindowType.FramelessWindowHint
+            | QtCore.Qt.WindowType.NoDropShadowWindowHint,
+        )
         self.setObjectName("fluentDatePopup")
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAccessibleName("日期选择器")
@@ -346,10 +382,14 @@ class DatePicker(QtWidgets.QWidget):
         self._column = 0
         calendar.clamp_date(*self._minimum, minimum=self._minimum, maximum=self._maximum)
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.setAccessibleName("日期")
-        self.setAccessibleDescription("点击年、月、日打开日期选择器；使用方向键选择，Enter 确认，Escape 取消。")
+        self.setAccessibleDescription(
+            "点击年、月、日打开日期选择器；使用方向键选择，Enter 确认，Escape 取消。"
+        )
         self._refresh_theme()
         theme.subscribe(self, self._refresh_theme)
 
@@ -380,7 +420,7 @@ class DatePicker(QtWidgets.QWidget):
             self.dateChanged.emit(self.date())
         self._sync_popup()
 
-    def setDate(self, value: QtCore.QDate) -> None:  # noqa: N802
+    def setDate(self, value: QtCore.QDate) -> None:
         self.set_date(value)
 
     def clear(self) -> None:
@@ -410,10 +450,10 @@ class DatePicker(QtWidgets.QWidget):
     def maximum_date(self) -> QtCore.QDate:
         return QtCore.QDate(*self._maximum)
 
-    def setMinimumDate(self, value: QtCore.QDate) -> None:  # noqa: N802
+    def setMinimumDate(self, value: QtCore.QDate) -> None:
         self.set_date_range(value, self.maximum_date())
 
-    def setMaximumDate(self, value: QtCore.QDate) -> None:  # noqa: N802
+    def setMaximumDate(self, value: QtCore.QDate) -> None:
         self.set_date_range(self.minimum_date(), value)
 
     def show_popup(self) -> None:
@@ -429,12 +469,20 @@ class DatePicker(QtWidgets.QWidget):
         self._sync_popup(force=True)
         self._popup.adjustSize()
         # Align the selected wheel row with the collapsed field.
-        selected_y = 16 + self._popup.wheel.RADIUS * self._popup.wheel.ROW_HEIGHT + self._popup.wheel.ROW_HEIGHT // 2
+        selected_y = (
+            16
+            + self._popup.wheel.RADIUS * self._popup.wheel.ROW_HEIGHT
+            + self._popup.wheel.ROW_HEIGHT // 2
+        )
         anchor = self.mapToGlobal(QtCore.QPoint(0, self.height() // 2 - selected_y))
         screen = QtGui.QGuiApplication.screenAt(anchor) or QtWidgets.QApplication.primaryScreen()
         available = screen.availableGeometry() if screen else QtCore.QRect(0, 0, 1280, 800)
-        anchor.setX(max(available.left(), min(anchor.x() - 12, available.right() - self._popup.width() + 1)))
-        anchor.setY(max(available.top(), min(anchor.y(), available.bottom() - self._popup.height() + 1)))
+        anchor.setX(
+            max(available.left(), min(anchor.x() - 12, available.right() - self._popup.width() + 1))
+        )
+        anchor.setY(
+            max(available.top(), min(anchor.y(), available.bottom() - self._popup.height() + 1))
+        )
         self._popup.move(anchor)
         self._popup.setAttribute(
             QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen,
@@ -487,7 +535,11 @@ class DatePicker(QtWidgets.QWidget):
             super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:
-        activate = self._pressed and event.button() == QtCore.Qt.MouseButton.LeftButton and self.rect().contains(event.position().toPoint())
+        activate = (
+            self._pressed
+            and event.button() == QtCore.Qt.MouseButton.LeftButton
+            and self.rect().contains(event.position().toPoint())
+        )
         self._pressed = False
         if activate:
             self.show_popup()
@@ -497,7 +549,13 @@ class DatePicker(QtWidgets.QWidget):
         self.update()
 
     def keyPressEvent(self, event) -> None:
-        if event.key() in (QtCore.Qt.Key.Key_Space, QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_F4):
+        if event.key() in (
+            QtCore.Qt.Key.Key_Space,
+            QtCore.Qt.Key.Key_Return,
+            QtCore.Qt.Key.Key_Enter,
+            QtCore.Qt.Key.Key_Down,
+            QtCore.Qt.Key.Key_F4,
+        ):
             self.show_popup()
             event.accept()
         else:
@@ -509,7 +567,11 @@ class DatePicker(QtWidgets.QWidget):
         super().hideEvent(event)
 
     def changeEvent(self, event) -> None:
-        if event.type() == QtCore.QEvent.Type.EnabledChange and not self.isEnabled() and self._popup is not None:
+        if (
+            event.type() == QtCore.QEvent.Type.EnabledChange
+            and not self.isEnabled()
+            and self._popup is not None
+        ):
             self._popup.close()
         super().changeEvent(event)
 
@@ -518,19 +580,38 @@ class DatePicker(QtWidgets.QWidget):
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         tokens = theme.tokens
-        rect = QtCore.QRectF(self.rect()).adjusted(.5, .5, -.5, -.5)
-        surface = tokens.surface_pressed if self._pressed else tokens.surface_hover if self._hover else tokens.surface
+        rect = QtCore.QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+        surface = (
+            tokens.surface_pressed
+            if self._pressed
+            else tokens.surface_hover
+            if self._hover
+            else tokens.surface
+        )
         painter.setBrush(QtGui.QColor(surface))
         painter.setPen(QtGui.QPen(QtGui.QColor(tokens.border), 1))
         painter.drawRoundedRect(rect, tokens.radius, tokens.radius)
         width = self.width() / 3
         for column in (1, 2):
-            painter.drawLine(QtCore.QPointF(column * width, 1), QtCore.QPointF(column * width, self.height() - 1))
+            painter.drawLine(
+                QtCore.QPointF(column * width, 1), QtCore.QPointF(column * width, self.height() - 1)
+            )
         if self.hasFocus() and self.isEnabled():
             painter.setPen(QtGui.QPen(QtGui.QColor(tokens.accent), 2))
-            painter.drawLine(QtCore.QPointF(5, self.height() - 1), QtCore.QPointF(self.width() - 5, self.height() - 1))
-        values = (f"{self._date.year()}年", f"{self._date.month()}月", f"{self._date.day()}日") if self._date.isValid() else ("年", "月", "日")
+            painter.drawLine(
+                QtCore.QPointF(5, self.height() - 1),
+                QtCore.QPointF(self.width() - 5, self.height() - 1),
+            )
+        values = (
+            (f"{self._date.year()}年", f"{self._date.month()}月", f"{self._date.day()}日")
+            if self._date.isValid()
+            else ("年", "月", "日")
+        )
         color = tokens.text if self._date.isValid() else tokens.text_muted
         painter.setPen(QtGui.QColor(color if self.isEnabled() else tokens.disabled))
         for column, value in enumerate(values):
-            painter.drawText(QtCore.QRectF(column * width, 0, width, self.height()), QtCore.Qt.AlignmentFlag.AlignCenter, value)
+            painter.drawText(
+                QtCore.QRectF(column * width, 0, width, self.height()),
+                QtCore.Qt.AlignmentFlag.AlignCenter,
+                value,
+            )

@@ -1,10 +1,11 @@
 """Compact, actionable overview composed from existing FluentPy controls."""
+
 from importlib import resources
+
+from gallery_home import LINKS, AuroraSurface, GlassButton, Picture, caption, text_color
 
 from fluentpy import Button, FluentIcon, __version__, fluent_icon, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets, Signal
-from gallery_home import AuroraSurface, GlassButton, LINKS, Picture, caption, text_color
-
 
 DESCRIPTIONS = {
     "buttons": "触发动作，展开菜单与右键操作。",
@@ -31,17 +32,28 @@ class QuickLink(GlassButton):
         self.setAccessibleDescription(detail)
         self.setToolTip("浏览下方的组件分类" if target == "catalog" else target)
         self.setFixedHeight(112)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         body = QtWidgets.QVBoxLayout(self)
         body.setContentsMargins(16, 14, 16, 14)
         body.setSpacing(8)
         top = QtWidgets.QHBoxLayout()
         brand = icon is None
-        art = (QtGui.QIcon(str(resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg")))
-               if brand else fluent_icon(icon))
+        art = (
+            QtGui.QIcon(str(resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg")))
+            if brand
+            else fluent_icon(icon)
+        )
         top.addWidget(Picture(art, 25, self, original=brand))
         top.addStretch()
-        top.addWidget(Picture(fluent_icon(FluentIcon.CHEVRON_DOWN if target == "catalog" else FluentIcon.OPEN), 13, self))
+        top.addWidget(
+            Picture(
+                fluent_icon(FluentIcon.CHEVRON_DOWN if target == "catalog" else FluentIcon.OPEN),
+                13,
+                self,
+            )
+        )
         body.addLayout(top)
         self.heading = caption(title, 15, bold=True)
         self.detail = caption(detail, 11)
@@ -67,7 +79,7 @@ class HomeBanner(AuroraSurface):
     activated = Signal(str)
 
     def __init__(self, parent=None):
-        super().__init__(parent, art_scale=.58, corner_radius=14)
+        super().__init__(parent, art_scale=0.58, corner_radius=14)
         self.columns = 0
         self.body = QtWidgets.QVBoxLayout(self)
         self.body.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetNoConstraint)
@@ -87,11 +99,18 @@ class HomeBanner(AuroraSurface):
         self.grid = QtWidgets.QGridLayout()
         self.grid.setSpacing(12)
         self.links = []
-        details = ("安装与第一个窗口", "实现细节与开源协作", "浏览全部组件分类", "分享想法与报告问题")
+        details = (
+            "安装与第一个窗口",
+            "实现细节与开源协作",
+            "浏览全部组件分类",
+            "分享想法与报告问题",
+        )
         for index, (title, _detail, icon, url) in enumerate(LINKS):
             target = "catalog" if index == 2 else url
             link = QuickLink(title, details[index], icon, target, self)
-            link.clicked.connect(lambda checked=False, destination=target: self.activated.emit(destination))
+            link.clicked.connect(
+                lambda checked=False, destination=target: self.activated.emit(destination)
+            )
             self.links.append(link)
         self.body.addLayout(self.grid)
         self.reflow(4)
@@ -148,13 +167,16 @@ class IconBadge(QtWidgets.QWidget):
 
 class ComponentCard(Button):
     """One focusable click target per category; original context actions remain."""
+
     def __init__(self, route, title, icon, parent=None):
         super().__init__(title, parent)
         self.setProperty("componentRoute", route)
         self.setProperty("componentTitle", title)
         self.setAccessibleDescription(DESCRIPTIONS[route])
         self.setFixedHeight(108)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         body = QtWidgets.QHBoxLayout(self)
         body.setContentsMargins(14, 14, 14, 14)
         body.setSpacing(12)
@@ -163,7 +185,9 @@ class ComponentCard(Button):
         text.setSpacing(7)
         self.heading = caption(title, 15, bold=True)
         self.heading.setMinimumWidth(0)
-        self.heading.setSizePolicy(QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred)
+        self.heading.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred
+        )
         self.detail = caption(DESCRIPTIONS[route], 12)
         self.detail.setWordWrap(True)
         self.detail.setMinimumWidth(0)

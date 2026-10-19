@@ -1,8 +1,8 @@
 """Capture actual Qt inputs and FluentPy focus states for the introduction."""
 
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Windows offscreen font discovery misses CJK; hidden native roots retain the
 # system's real fallback fonts without showing a window on the desktop.
@@ -10,6 +10,7 @@ os.environ["QT_QPA_PLATFORM"] = "windows" if sys.platform == "win32" else "offsc
 os.environ["QT_SCALE_FACTOR"] = "2"
 SITE = Path(__file__).resolve().parent
 from source_project import source_root
+
 sys.path.insert(0, str(source_root() / "src"))
 
 from fluentpy import LineEdit, theme
@@ -24,7 +25,9 @@ def main():
     app.setStyle("Fusion")
     app.styleHints().setColorScheme(QtCore.Qt.ColorScheme.Light)
     font = ui_font(14)
-    font.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferAntialias | QtGui.QFont.StyleStrategy.NoSubpixelAntialias)
+    font.setStyleStrategy(
+        QtGui.QFont.StyleStrategy.PreferAntialias | QtGui.QFont.StyleStrategy.NoSubpixelAntialias
+    )
     app.setFont(font)
     app.setPalette(app.style().standardPalette())
     theme.set_mode("light")

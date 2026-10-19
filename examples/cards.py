@@ -3,21 +3,34 @@
 Hidden captures: --screenshot ABSOLUTE_PATH --quit-after-screenshot [--dark].
 The embeddable create_cards_content() factory never changes the global theme.
 """
+
 from __future__ import annotations
 
 import argparse
-from importlib import resources
 import os
-from pathlib import Path
 import sys
+from importlib import resources
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from fluentpy import (
-    AccentButton, Button, CardWidget, ComboBox, ElevatedCardWidget,
-    GroupHeaderCardWidget, HeaderCardWidget, LineEdit, SimpleCardWidget,
-    SpinBox, TextButton, ToggleSwitch, FluentIcon, fluent_icon, theme,
+    AccentButton,
+    Button,
+    CardWidget,
+    ComboBox,
+    ElevatedCardWidget,
+    FluentIcon,
+    GroupHeaderCardWidget,
+    HeaderCardWidget,
+    LineEdit,
+    SimpleCardWidget,
+    SpinBox,
+    TextButton,
+    ToggleSwitch,
+    fluent_icon,
+    theme,
 )
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.theme.fonts import ui_font
@@ -28,8 +41,16 @@ TILES_PREVIEW_SIZE = (440, 168)
 
 class FluentPicture(QtWidgets.QWidget):
     """A bundled SVG, either theme-tinted or displayed in its original colors."""
-    def __init__(self, icon: FluentIcon | QtGui.QIcon, size: int = 64, *, success=False,
-                 preserve_colors=False, parent=None):
+
+    def __init__(
+        self,
+        icon: FluentIcon | QtGui.QIcon,
+        size: int = 64,
+        *,
+        success=False,
+        preserve_colors=False,
+        parent=None,
+    ):
         super().__init__(parent)
         self.icon = fluent_icon(icon) if isinstance(icon, FluentIcon) else QtGui.QIcon(icon)
         self.success = success
@@ -47,7 +68,11 @@ class FluentPicture(QtWidgets.QWidget):
         pixmap = self.icon.pixmap(self.size())
         painter = QtGui.QPainter(pixmap)
         painter.setCompositionMode(QtGui.QPainter.CompositionMode.CompositionMode_SourceIn)
-        color = ("#0f7b0f" if theme.mode.value == "light" else "#6ccb5f") if self.success else theme.tokens.text
+        color = (
+            ("#0f7b0f" if theme.mode.value == "light" else "#6ccb5f")
+            if self.success
+            else theme.tokens.text
+        )
         painter.fillRect(pixmap.rect(), QtGui.QColor(color))
         painter.end()
         painter = QtGui.QPainter(self)
@@ -62,7 +87,9 @@ def emoji_label(text: str, parent=None) -> QtWidgets.QLabel:
     font = QtGui.QFont("Segoe UI Emoji")
     font.setPixelSize(40)
     widget.setFont(font)
-    widget.setStyleSheet('font-family: "Segoe UI Emoji"; font-size: 40px; background: transparent; border: none;')
+    widget.setStyleSheet(
+        'font-family: "Segoe UI Emoji"; font-size: 40px; background: transparent; border: none;'
+    )
     widget.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents)
     return widget
 
@@ -82,6 +109,7 @@ class AppMoreButton(TextButton):
 
 class CardsContent(QtWidgets.QWidget):
     """Embeddable content: no window, scroll container or theme mutation."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("cardsContent")
@@ -118,28 +146,38 @@ class CardsContent(QtWidgets.QWidget):
             row = QtWidgets.QHBoxLayout(card)
             row.setContentsMargins(16, 12, 16, 12)
             row.setSpacing(16)
-            row.addWidget(FluentPicture(art, 40, preserve_colors=isinstance(art, QtGui.QIcon), parent=card))
+            row.addWidget(
+                FluentPicture(art, 40, preserve_colors=isinstance(art, QtGui.QIcon), parent=card)
+            )
             text_widget = QtWidgets.QWidget(card)
-            text_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+            text_widget.setSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+            )
             text = QtWidgets.QVBoxLayout(text_widget)
             text.setContentsMargins(0, 0, 0, 0)
             text.setSpacing(2)
             for value, role in ((name, "appTitle"), (detail, "appDescription")):
                 caption = label(value, role, text_widget)
                 caption.setWordWrap(False)
-                caption.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
+                caption.setSizePolicy(
+                    QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed
+                )
                 text.addWidget(caption)
             row.addWidget(text_widget, 1, QtCore.Qt.AlignmentFlag.AlignVCenter)
             actions = QtWidgets.QHBoxLayout()
             actions.setSpacing(8)
             open_button = Button("打开", card)
             open_button.setFixedSize(80, 32)
-            open_button.clicked.connect(lambda checked=False, n=name: self.report("打开", f"触发了「{n}」的打开操作。"))
+            open_button.clicked.connect(
+                lambda checked=False, n=name: self.report("打开", f"触发了「{n}」的打开操作。")
+            )
             actions.addWidget(open_button, 0, QtCore.Qt.AlignmentFlag.AlignVCenter)
             more = AppMoreButton("•••", card)
             more.setAccessibleName(name + "的更多选项")
             more.setFixedSize(32, 32)
-            more.clicked.connect(lambda checked=False, n=name: self.report("更多", f"触发了「{n}」的更多操作。"))
+            more.clicked.connect(
+                lambda checked=False, n=name: self.report("更多", f"触发了「{n}」的更多操作。")
+            )
             actions.addWidget(more, 0, QtCore.Qt.AlignmentFlag.AlignVCenter)
             row.addLayout(actions)
             apps.addWidget(card)
@@ -190,16 +228,24 @@ class CardsContent(QtWidgets.QWidget):
         self.requirements.header_widget.setFixedHeight(52)
         check_row = QtWidgets.QHBoxLayout()
         check_row.setSpacing(12)
-        check_row.addWidget(FluentPicture(FluentIcon.CHECKMARK_CIRCLE, 26, success=True, parent=self.requirements))
+        check_row.addWidget(
+            FluentPicture(FluentIcon.CHECKMARK_CIRCLE, 26, success=True, parent=self.requirements)
+        )
         check_row.addWidget(label("当前环境已就绪", "bodyStrong", self.requirements), 1)
         self.requirements.body_layout.addLayout(check_row)
-        self.requirements.body_layout.addWidget(label("Windows 10 及以上\nPython 3.10+ · Qt 6", "muted", self.requirements))
-        self.requirements_detail = label("卡片和交互由 Qt 绘制。\n本页演示不运行外部构建或上传。", "muted", self.requirements)
+        self.requirements.body_layout.addWidget(
+            label("Windows 10 及以上\nPython 3.10+ · Qt 6", "muted", self.requirements)
+        )
+        self.requirements_detail = label(
+            "卡片和交互由 Qt 绘制。\n本页演示不运行外部构建或上传。", "muted", self.requirements
+        )
         self.requirements_detail.hide()
         self.requirements.body_layout.addWidget(self.requirements_detail)
         self.details_button = TextButton("查看详情", self.requirements)
         self.details_button.clicked.connect(self._toggle_details)
-        self.requirements.body_layout.addWidget(self.details_button, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
+        self.requirements.body_layout.addWidget(
+            self.details_button, 0, QtCore.Qt.AlignmentFlag.AlignLeft
+        )
         left = QtWidgets.QVBoxLayout()
         left.addWidget(self.requirements)
         left.addStretch()
@@ -209,19 +255,29 @@ class CardsContent(QtWidgets.QWidget):
         self.directory = LineEdit(parent=self.settings)
         self.directory.setText("build/cards-demo")
         self.directory.setFixedWidth(174)
-        self.directory.editingFinished.connect(lambda: self.report("目录", f"构建目录已改为 {self.directory.text()}"))
+        self.directory.editingFinished.connect(
+            lambda: self.report("目录", f"构建目录已改为 {self.directory.text()}")
+        )
         self.terminal = ComboBox(self.settings)
         self.terminal.addItems(["集成终端", "独立终端"])
         self.terminal.setFixedWidth(174)
-        self.terminal.currentTextChanged.connect(lambda value: self.report("终端", f"已选择{value}。"))
+        self.terminal.currentTextChanged.connect(
+            lambda value: self.report("终端", f"已选择{value}。")
+        )
         self.entry = ComboBox(self.settings)
         self.entry.addItems(["examples/cards.py", "examples/main.py", "app.py"])
         self.entry.setFixedWidth(174)
-        self.entry.currentTextChanged.connect(lambda value: self.report("入口", f"入口脚本：{value}"))
+        self.entry.currentTextChanged.connect(
+            lambda value: self.report("入口", f"入口脚本：{value}")
+        )
         self.groups = [
-            self.settings.add_group(FluentIcon.FOLDER, "构建目录", "保存本地演示内容", self.directory),
+            self.settings.add_group(
+                FluentIcon.FOLDER, "构建目录", "保存本地演示内容", self.directory
+            ),
             self.settings.add_group(FluentIcon.CODE, "终端模式", "选择运行时的终端", self.terminal),
-            self.settings.add_group(FluentIcon.DOCUMENT, "入口脚本", "启动时使用的 Python 文件", self.entry),
+            self.settings.add_group(
+                FluentIcon.DOCUMENT, "入口脚本", "启动时使用的 Python 文件", self.entry
+            ),
         ]
         footer = QtWidgets.QWidget(self.settings)
         footer_row = QtWidgets.QHBoxLayout(footer)
@@ -271,12 +327,15 @@ class CardsContent(QtWidgets.QWidget):
         self.report("重置", "已恢复默认设置。")
 
     def _build(self):
-        self.report("构建", f"预览已就绪 · {self.entry.currentText()} · {self.terminal.currentText()} · {self.directory.text()}")
+        self.report(
+            "构建",
+            f"预览已就绪 · {self.entry.currentText()} · {self.terminal.currentText()} · {self.directory.text()}",
+        )
 
     def _apply_theme(self):
         tokens = theme.tokens
         self.setFont(ui_font(14, self.font()))
-        self.setStyleSheet(f'''
+        self.setStyleSheet(f"""
 QWidget#cardsContent {{ background: transparent; }}
 QWidget#tilesPreview {{ background: {tokens.background}; }}
 QLabel {{ color: {tokens.text}; background: transparent; border: none;
@@ -289,7 +348,7 @@ QLabel#muted {{ color: {tokens.text_muted}; font-size: 12px; }}
 QLabel#tileCaption {{ color: {tokens.text_muted}; font-size: 11px; }}
 QLabel#result {{ color: {tokens.accent}; font-size: 12px; padding: 8px 12px;
  background: {tokens.surface}; border: 1px solid {tokens.border}; border-radius: 6px; }}
-''')
+""")
 
 
 def create_cards_content(parent=None) -> QtWidgets.QWidget:
@@ -331,12 +390,12 @@ class CardsDemo(QtWidgets.QWidget):
     def _apply_theme(self):
         tokens = theme.tokens
         self.setFont(ui_font(14, self.font()))
-        self.setStyleSheet(f'''
+        self.setStyleSheet(f"""
 QWidget#cardsDemo, QScrollArea, QScrollArea > QWidget > QWidget {{ background: {tokens.background}; }}
 QLabel {{ color: {tokens.text}; background: transparent; font-family: "Segoe UI Variable Text", "Microsoft YaHei UI"; font-size: 14px; }}
 QLabel#demoTitle {{ font-size: 26px; font-weight: 600; }}
 QLabel#muted {{ color: {tokens.text_muted}; font-size: 12px; }}
-''')
+""")
 
     def fit_preview(self):
         app = QtWidgets.QApplication.instance()
@@ -367,6 +426,7 @@ def main() -> int:
     window.show()
     failures = []
     if args.screenshot:
+
         def save():
             try:
                 window.fit_preview()
@@ -381,6 +441,7 @@ def main() -> int:
             finally:
                 if args.quit_after_screenshot or failures:
                     app.quit()
+
         QtCore.QTimer.singleShot(200, save)
     result = app.exec()
     return 1 if failures else result

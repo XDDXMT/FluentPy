@@ -6,20 +6,21 @@ the Windows Qt platform (for system fonts), with every root marked
 WA_DontShowOnScreen before show(). Only our own QWidget.grab() is captured.
 The JSON printed at the end records real sampling times and encoded GIF timing.
 """
+
 from __future__ import annotations
 
 import argparse
 import io
 import json
 import os
-from pathlib import Path
 import statistics
 import sys
 import traceback
-
+from pathlib import Path
 
 SITE = Path(__file__).resolve().parent
 from source_project import source_root
+
 ROOT = source_root()
 sys.path.insert(0, str(ROOT / "src"))
 
@@ -32,7 +33,7 @@ os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
 from PIL import Image, ImageChops
 
-from fluentpy import Button, QT_API, Toast, theme
+from fluentpy import QT_API, Button, Toast, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.theme.fonts import ui_font
 
@@ -55,8 +56,9 @@ def _capture_font() -> QtGui.QFont:
     font = ui_font(14)
     # Grayscale antialiasing is appropriate for exported bitmap assets. Native
     # ClearType RGB fringes otherwise change colour in an indexed GIF palette.
-    font.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferAntialias |
-                          QtGui.QFont.StyleStrategy.NoSubpixelAntialias)
+    font.setStyleStrategy(
+        QtGui.QFont.StyleStrategy.PreferAntialias | QtGui.QFont.StyleStrategy.NoSubpixelAntialias
+    )
     return font
 
 
@@ -109,15 +111,21 @@ class Canvas(QtWidgets.QWidget):
             self.message = Toast.success("代码已复制", parent=self, timeout_ms=0)
         else:
             self.message = Toast.success(
-                "已保存", detail="灵感已经收好，可以开始下一段创作。",
-                target=self.button, timeout_ms=0,
+                "已保存",
+                detail="灵感已经收好，可以开始下一段创作。",
+                target=self.button,
+                timeout_ms=0,
             )
         assert not self.message.isWindow()
         assert self.message.testAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen)
         self.message.destroyed.connect(self._message_destroyed)
-        self.fonts["message_title"] = _font_families(self.message._title, self.message._title.text())
+        self.fonts["message_title"] = _font_families(
+            self.message._title, self.message._title.text()
+        )
         if self.message._detail.text():
-            self.fonts["message_detail"] = _font_families(self.message._detail, self.message._detail.text())
+            self.fonts["message_detail"] = _font_families(
+                self.message._detail, self.message._detail.text()
+            )
 
     def _message_destroyed(self):
         self.message = None
@@ -143,7 +151,7 @@ def _write_gif(frames: list[Image.Image], elapsed: list[int], path: Path) -> dic
     palette_source = Image.new("RGB", (columns * width, rows * height), "#fafbfc")
     for index, frame in enumerate(unique.values()):
         palette_source.paste(frame, ((index % columns) * width, (index // columns) * height))
-    adaptive = palette_source.quantize(colors=128).getpalette()[:128 * 3]
+    adaptive = palette_source.quantize(colors=128).getpalette()[: 128 * 3]
     # Reserve a neutral ramp so fading dark UI text never maps to icon green.
     neutral = [channel for value in range(128) for channel in (round(value * 255 / 127),) * 3]
     palette = Image.new("P", (1, 1))
@@ -153,8 +161,15 @@ def _write_gif(frames: list[Image.Image], elapsed: list[int], path: Path) -> dic
     # interval independently, so alternating 20/30ms samples keep their timing.
     boundaries = [round(time / 10) * 10 for time in elapsed] + [LOOP_MS]
     durations = [max(10, end - start) for start, end in zip(boundaries, boundaries[1:])]
-    indexed[0].save(path, save_all=True, append_images=indexed[1:], duration=durations,
-                    loop=0, disposal=2, optimize=True)
+    indexed[0].save(
+        path,
+        save_all=True,
+        append_images=indexed[1:],
+        duration=durations,
+        loop=0,
+        disposal=2,
+        optimize=True,
+    )
     size = path.stat().st_size
     if size >= MAX_GIF_BYTES:
         raise RuntimeError(f"Animation exceeds 700 KiB: {path.name}: {size}")
@@ -170,8 +185,11 @@ def _write_gif(frames: list[Image.Image], elapsed: list[int], path: Path) -> dic
         if ImageChops.difference(first, gif.convert("RGB")).getbbox() is not None:
             raise RuntimeError(f"Encoded GIF does not end on its clean initial canvas: {path}")
     return {
-        "gif": str(path), "bytes": size, "dimensions": list(frames[0].size),
-        "sampled_frames": len(frames), "encoded_frames": encoded_frames,
+        "gif": str(path),
+        "bytes": size,
+        "dimensions": list(frames[0].size),
+        "sampled_frames": len(frames),
+        "encoded_frames": encoded_frames,
         "encoded_loop_returns_to_initial_canvas": True,
         "encoded_duration_ms": sum(encoded_durations),
         "encoded_frame_durations_ms": encoded_durations,
@@ -221,13 +239,15 @@ def capture(app: QtWidgets.QApplication, kind: str, output: Path) -> dict:
                 QTest.mouseRelease(canvas.message.close_button, QtCore.Qt.MouseButton.LeftButton)
                 actions.add("close_release")
             message = canvas.message
-            observations.append({
-                "elapsed_ms": elapsed,
-                "opacity": message._opacity.opacity() if message is not None else None,
-                "position": [message.x(), message.y()] if message is not None else None,
-                "closing": bool(message is not None and message._closing),
-                "arrow_edge": message._arrow_edge if message is not None else None,
-            })
+            observations.append(
+                {
+                    "elapsed_ms": elapsed,
+                    "opacity": message._opacity.opacity() if message is not None else None,
+                    "position": [message.x(), message.y()] if message is not None else None,
+                    "closing": bool(message is not None and message._closing),
+                    "arrow_edge": message._arrow_edge if message is not None else None,
+                }
+            )
             frame = _image(canvas)
             if frame.size != (canvas.width(), canvas.height()):
                 raise RuntimeError("Expected 1x widget capture; check Qt scaling settings")
@@ -252,32 +272,57 @@ def capture(app: QtWidgets.QApplication, kind: str, output: Path) -> dict:
         assert canvas.message is None, "Close must finish and DeleteOnClose must recycle the Toast"
         assert poster is not None and canvas.show_events == 1
         assert not canvas.orphan_label_shows
-        entering = [s for s in observations if s["opacity"] is not None and 0 < s["opacity"] < 1 and not s["closing"]]
-        exiting = [s for s in observations if s["opacity"] is not None and 0 < s["opacity"] < 1 and s["closing"]]
-        assert len(entering) >= 4 and len(exiting) >= 3, "Both real animation phases must be captured"
+        entering = [
+            s
+            for s in observations
+            if s["opacity"] is not None and 0 < s["opacity"] < 1 and not s["closing"]
+        ]
+        exiting = [
+            s
+            for s in observations
+            if s["opacity"] is not None and 0 < s["opacity"] < 1 and s["closing"]
+        ]
+        assert len(entering) >= 4 and len(exiting) >= 3, (
+            "Both real animation phases must be captured"
+        )
         assert observations[-1]["opacity"] is None
-        assert ImageChops.difference(frames[0], frames[-1]).getbbox() is None, "Loop must return to its clean initial canvas"
-        assert len({tuple(s["position"]) for s in entering}) > 1, "Entry must include the actual position animation"
+        assert ImageChops.difference(frames[0], frames[-1]).getbbox() is None, (
+            "Loop must return to its clean initial canvas"
+        )
+        assert len({tuple(s["position"]) for s in entering}) > 1, (
+            "Entry must include the actual position animation"
+        )
         if kind == "anchored":
-            assert all(s["arrow_edge"] == "bottom" for s in observations if s["opacity"] is not None)
+            assert all(
+                s["arrow_edge"] == "bottom" for s in observations if s["opacity"] is not None
+            )
         name = f"toast-{kind}-light"
         poster_path = output / f"{name}.png"
         poster.save(poster_path, optimize=True)
         report = _write_gif(frames, times, output / f"{name}.gif")
         intervals = [end - begin for begin, end in zip(times, times[1:])]
-        report.update({
-            "poster": str(poster_path), "poster_bytes": poster_path.stat().st_size,
-            "requested_sample_interval_ms": SAMPLE_MS,
-            "actual_sample_intervals_ms": intervals,
-            "actual_interval_min_ms": min(intervals), "actual_interval_max_ms": max(intervals),
-            "actual_interval_mean_ms": round(statistics.mean(intervals), 3),
-            "show_duration_ms": Toast.SHOW_DURATION, "hide_duration_ms": Toast.HIDE_DURATION,
-            "entry_intermediate_frames": len(entering), "exit_intermediate_frames": len(exiting),
-            "message_show_events": canvas.show_events, "fonts": canvas.fonts,
-            "orphan_label_shows": canvas.orphan_label_shows,
-            "root_hidden_from_desktop": canvas.testAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen),
-            "deleted_after_close": canvas.message is None,
-        })
+        report.update(
+            {
+                "poster": str(poster_path),
+                "poster_bytes": poster_path.stat().st_size,
+                "requested_sample_interval_ms": SAMPLE_MS,
+                "actual_sample_intervals_ms": intervals,
+                "actual_interval_min_ms": min(intervals),
+                "actual_interval_max_ms": max(intervals),
+                "actual_interval_mean_ms": round(statistics.mean(intervals), 3),
+                "show_duration_ms": Toast.SHOW_DURATION,
+                "hide_duration_ms": Toast.HIDE_DURATION,
+                "entry_intermediate_frames": len(entering),
+                "exit_intermediate_frames": len(exiting),
+                "message_show_events": canvas.show_events,
+                "fonts": canvas.fonts,
+                "orphan_label_shows": canvas.orphan_label_shows,
+                "root_hidden_from_desktop": canvas.testAttribute(
+                    QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen
+                ),
+                "deleted_after_close": canvas.message is None,
+            }
+        )
         return report
     finally:
         timer.stop()
@@ -300,10 +345,14 @@ def main() -> int:
     theme.set_active(True)
     errors = []
     previous_hook = sys.excepthook
-    sys.excepthook = lambda kind, error, tb: errors.append("".join(traceback.format_exception(kind, error, tb)))
+    sys.excepthook = lambda kind, error, tb: errors.append(
+        "".join(traceback.format_exception(kind, error, tb))
+    )
     clipboard = app.clipboard()
     mime = clipboard.mimeData()
-    saved_clipboard = {format: bytes(mime.data(format)) for format in mime.formats()} if mime is not None else {}
+    saved_clipboard = (
+        {format: bytes(mime.data(format)) for format in mime.formats()} if mime is not None else {}
+    )
     try:
         reports = [capture(app, kind, args.output_dir) for kind in ("compact", "anchored")]
         if errors:
@@ -315,10 +364,22 @@ def main() -> int:
         clipboard.setMimeData(restored)
         sys.excepthook = previous_hook
     restored_mime = clipboard.mimeData()
-    assert all(bytes(restored_mime.data(format)) == data for format, data in saved_clipboard.items())
-    print(json.dumps({"qt_api": QT_API, "platform": app.platformName(),
-                      "qt_callback_errors": errors, "captures": reports,
-                      "clipboard_restored": True}, ensure_ascii=False, indent=2))
+    assert all(
+        bytes(restored_mime.data(format)) == data for format, data in saved_clipboard.items()
+    )
+    print(
+        json.dumps(
+            {
+                "qt_api": QT_API,
+                "platform": app.platformName(),
+                "qt_callback_errors": errors,
+                "captures": reports,
+                "clipboard_restored": True,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     return 0
 
 

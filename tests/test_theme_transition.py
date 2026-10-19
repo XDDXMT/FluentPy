@@ -1,14 +1,17 @@
 """Atomic palette changes and the rendered whole-window theme transition."""
+
 import os
-os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import unittest
 from unittest.mock import patch
 
 from fluentpy import FluentWindow, LineEdit, theme
-from fluentpy.qt import QtCore, QtGui, QtWidgets, QT_API
+from fluentpy.qt import QT_API, QtCore, QtGui, QtWidgets
 from fluentpy.theme import ThemeManager, ThemeMode
-if QT_API == 'PySide6':
+
+if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
     from PyQt6.QtTest import QTest
@@ -21,12 +24,12 @@ class ThemeTransitionTests(unittest.TestCase):
 
     def setUp(self):
         self.original = theme.tokens
-        theme.set_theme('light', accent=None)
-        self.window = FluentWindow('Theme transition')
+        theme.set_theme("light", accent=None)
+        self.window = FluentWindow("Theme transition")
         self.window.set_title_bar_enabled(True)
         self.window.resize(460, 300)
-        self.field = LineEdit('保留内容')
-        self.field.setText('保留内容')
+        self.field = LineEdit("保留内容")
+        self.field.setText("保留内容")
         self.window.content_layout.addWidget(self.field)
         self.window.content_layout.addStretch()
         self.window.show()
@@ -45,17 +48,28 @@ class ThemeTransitionTests(unittest.TestCase):
     def test_atomic_mode_and_accent_refresh_once_and_bracket_all_subscribers(self):
         manager = ThemeManager()
         events = []
-        manager.modeAboutToChange.connect(lambda tokens: events.append(('before', manager.mode, tokens.custom_accent)))
-        manager.changed.connect(lambda tokens: events.append(('refresh', manager.mode, tokens.custom_accent)))
-        manager.modeChanged.connect(lambda tokens: events.append(('after', manager.mode, tokens.custom_accent)))
-        manager.set_theme('dark', accent='#60cdff')
-        self.assertEqual(events, [('before', ThemeMode.LIGHT, '#60cdff'),
-                                  ('refresh', ThemeMode.DARK, '#60cdff'),
-                                  ('after', ThemeMode.DARK, '#60cdff')])
-        manager.set_theme('dark', accent='#60cdff')
+        manager.modeAboutToChange.connect(
+            lambda tokens: events.append(("before", manager.mode, tokens.custom_accent))
+        )
+        manager.changed.connect(
+            lambda tokens: events.append(("refresh", manager.mode, tokens.custom_accent))
+        )
+        manager.modeChanged.connect(
+            lambda tokens: events.append(("after", manager.mode, tokens.custom_accent))
+        )
+        manager.set_theme("dark", accent="#60cdff")
+        self.assertEqual(
+            events,
+            [
+                ("before", ThemeMode.LIGHT, "#60cdff"),
+                ("refresh", ThemeMode.DARK, "#60cdff"),
+                ("after", ThemeMode.DARK, "#60cdff"),
+            ],
+        )
+        manager.set_theme("dark", accent="#60cdff")
         self.assertEqual(len(events), 3)
         manager.set_accent(None)
-        self.assertEqual(events[-1], ('refresh', ThemeMode.DARK, None))
+        self.assertEqual(events[-1], ("refresh", ThemeMode.DARK, None))
 
     def test_rendered_midpoint_blends_all_backgrounds_and_finishes_at_target(self):
         start = self.pixel()
@@ -89,26 +103,34 @@ class ThemeTransitionTests(unittest.TestCase):
         self.field.setCursorPosition(len(self.field.text()))
         self.window.set_dark(True)
         changes = []
+
         def changed(tokens):
             changes.append(tokens)
+
         theme.changed.connect(changed)
         try:
             transition = self.window._theme_transition
-            self.assertTrue(transition.layer.testAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents))
+            self.assertTrue(
+                transition.layer.testAttribute(
+                    QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents
+                )
+            )
             for position in (40, 80, 120, 160, 200):
                 transition.animation.setCurrentTime(position)
                 self.pixel()
-            QTest.keyClicks(self.field, 'abc')
-            self.assertEqual(self.field.text(), '保留内容abc')
+            QTest.keyClicks(self.field, "abc")
+            self.assertEqual(self.field.text(), "保留内容abc")
             self.assertIs(self.window.focusWidget(), self.field)
             self.assertEqual(changes, [])
             self.app.processEvents()
-            self.assertFalse(transition.is_running(), 'Input reveals live content on the next event turn')
+            self.assertFalse(
+                transition.is_running(), "Input reveals live content on the next event turn"
+            )
         finally:
             theme.changed.disconnect(changed)
 
     def test_click_that_reverses_theme_keeps_its_new_transition(self):
-        button = QtWidgets.QPushButton('Switch theme', self.window)
+        button = QtWidgets.QPushButton("Switch theme", self.window)
         self.window.content_layout.addWidget(button)
         button.clicked.connect(theme.toggle)
         self.app.processEvents()
@@ -123,7 +145,7 @@ class ThemeTransitionTests(unittest.TestCase):
 
     def test_unavailable_target_snapshot_falls_back_without_leaving_updates_disabled(self):
         previous = self.window.grab()
-        with patch.object(self.window, 'grab', side_effect=[previous, QtGui.QPixmap()]):
+        with patch.object(self.window, "grab", side_effect=[previous, QtGui.QPixmap()]):
             self.window.set_dark(True)
         transition = self.window._theme_transition
         self.assertFalse(transition.is_running())
@@ -151,5 +173,5 @@ class ThemeTransitionTests(unittest.TestCase):
         self.assertTrue(self.window.updatesEnabled())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

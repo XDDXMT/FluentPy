@@ -1,8 +1,9 @@
 """Prefer C shortcut policy, falling back to Python; Qt converts key strings."""
 
 from importlib import import_module
-from ._compat import select_backend
+
 from . import _shortcut_python
+from ._compat import select_backend
 
 try:
     _extension = import_module("fluentpy._native")
@@ -11,8 +12,10 @@ except (ImportError, OSError) as error:
     _import_error = str(error)
 else:
     _import_error = None
-    if not all(callable(getattr(_extension, name, None)) for name in
-               ("shortcut_normalize", "shortcut_modifier_labels", "shortcut_conflicts")):
+    if not all(
+        callable(getattr(_extension, name, None))
+        for name in ("shortcut_normalize", "shortcut_modifier_labels", "shortcut_conflicts")
+    ):
         _extension = None
         _import_error = "The installed C extension predates the shortcut backend."
 

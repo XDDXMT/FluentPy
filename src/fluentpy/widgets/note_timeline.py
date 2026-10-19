@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable
 from dataclasses import dataclass
-import math
 from numbers import Integral, Real
 
 from ..qt import QtCore, QtGui, QtWidgets, Signal
@@ -69,7 +69,9 @@ class NoteTimeline(QtWidgets.QWidget):
         self._background: QtGui.QPixmap | None = None
         self._background_key: tuple[int, int, float] | None = None
         self.setMinimumHeight(48)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred
+        )
         self.setAccessibleName("音符时间轴")
         theme.subscribe(self, self._invalidate_background)
 
@@ -96,7 +98,11 @@ class NoteTimeline(QtWidgets.QWidget):
             raise TypeError("notes must contain NoteEvent instances")
         total = 0.0 if duration is None else _seconds(duration, "duration")
         total = max(total, max((note.start + note.duration for note in values), default=0.0))
-        auto_range = (min(note.pitch for note in values), max(note.pitch for note in values)) if values else (48, 85)
+        auto_range = (
+            (min(note.pitch for note in values), max(note.pitch for note in values))
+            if values
+            else (48, 85)
+        )
         self._notes = values
         self._duration = total
         self._auto_pitch_range = auto_range
@@ -166,7 +172,9 @@ class NoteTimeline(QtWidgets.QWidget):
 
     def _make_background(self) -> QtGui.QPixmap:
         ratio = self.devicePixelRatioF()
-        pixmap = QtGui.QPixmap(max(1, math.ceil(self.width() * ratio)), max(1, math.ceil(self.height() * ratio)))
+        pixmap = QtGui.QPixmap(
+            max(1, math.ceil(self.width() * ratio)), max(1, math.ceil(self.height() * ratio))
+        )
         pixmap.setDevicePixelRatio(ratio)
         tokens = theme.tokens
         pixmap.fill(QtGui.QColor(tokens.surface))
@@ -181,12 +189,22 @@ class NoteTimeline(QtWidgets.QWidget):
             if not self._notes:
                 painter.setFont(self.font())
                 painter.setPen(QtGui.QColor(tokens.text_muted))
-                painter.drawText(self.rect().adjusted(8, 0, -8, 0), QtCore.Qt.AlignmentFlag.AlignCenter, self._empty_text)
+                painter.drawText(
+                    self.rect().adjusted(8, 0, -8, 0),
+                    QtCore.Qt.AlignmentFlag.AlignCenter,
+                    self._empty_text,
+                )
                 return pixmap
 
-            palette = self._track_colors or tuple(QtGui.QColor(color) for color in (
-                tokens.accent, "#77bfa3", "#d3a8e8", "#e7bb76",
-            ))
+            palette = self._track_colors or tuple(
+                QtGui.QColor(color)
+                for color in (
+                    tokens.accent,
+                    "#77bfa3",
+                    "#d3a8e8",
+                    "#e7bb76",
+                )
+            )
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             low, high = self.pitch_range()
             width, height = float(self.width()), float(self.height())
@@ -203,11 +221,17 @@ class NoteTimeline(QtWidgets.QWidget):
                     brushes[color_index] = color
                 painter.setBrush(brushes[color_index])
                 x = note.start / self._duration * width if self._duration else 0.0
-                note_width = max(2.0, note.duration / self._duration * width) if self._duration else 2.0
+                note_width = (
+                    max(2.0, note.duration / self._duration * width) if self._duration else 2.0
+                )
                 # End-point impulses retain their minimum width inside the view.
                 x = min(x, max(0.0, width - 2.0))
                 note_width = min(note_width, width - x)
-                y = (high - note.pitch) / (high - low) * vertical_span if high != low else max(0.0, (height - note_height) / 2)
+                y = (
+                    (high - note.pitch) / (high - low) * vertical_span
+                    if high != low
+                    else max(0.0, (height - note_height) / 2)
+                )
                 painter.drawRoundedRect(QtCore.QRectF(x, y, note_width, note_height), 2, 2)
         finally:
             painter.end()
@@ -224,7 +248,14 @@ class NoteTimeline(QtWidgets.QWidget):
             painter.drawPixmap(0, 0, self._background)
             if self._notes and self._duration > 0:
                 x = min(self.width() - 1, self._position / self._duration * self.width())
-                painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.text if self.isEnabled() else theme.tokens.disabled), 1))
+                painter.setPen(
+                    QtGui.QPen(
+                        QtGui.QColor(
+                            theme.tokens.text if self.isEnabled() else theme.tokens.disabled
+                        ),
+                        1,
+                    )
+                )
                 painter.drawLine(int(x), 0, int(x), self.height())
         finally:
             painter.end()

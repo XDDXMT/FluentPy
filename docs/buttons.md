@@ -16,8 +16,7 @@ Windows 双击 `examples/run_buttons.bat`，或在项目根目录运行 `python 
 from fluentpy import ActionMenu, DropDownButton, AccentSplitButton, FluentIcon
 
 menu = ActionMenu(window)
-menu.add_action("另存为…", icon=FluentIcon.DOCUMENT_SAVE,
-                callback=lambda: print("另存为"))
+menu.add_action("另存为…", icon=FluentIcon.DOCUMENT_SAVE, callback=lambda: print("另存为"))
 menu.add_separator()
 menu.add_action("包含说明", checkable=True, checked=True)
 menu.add_action("发布到云端", enabled=False)
@@ -41,8 +40,9 @@ from fluentpy import ActionMenu, AccentSplitButton
 launch = AccentSplitButton("启动游戏", window, description="1.0 · 正式版")
 versions = ActionMenu(window)
 for version in ("1.0 · 正式版", "1.1 · 预览版", "本地开发版"):
-    versions.add_action(version, callback=lambda checked=False, value=version:
-                        launch.set_description(value))
+    versions.add_action(
+        version, callback=lambda checked=False, value=version: launch.set_description(value)
+    )
 launch.set_menu(versions)
 launch.clicked.connect(lambda: print("启动所选版本：", launch.description()))
 ```

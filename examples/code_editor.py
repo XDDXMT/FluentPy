@@ -15,31 +15,37 @@ from fluentpy import Button, CodeEdit, ToggleSwitch, theme  # noqa: E402
 from fluentpy.qt import QtCore, QtGui, QtWidgets  # noqa: E402
 from fluentpy.theme.fonts import ui_font  # noqa: E402
 
-
-SAMPLE = json.dumps({
-    "TotalCount": 2,
-    "RequestId": "27A90792-2B98-5435-8589-A2AF90E6C374",
-    "PageSize": 500,
-    "PageNumber": 1,
-    "Records": [{
-        "RecordName": name,
-        "Comment": "",
-        "SiteId": 594022096258736,
-        "SiteName": "example.com",
-        "RecordSourceType": "Domain",
-        "CreateTime": "2026-01-08T12:24:57Z",
-        "Data": {"Value": "example.com"},
-        "Ttl": 1,
-        "Proxied": True,
-        "RecordType": "CNAME",
-        "UpdateTime": "2026-01-08T12:24:57Z",
-        "BizName": "web",
-        "HostPolicy": "follow_hostname",
-        "RecordId": 4294374396209216 + index,
-        "AuthConf": {},
-        "RecordCname": "",
-    } for index, name in enumerate(("app.example.com", "chat.example.com"))],
-}, ensure_ascii=False, indent=2)
+SAMPLE = json.dumps(
+    {
+        "TotalCount": 2,
+        "RequestId": "27A90792-2B98-5435-8589-A2AF90E6C374",
+        "PageSize": 500,
+        "PageNumber": 1,
+        "Records": [
+            {
+                "RecordName": name,
+                "Comment": "",
+                "SiteId": 594022096258736,
+                "SiteName": "example.com",
+                "RecordSourceType": "Domain",
+                "CreateTime": "2026-01-08T12:24:57Z",
+                "Data": {"Value": "example.com"},
+                "Ttl": 1,
+                "Proxied": True,
+                "RecordType": "CNAME",
+                "UpdateTime": "2026-01-08T12:24:57Z",
+                "BizName": "web",
+                "HostPolicy": "follow_hostname",
+                "RecordId": 4294374396209216 + index,
+                "AuthConf": {},
+                "RecordCname": "",
+            }
+            for index, name in enumerate(("app.example.com", "chat.example.com"))
+        ],
+    },
+    ensure_ascii=False,
+    indent=2,
+)
 
 
 class CodeEditorDemo(QtWidgets.QWidget):
@@ -64,7 +70,9 @@ class CodeEditorDemo(QtWidgets.QWidget):
         footer.addWidget(QtWidgets.QLabel("深色"))
         self.dark_toggle = ToggleSwitch()
         self.dark_toggle.setChecked(theme.mode.value == "dark")
-        self.dark_toggle.toggled.connect(lambda checked: theme.set_mode("dark" if checked else "light"))
+        self.dark_toggle.toggled.connect(
+            lambda checked: theme.set_mode("dark" if checked else "light")
+        )
         footer.addWidget(self.dark_toggle)
         layout.addLayout(footer)
         self.editor.text_edit.cursorPositionChanged.connect(self._update_position)
@@ -98,7 +106,7 @@ class CodeEditorDemo(QtWidgets.QWidget):
         light = theme.mode.value == "light"
         background, text = ("#ffffff", "#697078") if light else ("#191919", "#a7a7a7")
         self.setStyleSheet(
-            f'CodeEditorDemo {{ background: {background}; }}'
+            f"CodeEditorDemo {{ background: {background}; }}"
             f'QLabel {{ color: {text}; font-family: "Segoe UI", "Microsoft YaHei UI"; font-size: 12px; background: transparent; }}'
         )
 

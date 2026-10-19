@@ -1,6 +1,7 @@
 """Constructor visibility includes every QLabel, not only the dialog itself."""
 
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import unittest
@@ -19,7 +20,10 @@ class _LabelLifecycleEvents(QtCore.QObject):
         if isinstance(watched, QtWidgets.QLabel):
             if event.type() == QtCore.QEvent.Type.Show and watched.isWindow():
                 self.top_level_shows.append((watched.text(), watched.parentWidget()))
-            if event.type() == QtCore.QEvent.Type.WinIdChange and watched.windowHandle() is not None:
+            if (
+                event.type() == QtCore.QEvent.Type.WinIdChange
+                and watched.windowHandle() is not None
+            ):
                 self.native_labels.append(watched.text())
         return False
 

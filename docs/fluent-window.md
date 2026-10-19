@@ -29,15 +29,15 @@ from fluentpy import FluentIcon, fluent_icon, CheckBox
 overview = QtWidgets.QWidget()
 overview_layout = QtWidgets.QVBoxLayout(overview)
 overview_layout.addWidget(QtWidgets.QLabel("项目概览"))
-window.add_page(overview, "概览", fluent_icon(FluentIcon.HOME),
-                route="overview", position="header")
+window.add_page(overview, "概览", fluent_icon(FluentIcon.HOME), route="overview", position="header")
 
 document = QtWidgets.QWidget()
 document_layout = QtWidgets.QVBoxLayout(document)
 editor = QtWidgets.QPlainTextEdit()
 document_layout.addWidget(editor)
-window.add_page(document, "项目说明", fluent_icon(FluentIcon.DOCUMENT),
-                route="documents", position="scroll")
+window.add_page(
+    document, "项目说明", fluent_icon(FluentIcon.DOCUMENT), route="documents", position="scroll"
+)
 
 settings = QtWidgets.QWidget()
 settings_layout = QtWidgets.QVBoxLayout(settings)
@@ -45,8 +45,9 @@ dark_mode = CheckBox("深色主题")
 dark_mode.toggled.connect(window.set_dark)
 settings_layout.addWidget(dark_mode)
 settings_layout.addStretch()
-window.add_page(settings, "设置", fluent_icon(FluentIcon.SETTINGS),
-                route="settings", position="bottom")
+window.add_page(
+    settings, "设置", fluent_icon(FluentIcon.SETTINGS), route="settings", position="bottom"
+)
 ```
 
 `header` 位于侧栏顶部固定区，`scroll` 位于中间滚动区，`bottom` 位于底部固定区；`top` 是原有滚动入口的位置别名。可以继续用 `window.navigation_view().sidebar.set_header_widget(...)` 放置搜索框，或使用 `set_footer_widget(...)` 放置账户等普通控件。

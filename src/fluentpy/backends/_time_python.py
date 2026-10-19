@@ -55,7 +55,11 @@ def column_values(hour, minute, column, radius=4, use_12_hour=False):
     column = _bounded(column, "column", 0, 2 if use_12_hour else 1)
     radius = _bounded(radius, "radius", 0, 100)
     if column == 2:
-        return tuple(value if 0 <= value <= 1 else None
-                     for value in range(period-radius, period+radius+1))
-    value, lower, count = (minute, 0, 60) if column == 1 else (display, 1, 12) if use_12_hour else (display, 0, 24)
-    return tuple((value-lower+offset) % count + lower for offset in range(-radius, radius+1))
+        return tuple(
+            value if 0 <= value <= 1 else None
+            for value in range(period - radius, period + radius + 1)
+        )
+    value, lower, count = (
+        (minute, 0, 60) if column == 1 else (display, 1, 12) if use_12_hour else (display, 0, 24)
+    )
+    return tuple((value - lower + offset) % count + lower for offset in range(-radius, radius + 1))

@@ -1,6 +1,7 @@
-"""An animated in-window action menu using real Qt actions and buttons."""
+"""Action menus displayed within an owning Qt window."""
 
 from __future__ import annotations
+
 import weakref
 
 from ..icons import FluentIcon, fluent_icon
@@ -9,6 +10,7 @@ from ..theme import theme
 from ..theme.fonts import ui_font
 from .button import TextButton
 from .scroll_bar import FluentScrollBar
+from .system_tray_menu import SystemTrayMenu as SystemTrayMenu
 
 
 class _MenuSurface(QtWidgets.QWidget):
@@ -21,7 +23,9 @@ class _MenuSurface(QtWidgets.QWidget):
         painter.save()
         painter.translate(0, 2)
         for spread in range(10, 0, -1):
-            painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 1 if theme.mode.value == "light" else 2), spread))
+            painter.setPen(
+                QtGui.QPen(QtGui.QColor(0, 0, 0, 1 if theme.mode.value == "light" else 2), spread)
+            )
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.drawPath(path)
         painter.restore()
@@ -78,10 +82,16 @@ class _MenuRow(TextButton):
         self.ensurePolished()
         metrics = self.fontMetrics()
         shortcut = self.action.shortcut().toString(QtGui.QKeySequence.SequenceFormat.NativeText)
-        trailing = (16 if self.submenu is not None else metrics.horizontalAdvance(shortcut)) if (self.submenu is not None or shortcut) else 0
+        trailing = (
+            (16 if self.submenu is not None else metrics.horizontalAdvance(shortcut))
+            if (self.submenu is not None or shortcut)
+            else 0
+        )
         # Match the painter: 10 left, 25 icon column, 12 right, optional 18
         # before a shortcut, plus the two half-pixel button boundaries.
-        return metrics.horizontalAdvance(self._label_text()) + 49 + trailing + (18 if shortcut else 0)
+        return (
+            metrics.horizontalAdvance(self._label_text()) + 49 + trailing + (18 if shortcut else 0)
+        )
 
     def enterEvent(self, event):
         self.entered.emit()
@@ -105,30 +115,55 @@ class _MenuRow(TextButton):
         if radio:
             painter.setBrush(color)
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
-            painter.drawEllipse(QtCore.QPointF(x+8, rect.center().y()), 3.5, 3.5)
+            painter.drawEllipse(QtCore.QPointF(x + 8, rect.center().y()), 3.5, 3.5)
             painter.setPen(color)
         elif not icon.isNull():
-            self._draw_tinted_icon(painter, QtCore.QRect(round(x), round(rect.center().y()-8), 16, 16), color, icon)
+            self._draw_tinted_icon(
+                painter, QtCore.QRect(round(x), round(rect.center().y() - 8), 16, 16), color, icon
+            )
         x += 25
         shortcut = self.action.shortcut().toString(QtGui.QKeySequence.SequenceFormat.NativeText)
-        width = 16 if self.submenu is not None else self.fontMetrics().horizontalAdvance(shortcut) if shortcut else 0
-        text_rect = QtCore.QRectF(x, rect.top(), max(0, rect.right()-x-12-width-(18 if shortcut else 0)), rect.height())
-        painter.drawText(text_rect, QtCore.Qt.AlignmentFlag.AlignVCenter,
-                         self.fontMetrics().elidedText(self._label_text(),
-                                                      QtCore.Qt.TextElideMode.ElideRight, round(text_rect.width())))
+        width = (
+            16
+            if self.submenu is not None
+            else self.fontMetrics().horizontalAdvance(shortcut)
+            if shortcut
+            else 0
+        )
+        text_rect = QtCore.QRectF(
+            x,
+            rect.top(),
+            max(0, rect.right() - x - 12 - width - (18 if shortcut else 0)),
+            rect.height(),
+        )
+        painter.drawText(
+            text_rect,
+            QtCore.Qt.AlignmentFlag.AlignVCenter,
+            self.fontMetrics().elidedText(
+                self._label_text(), QtCore.Qt.TextElideMode.ElideRight, round(text_rect.width())
+            ),
+        )
         if self.submenu is not None:
-            cx, cy = rect.right()-14, rect.center().y()
-            painter.setPen(QtGui.QPen(color, 1.3, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
-            painter.drawLine(QtCore.QLineF(cx-2, cy-4, cx+2, cy))
-            painter.drawLine(QtCore.QLineF(cx+2, cy, cx-2, cy+4))
+            cx, cy = rect.right() - 14, rect.center().y()
+            painter.setPen(
+                QtGui.QPen(color, 1.3, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
+            )
+            painter.drawLine(QtCore.QLineF(cx - 2, cy - 4, cx + 2, cy))
+            painter.drawLine(QtCore.QLineF(cx + 2, cy, cx - 2, cy + 4))
         elif shortcut:
-            painter.setPen(QtGui.QColor(theme.tokens.text_muted if self.isEnabled() else theme.tokens.disabled))
-            painter.drawText(QtCore.QRectF(rect.right()-12-width, rect.top(), width, rect.height()),
-                             QtCore.Qt.AlignmentFlag.AlignVCenter, shortcut)
+            painter.setPen(
+                QtGui.QColor(theme.tokens.text_muted if self.isEnabled() else theme.tokens.disabled)
+            )
+            painter.drawText(
+                QtCore.QRectF(rect.right() - 12 - width, rect.top(), width, rect.height()),
+                QtCore.Qt.AlignmentFlag.AlignVCenter,
+                shortcut,
+            )
 
 
 class _SubmenuLink(QtCore.QObject):
     """A Qt-owned receiver avoids touching a deleted submenu wrapper."""
+
     def __init__(self, owner, action, menu):
         super().__init__(owner)
         self.action, self.menu = action, menu
@@ -153,7 +188,7 @@ class _SubmenuLink(QtCore.QObject):
 
 
 class ActionMenu(QtWidgets.QWidget):
-    """A small action list anchored inside its owner window, without a popup HWND.
+    """An action list anchored within its owning window.
 
     Qt actions retain their enabled, visible, checkable, icon and shortcut state.
     Submenus and inline QWidgetAction items share the same popup lifecycle.
@@ -224,7 +259,17 @@ class ActionMenu(QtWidgets.QWidget):
         theme.subscribe(self, self._apply_theme)
         self.hide()
 
-    def add_action(self, text, *, icon=None, callback=None, checkable=False, checked=False, enabled=True, shortcut=""):
+    def add_action(
+        self,
+        text,
+        *,
+        icon=None,
+        callback=None,
+        checkable=False,
+        checked=False,
+        enabled=True,
+        shortcut="",
+    ):
         action = QtGui.QAction(str(text), self)
         if icon is not None:
             action.setIcon(fluent_icon(icon) if isinstance(icon, FluentIcon) else icon)
@@ -237,7 +282,7 @@ class ActionMenu(QtWidgets.QWidget):
             action.triggered.connect(callback)
         return self.addAction(action)
 
-    def addAction(self, action):  # noqa: N802
+    def addAction(self, action):
         if self._custom_content is not None:
             raise ValueError("custom content and action rows cannot be mixed")
         if isinstance(action, str):
@@ -250,21 +295,21 @@ class ActionMenu(QtWidgets.QWidget):
             QtWidgets.QWidget.addAction(self, action)
         return action
 
-    def addActions(self, actions):  # noqa: N802
+    def addActions(self, actions):
         for action in actions:
             self.addAction(action)
 
     def title(self):
         return self._title
 
-    def setTitle(self, title):  # noqa: N802
+    def setTitle(self, title):
         self._title = str(title)
         if self._parent_menu is not None:
             for action, menu in self._parent_menu._submenus.items():
                 if menu is self:
                     action.setText(self._title)
 
-    def setIcon(self, icon):  # noqa: N802
+    def setIcon(self, icon):
         self._icon = fluent_icon(icon) if isinstance(icon, FluentIcon) else QtGui.QIcon(icon)
         if self._parent_menu is not None:
             for action, menu in self._parent_menu._submenus.items():
@@ -276,14 +321,14 @@ class ActionMenu(QtWidgets.QWidget):
         if menu is None:
             menu = ActionMenu(self, title=title)
         if not isinstance(menu, ActionMenu):
-            raise TypeError('submenu must be an ActionMenu')
+            raise TypeError("submenu must be an ActionMenu")
         node = self
         while node is not None:
             if node is menu:
-                raise ValueError('submenu cycles are not allowed')
+                raise ValueError("submenu cycles are not allowed")
             node = node._parent_menu
         if menu._parent_menu is not None:
-            raise ValueError('submenu already belongs to a menu')
+            raise ValueError("submenu already belongs to a menu")
         action = self.add_action(title, icon=icon)
         menu._parent_menu = self
         menu._title = str(title)
@@ -297,15 +342,23 @@ class ActionMenu(QtWidgets.QWidget):
         self.destroyed.connect(menu.deleteLater)
         return menu
 
-    def addMenu(self, menu):  # noqa: N802
-        return self.add_menu(menu.title(), menu, icon=menu._icon) if isinstance(menu, ActionMenu) else self.add_menu(str(menu))
+    def addMenu(self, menu):
+        return (
+            self.add_menu(menu.title(), menu, icon=menu._icon)
+            if isinstance(menu, ActionMenu)
+            else self.add_menu(str(menu))
+        )
 
     def add_widget(self, widget):
         """Insert a native QWidgetAction between action rows; owns the widget."""
         if not isinstance(widget, QtWidgets.QWidget):
-            raise TypeError('menu content must be a QWidget')
-        if widget is self or widget.isAncestorOf(self) or widget in (self._surface, self._content, self._scroll):
-            raise ValueError('cannot insert a structural widget or ancestor')
+            raise TypeError("menu content must be a QWidget")
+        if (
+            widget is self
+            or widget.isAncestorOf(self)
+            or widget in (self._surface, self._content, self._scroll)
+        ):
+            raise ValueError("cannot insert a structural widget or ancestor")
         action = QtWidgets.QWidgetAction(self)
         action.setDefaultWidget(widget)
         self.addAction(action)
@@ -318,7 +371,7 @@ class ActionMenu(QtWidgets.QWidget):
         action.setSeparator(True)
         return self.addAction(action)
 
-    def addSeparator(self):  # noqa: N802
+    def addSeparator(self):
         return self.add_separator()
 
     def remove_action(self, action):
@@ -337,7 +390,7 @@ class ActionMenu(QtWidgets.QWidget):
             action.triggered.disconnect(self._forward_triggered)
             QtWidgets.QWidget.removeAction(self, action)
 
-    def removeAction(self, action):  # noqa: N802
+    def removeAction(self, action):
         self.remove_action(action)
 
     def clear(self):
@@ -360,7 +413,11 @@ class ActionMenu(QtWidgets.QWidget):
             raise TypeError("content must be a QWidget or None")
         if self.actions():
             raise ValueError("remove actions before setting custom content")
-        if widget is not None and (widget is self or widget.isAncestorOf(self) or widget in (self._surface, self._content, self._scroll)):
+        if widget is not None and (
+            widget is self
+            or widget.isAncestorOf(self)
+            or widget in (self._surface, self._content, self._scroll)
+        ):
             raise ValueError("content cannot be a popup's structural widget or ancestor")
         if widget is self._custom_content:
             return
@@ -403,12 +460,14 @@ class ActionMenu(QtWidgets.QWidget):
         self._rebuild_timer.stop()
         if self._custom_content is not None:
             return
-        active_action = self._items[self._active].action if 0 <= self._active < len(self._items) else None
+        active_action = (
+            self._items[self._active].action if 0 <= self._active < len(self._items) else None
+        )
         self._close_child()
         while self._layout.count():
             widget = self._layout.takeAt(0).widget()
             widget.hide()
-            if not widget.property('_menuInlineWidget'):
+            if not widget.property("_menuInlineWidget"):
                 widget.deleteLater()
         self._items = []
         for action in self.actions():
@@ -417,7 +476,7 @@ class ActionMenu(QtWidgets.QWidget):
             if isinstance(action, QtWidgets.QWidgetAction):
                 widget = action.defaultWidget()
                 if widget is not None:
-                    widget.setProperty('_menuInlineWidget', True)
+                    widget.setProperty("_menuInlineWidget", True)
                     self._layout.addWidget(widget)
                     widget.show()
             elif action.isSeparator():
@@ -433,7 +492,14 @@ class ActionMenu(QtWidgets.QWidget):
                 self._items.append(row)
                 self._layout.addWidget(row)
         self._layout.activate()
-        self._active = next((i for i, row in enumerate(self._items) if row.action is active_action and row.isEnabled()), -1)
+        self._active = next(
+            (
+                i
+                for i, row in enumerate(self._items)
+                if row.action is active_action and row.isEnabled()
+            ),
+            -1,
+        )
         if self._opened:
             if not self._layout.count():
                 self.dismiss(immediate=True)
@@ -510,7 +576,11 @@ class ActionMenu(QtWidgets.QWidget):
             raise TypeError("popup anchor must be a QWidget")
         if self._dirty:
             self._rebuild()
-        if not anchor.isEnabled() or not anchor.isVisible() or (not self._layout.count() and self._custom_content is None):
+        if (
+            not anchor.isEnabled()
+            or not anchor.isVisible()
+            or (not self._layout.count() and self._custom_content is None)
+        ):
             return False
         context_position = self._context_position
         if self._opened:
@@ -561,7 +631,7 @@ class ActionMenu(QtWidgets.QWidget):
     def popup_at(self, anchor, position):
         """Open at a point in anchor coordinates, e.g. a contextMenuEvent pos."""
         if not isinstance(position, QtCore.QPoint):
-            raise TypeError('position must be a QPoint in anchor coordinates')
+            raise TypeError("position must be a QPoint in anchor coordinates")
         self._context_position = QtCore.QPoint(position)
         if not self.popup(anchor):
             self._context_position = None
@@ -577,7 +647,7 @@ class ActionMenu(QtWidgets.QWidget):
             self._submenu_timer.stop()
             self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
             self.aboutToHide.emit()
-        if immediate or self._progress <= .001:
+        if immediate or self._progress <= 0.001:
             self._reveal.stop()
             self._finish_hide()
         else:
@@ -586,7 +656,9 @@ class ActionMenu(QtWidgets.QWidget):
     def _animate(self, end, duration):
         self._reveal.stop()
         self._reveal.setDuration(duration)
-        self._reveal.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic if end else QtCore.QEasingCurve.Type.InOutCubic)
+        self._reveal.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic if end else QtCore.QEasingCurve.Type.InOutCubic
+        )
         self._reveal.setStartValue(self._progress)
         self._reveal.setEndValue(end)
         self._reveal.start()
@@ -594,9 +666,13 @@ class ActionMenu(QtWidgets.QWidget):
     def _set_progress(self, value):
         self._progress = float(value)
         self._opacity.setOpacity(self._progress)
-        self._surface.move(self._rest + QtCore.QPoint(
-            round(self._slide_offset.x() * (1-self._progress)),
-            round(self._slide_offset.y() * (1-self._progress))))
+        self._surface.move(
+            self._rest
+            + QtCore.QPoint(
+                round(self._slide_offset.x() * (1 - self._progress)),
+                round(self._slide_offset.y() * (1 - self._progress)),
+            )
+        )
         if self._parent_menu is not None:
             # Only the child panel receives input; the parent's rows stay usable.
             self.setMask(QtGui.QRegion(self._surface.geometry()))
@@ -654,35 +730,43 @@ class ActionMenu(QtWidgets.QWidget):
             anchor = QtCore.QRect(self._anchor.mapTo(owner, QtCore.QPoint()), self._anchor.size())
             scrollbar_space = max(0, self._scroll.verticalScrollBar().sizeHint().width())
             widths = [row.preferred_width() + 34 + scrollbar_space for row in self._items]
-            anchor_width = 0 if self._context_position is not None else anchor.width()+20
-            width = max(0, min(self.width()-8, 480, max([160, anchor_width, *widths])))
-            height = max(0, min(self.height()-8, 360, self._layout.sizeHint().height()+32))
+            anchor_width = 0 if self._context_position is not None else anchor.width() + 20
+            width = max(0, min(self.width() - 8, 480, max([160, anchor_width, *widths])))
+            height = max(0, min(self.height() - 8, 360, self._layout.sizeHint().height() + 32))
             if self._custom_content is not None:
-                width = max(0, min(self.width()-8, self._custom_content.sizeHint().width()+34))
-                height = max(0, min(self.height()-8, self._layout.sizeHint().height()+32))
-            inline_widths = [max(action.defaultWidget().sizeHint().width(), action.defaultWidget().minimumSizeHint().width(),
-                                 action.defaultWidget().minimumWidth())+34 for action in self.actions()
-                             if isinstance(action, QtWidgets.QWidgetAction) and action.defaultWidget() is not None]
+                width = max(0, min(self.width() - 8, self._custom_content.sizeHint().width() + 34))
+                height = max(0, min(self.height() - 8, self._layout.sizeHint().height() + 32))
+            inline_widths = [
+                max(
+                    action.defaultWidget().sizeHint().width(),
+                    action.defaultWidget().minimumSizeHint().width(),
+                    action.defaultWidget().minimumWidth(),
+                )
+                + 34
+                for action in self.actions()
+                if isinstance(action, QtWidgets.QWidgetAction)
+                and action.defaultWidget() is not None
+            ]
             if inline_widths:
-                width = min(self.width()-8, max(width, *inline_widths))
+                width = min(self.width() - 8, max(width, *inline_widths))
             self._surface.resize(width, height)
-            self._scroll.setGeometry(17, 15, max(0, width-34), max(0, height-30))
-            x = anchor.left()-10
-            below = anchor.bottom()+1-3
-            above = anchor.top()-height+3
-            fits_below = below+height <= self.height()-4
+            self._scroll.setGeometry(17, 15, max(0, width - 34), max(0, height - 30))
+            x = anchor.left() - 10
+            below = anchor.bottom() + 1 - 3
+            above = anchor.top() - height + 3
+            fits_below = below + height <= self.height() - 4
             y = below if fits_below or above < 4 else above
             if self._context_position is not None:
                 context = self._anchor.mapTo(owner, self._context_position)
-                x, y = context.x()-10, context.y()-8
-                if y+height > self.height()-4:
-                    y = context.y()-height+8
+                x, y = context.x() - 10, context.y() - 8
+                if y + height > self.height() - 4:
+                    y = context.y() - height + 8
             if self._parent_menu is not None:
                 parent_rect = self._parent_menu._surface.geometry()
-                x = parent_rect.right()-10
-                if x+width > self.width()-4:
-                    x = parent_rect.left()-width+10
-                y = anchor.top()-15
+                x = parent_rect.right() - 10
+                if x + width > self.width() - 4:
+                    x = parent_rect.left() - width + 10
+                y = anchor.top() - 15
             self._direction = -1 if fits_below else 1
             if self._context_position is not None:
                 self._direction = -1 if y >= context.y() - 8 else 1
@@ -690,8 +774,8 @@ class ActionMenu(QtWidgets.QWidget):
                 self._slide_offset = QtCore.QPoint(-8 if x >= parent_rect.left() else 8, 0)
             else:
                 self._slide_offset = QtCore.QPoint(0, self._direction * 8)
-            x = max(4, min(x, self.width()-width-4))
-            y = max(4, min(y, self.height()-height-4))
+            x = max(4, min(x, self.width() - width - 4))
+            y = max(4, min(y, self.height() - height - 4))
             self._rest = QtCore.QPoint(x, y)
             self._set_progress(self._progress)
         finally:
@@ -701,26 +785,46 @@ class ActionMenu(QtWidgets.QWidget):
         if not self._opened or self._closing:
             return False
         kind = event.type()
-        if (self._parent_menu is not None and kind == QtCore.QEvent.Type.MouseButtonPress
-                and isinstance(watched, QtWidgets.QWidget) and not self._surface.isAncestorOf(watched)
-                and watched is not self._surface):
+        if (
+            self._parent_menu is not None
+            and kind == QtCore.QEvent.Type.MouseButtonPress
+            and isinstance(watched, QtWidgets.QWidget)
+            and not self._surface.isAncestorOf(watched)
+            and watched is not self._surface
+        ):
             self.dismiss(immediate=True)
             return False
         if watched in self._watched:
-            if kind in (QtCore.QEvent.Type.Hide, QtCore.QEvent.Type.Close, QtCore.QEvent.Type.WindowDeactivate):
+            if kind in (
+                QtCore.QEvent.Type.Hide,
+                QtCore.QEvent.Type.Close,
+                QtCore.QEvent.Type.WindowDeactivate,
+            ):
                 self.dismiss(immediate=True)
             elif kind == QtCore.QEvent.Type.EnabledChange and not watched.isEnabled():
                 self.dismiss(immediate=True)
             elif kind in (QtCore.QEvent.Type.Resize, QtCore.QEvent.Type.Move) and not self._closing:
                 self._place()
-        if (self._opened and isinstance(watched, QtWidgets.QWidget) and watched.window() is self.window()):
+        if (
+            self._opened
+            and isinstance(watched, QtWidgets.QWidget)
+            and watched.window() is self.window()
+        ):
             if self._child_menu is not None and self._child_menu._opened:
                 return False  # The deepest menu owns keyboard handling.
-            inline = any(isinstance(action, QtWidgets.QWidgetAction) and action.defaultWidget() is not None and
-                         (watched is action.defaultWidget() or action.defaultWidget().isAncestorOf(watched))
-                         for action in self.actions())
+            inline = any(
+                isinstance(action, QtWidgets.QWidgetAction)
+                and action.defaultWidget() is not None
+                and (
+                    watched is action.defaultWidget()
+                    or action.defaultWidget().isAncestorOf(watched)
+                )
+                for action in self.actions()
+            )
             if kind == QtCore.QEvent.Type.ShortcutOverride:
-                if (self._custom_content is not None or inline) and event.key() != QtCore.Qt.Key.Key_Escape:
+                if (
+                    self._custom_content is not None or inline
+                ) and event.key() != QtCore.Qt.Key.Key_Escape:
                     return False
                 event.accept()
                 return True
@@ -734,13 +838,24 @@ class ActionMenu(QtWidgets.QWidget):
                         event.accept()
                         return True
                     if key in (QtCore.Qt.Key.Key_Tab, QtCore.Qt.Key.Key_Backtab):
-                        controls = [control for control in self._custom_content.findChildren(QtWidgets.QWidget)
-                                    if control.isVisible() and control.isEnabled() and control.focusPolicy() & QtCore.Qt.FocusPolicy.TabFocus]
+                        controls = [
+                            control
+                            for control in self._custom_content.findChildren(QtWidgets.QWidget)
+                            if control.isVisible()
+                            and control.isEnabled()
+                            and control.focusPolicy() & QtCore.Qt.FocusPolicy.TabFocus
+                        ]
                         if controls:
                             focus = QtWidgets.QApplication.focusWidget()
                             index = controls.index(focus) if focus in controls else -1
-                            backwards = key == QtCore.Qt.Key.Key_Backtab or bool(event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier)
-                            controls[(index + (-1 if backwards else 1)) % len(controls)].setFocus(QtCore.Qt.FocusReason.BacktabFocusReason if backwards else QtCore.Qt.FocusReason.TabFocusReason)
+                            backwards = key == QtCore.Qt.Key.Key_Backtab or bool(
+                                event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier
+                            )
+                            controls[(index + (-1 if backwards else 1)) % len(controls)].setFocus(
+                                QtCore.Qt.FocusReason.BacktabFocusReason
+                                if backwards
+                                else QtCore.Qt.FocusReason.TabFocusReason
+                            )
                         event.accept()
                         return True
                     return False
@@ -750,15 +865,35 @@ class ActionMenu(QtWidgets.QWidget):
                     parent = self._parent_menu
                     self.dismiss(immediate=True)
                     parent._select(parent._active)
-                elif key in (QtCore.Qt.Key.Key_Escape, QtCore.Qt.Key.Key_Tab, QtCore.Qt.Key.Key_Backtab):
+                elif key in (
+                    QtCore.Qt.Key.Key_Escape,
+                    QtCore.Qt.Key.Key_Tab,
+                    QtCore.Qt.Key.Key_Backtab,
+                ):
                     self.dismiss()
-                elif key in (QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Home, QtCore.Qt.Key.Key_End):
+                elif key in (
+                    QtCore.Qt.Key.Key_Down,
+                    QtCore.Qt.Key.Key_Up,
+                    QtCore.Qt.Key.Key_Home,
+                    QtCore.Qt.Key.Key_End,
+                ):
                     eligible = [i for i, row in enumerate(self._items) if row.isEnabled()]
                     if eligible:
                         current = eligible.index(self._active) if self._active in eligible else -1
-                        index = 0 if key == QtCore.Qt.Key.Key_Home else len(eligible)-1 if key == QtCore.Qt.Key.Key_End else (current + (1 if key == QtCore.Qt.Key.Key_Down else -1)) % len(eligible)
+                        index = (
+                            0
+                            if key == QtCore.Qt.Key.Key_Home
+                            else len(eligible) - 1
+                            if key == QtCore.Qt.Key.Key_End
+                            else (current + (1 if key == QtCore.Qt.Key.Key_Down else -1))
+                            % len(eligible)
+                        )
                         self._select(eligible[index])
-                elif key in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter, QtCore.Qt.Key.Key_Space):
+                elif key in (
+                    QtCore.Qt.Key.Key_Return,
+                    QtCore.Qt.Key.Key_Enter,
+                    QtCore.Qt.Key.Key_Space,
+                ):
                     if 0 <= self._active < len(self._items) and not event.isAutoRepeat():
                         self._activate(self._items[self._active].action)
                 event.accept()
@@ -766,7 +901,9 @@ class ActionMenu(QtWidgets.QWidget):
         return False
 
     def mousePressEvent(self, event):
-        if self._custom_content is None or not self._surface.geometry().contains(event.position().toPoint()):
+        if self._custom_content is None or not self._surface.geometry().contains(
+            event.position().toPoint()
+        ):
             self.dismiss()
         event.accept()
 
@@ -791,49 +928,3 @@ class ActionMenu(QtWidgets.QWidget):
         self._surface.update()
         if self._opened:
             self._place()
-
-
-class SystemTrayMenu(QtWidgets.QMenu):
-    """A genuine QMenu for QSystemTrayIcon and menus outside an owner window.
-
-    The system owns positioning and dismissal; FluentPy supplies theme colors.
-    """
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFont(ui_font(theme.tokens.font_size))
-        self.aboutToShow.connect(self._apply_theme)
-        self._apply_theme()
-        theme.subscribe(self, self._apply_theme)
-
-    def add_action(self, text, *, icon=None, callback=None, checkable=False, checked=False, enabled=True, shortcut=''):
-        action = QtGui.QAction(str(text), self)
-        if icon is not None:
-            value = fluent_icon(icon) if isinstance(icon, FluentIcon) else QtGui.QIcon(icon)
-            action.setProperty('_fluentTrayIcon', value)
-            action.setIcon(value)
-        action.setCheckable(checkable)
-        action.setChecked(checked)
-        action.setEnabled(enabled)
-        if shortcut:
-            action.setShortcut(QtGui.QKeySequence(shortcut))
-        if callback is not None:
-            action.triggered.connect(callback)
-        self.addAction(action)
-        return action
-
-    def _apply_theme(self):
-        self.setFont(ui_font(theme.tokens.font_size))
-        self.setStyleSheet(f'''QMenu {{background:{theme.tokens.surface};color:{theme.tokens.text};border:1px solid {theme.tokens.border};border-radius:7px;padding:5px;}}
-QMenu::item {{padding:7px 30px 7px 28px;border-radius:4px;}}
-QMenu::item:selected {{background:{theme.tokens.accent};color:white;}}
-QMenu::item:disabled {{color:{theme.tokens.disabled};}}
-QMenu::separator {{height:1px;background:{theme.tokens.border};margin:4px 7px;}}''')
-        for action in self.actions():
-            source = action.property('_fluentTrayIcon')
-            if isinstance(source, QtGui.QIcon):
-                pixmap = source.pixmap(20, 20)
-                painter = QtGui.QPainter(pixmap)
-                painter.setCompositionMode(QtGui.QPainter.CompositionMode.CompositionMode_SourceIn)
-                painter.fillRect(pixmap.rect(), QtGui.QColor(theme.tokens.text))
-                painter.end()
-                action.setIcon(QtGui.QIcon(pixmap))

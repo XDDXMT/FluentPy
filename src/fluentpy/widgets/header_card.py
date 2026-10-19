@@ -13,7 +13,9 @@ class _CardDivider(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.setFixedHeight(1)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         theme.subscribe(self, self.update)
 
@@ -70,13 +72,17 @@ class HeaderCardWidget(SimpleCardWidget):
     Header actions may be added to ``header_layout`` after the title label.
     """
 
-    def __init__(self, title: str | QtWidgets.QWidget = "", parent: QtWidgets.QWidget | None = None) -> None:
+    def __init__(
+        self, title: str | QtWidgets.QWidget = "", parent: QtWidgets.QWidget | None = None
+    ) -> None:
         if isinstance(title, QtWidgets.QWidget):
             if parent is not None:
                 raise TypeError("parent was provided twice")
             parent, title = title, ""
         super().__init__(parent)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred
+        )
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
@@ -109,7 +115,7 @@ class HeaderCardWidget(SimpleCardWidget):
         self.title_label.setText(str(title))
         self.updateGeometry()
 
-    def setTitle(self, title: str) -> None:  # noqa: N802
+    def setTitle(self, title: str) -> None:
         self.set_title(title)
 
     def set_header_visible(self, visible: bool) -> None:
@@ -154,7 +160,9 @@ class _CardGroup(QtWidgets.QWidget):
             label.setTextFormat(QtCore.Qt.TextFormat.PlainText)
             label.setWordWrap(True)
             label.setMinimumWidth(0)
-            label.setSizePolicy(QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred)
+            label.setSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred
+            )
             labels.addWidget(label)
         self._grid.addWidget(self._text, 0, 1)
         self._set_text(title, content)
@@ -181,9 +189,12 @@ class _CardGroup(QtWidgets.QWidget):
             old.deleteLater()
         self.control = control
         if control is not None:
-            self._grid.addWidget(control, 1 if self._control_below else 0,
-                                 1 if self._control_below else 2,
-                                 QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter)
+            self._grid.addWidget(
+                control,
+                1 if self._control_below else 0,
+                1 if self._control_below else 2,
+                QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter,
+            )
             control.show()
         self._position_control()
         self.updateGeometry()
@@ -192,9 +203,16 @@ class _CardGroup(QtWidgets.QWidget):
         if self.control is None or self._relayout_pending:
             return
         margins = self._grid.contentsMargins()
-        icon_width = 0 if self.icon_widget.isHidden() else max(self.icon_widget.minimumWidth(), self.icon_widget.sizeHint().width())
-        control_width = max(self.control.minimumWidth(), self.control.minimumSizeHint().width(),
-                            min(360, self.control.sizeHint().width()))
+        icon_width = (
+            0
+            if self.icon_widget.isHidden()
+            else max(self.icon_widget.minimumWidth(), self.icon_widget.sizeHint().width())
+        )
+        control_width = max(
+            self.control.minimumWidth(),
+            self.control.minimumSizeHint().width(),
+            min(360, self.control.sizeHint().width()),
+        )
         needed = margins.left() + margins.right() + max(0, icon_width) + control_width + 160 + 28
         below = self.width() < needed
         if below == self._control_below:
@@ -203,8 +221,12 @@ class _CardGroup(QtWidgets.QWidget):
         try:
             self._control_below = below
             self._grid.removeWidget(self.control)
-            self._grid.addWidget(self.control, 1 if below else 0, 1 if below else 2,
-                                 QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter)
+            self._grid.addWidget(
+                self.control,
+                1 if below else 0,
+                1 if below else 2,
+                QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter,
+            )
             self.updateGeometry()
         finally:
             self._relayout_pending = False
@@ -216,10 +238,14 @@ class _CardGroup(QtWidgets.QWidget):
     def _refresh_group_theme(self):
         tokens = theme.tokens
         self.setFont(ui_font(tokens.font_size, self.font()))
-        for label, size, color in ((self.title_label, tokens.font_size, tokens.text),
-                                   (self.content_label, max(11, tokens.font_size - 2), tokens.text_muted)):
+        for label, size, color in (
+            (self.title_label, tokens.font_size, tokens.text),
+            (self.content_label, max(11, tokens.font_size - 2), tokens.text_muted),
+        ):
             label.setFont(ui_font(size, label.font()))
-            label.setStyleSheet(f"color: {color}; background: transparent; border: none; font-size: {size}px;")
+            label.setStyleSheet(
+                f"color: {color}; background: transparent; border: none; font-size: {size}px;"
+            )
         self.updateGeometry()
 
 
@@ -231,7 +257,9 @@ class GroupHeaderCardWidget(HeaderCardWidget):
     Removing a row or replacing its control schedules the old widget for deletion.
     """
 
-    def __init__(self, title: str | QtWidgets.QWidget = "", parent: QtWidgets.QWidget | None = None) -> None:
+    def __init__(
+        self, title: str | QtWidgets.QWidget = "", parent: QtWidgets.QWidget | None = None
+    ) -> None:
         super().__init__(title, parent)
         self.body_layout.setContentsMargins(0, 0, 0, 0)
         self.body_layout.setSpacing(0)
@@ -239,7 +267,9 @@ class GroupHeaderCardWidget(HeaderCardWidget):
         self._groups = []
         self._separators = []
 
-    def add_group(self, icon, title: str, content: str = "", control: QtWidgets.QWidget | None = None) -> QtWidgets.QWidget:
+    def add_group(
+        self, icon, title: str, content: str = "", control: QtWidgets.QWidget | None = None
+    ) -> QtWidgets.QWidget:
         if control is not None and not isinstance(control, QtWidgets.QWidget):
             raise TypeError("control must be a QWidget or None")
         row = _CardGroup(icon, title, content, control, self.view)
@@ -251,7 +281,9 @@ class GroupHeaderCardWidget(HeaderCardWidget):
         self._separators.append(separator)
         return row
 
-    def addGroup(self, icon, title: str, content: str = "", control: QtWidgets.QWidget | None = None) -> QtWidgets.QWidget:  # noqa: N802
+    def addGroup(
+        self, icon, title: str, content: str = "", control: QtWidgets.QWidget | None = None
+    ) -> QtWidgets.QWidget:
         return self.add_group(icon, title, content, control)
 
     def groups(self) -> tuple[QtWidgets.QWidget, ...]:
@@ -277,7 +309,9 @@ class GroupHeaderCardWidget(HeaderCardWidget):
         self.updateGeometry()
         return True
 
-    def set_group_control(self, group: QtWidgets.QWidget, control: QtWidgets.QWidget | None) -> None:
+    def set_group_control(
+        self, group: QtWidgets.QWidget, control: QtWidgets.QWidget | None
+    ) -> None:
         if group not in self._groups:
             raise ValueError("group does not belong to this card")
         group._set_control(control)

@@ -3,13 +3,21 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from fluentpy import Button, FileDropWidget, FolderDropWidget, SimpleCardWidget, TextEdit, ToggleSwitch, theme
+from fluentpy import (
+    Button,
+    FileDropWidget,
+    FolderDropWidget,
+    SimpleCardWidget,
+    TextEdit,
+    ToggleSwitch,
+    theme,
+)
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.theme.fonts import ui_font
 
@@ -65,9 +73,18 @@ class DropExamples(QtWidgets.QWidget):
         self.status.setText(f"已选择 {len(paths)} 项。文件夹原样返回路径。")
 
     def _rejected(self, paths):
-        reasons = {"extension": "文件类型不支持", "type": "请选择对应类型", "missing": "路径不存在",
-                   "duplicate": "重复项目", "multiple": "仅接受一项", "invalid": "路径无效"}
-        summary = "；".join(f"{QtCore.QFileInfo(path).fileName() or path}：{reasons.get(reason, reason)}" for path, reason in paths[:3])
+        reasons = {
+            "extension": "文件类型不支持",
+            "type": "请选择对应类型",
+            "missing": "路径不存在",
+            "duplicate": "重复项目",
+            "multiple": "仅接受一项",
+            "invalid": "路径无效",
+        }
+        summary = "；".join(
+            f"{QtCore.QFileInfo(path).fileName() or path}：{reasons.get(reason, reason)}"
+            for path, reason in paths[:3]
+        )
         self.status.setText(f"有 {len(paths)} 项未接收。{summary}")
 
     def _error(self, error):
@@ -138,6 +155,7 @@ def main():
     if args.screenshot:
         window.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen)
     window.show()
+
     def capture():
         app.processEvents()
         args.screenshot.parent.mkdir(parents=True, exist_ok=True)
@@ -145,6 +163,7 @@ def main():
             raise RuntimeError("Unable to save drop preview")
         if args.quit_after_screenshot:
             app.quit()
+
     if args.screenshot:
         QtCore.QTimer.singleShot(250, capture)
     return app.exec()

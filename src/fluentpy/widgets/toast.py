@@ -3,7 +3,7 @@ from __future__ import annotations
 from ..qt import QtCore, QtGui, QtWidgets
 from ..theme import theme
 from ..theme.fonts import ui_font
-from .toast_stack import _ToastStack, _notification_rect
+from .toast_stack import _notification_rect, _ToastStack
 
 
 class _SuccessIcon(QtWidgets.QWidget):
@@ -19,9 +19,15 @@ class _SuccessIcon(QtWidgets.QWidget):
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(QtGui.QColor("#0f7b0f" if theme.mode.value == "light" else "#6ccb5f"))
         painter.drawEllipse(QtCore.QRectF(0, 0, 24, 24))
-        painter.setPen(QtGui.QPen(QtGui.QColor("white" if theme.mode.value == "light" else "#102810"), 1.8,
-                                QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap,
-                                QtCore.Qt.PenJoinStyle.RoundJoin))
+        painter.setPen(
+            QtGui.QPen(
+                QtGui.QColor("white" if theme.mode.value == "light" else "#102810"),
+                1.8,
+                QtCore.Qt.PenStyle.SolidLine,
+                QtCore.Qt.PenCapStyle.RoundCap,
+                QtCore.Qt.PenJoinStyle.RoundJoin,
+            )
+        )
         path = QtGui.QPainterPath(QtCore.QPointF(7, 12))
         path.lineTo(10.5, 15.5)
         path.lineTo(17, 9)
@@ -52,8 +58,14 @@ class _CloseButton(QtWidgets.QAbstractButton):
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(QtGui.QColor(theme.tokens.surface_high))
             painter.drawRoundedRect(QtCore.QRectF(0, 0, 24, 24), 4, 4)
-        painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.text), 1.1,
-                                QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
+        painter.setPen(
+            QtGui.QPen(
+                QtGui.QColor(theme.tokens.text),
+                1.1,
+                QtCore.Qt.PenStyle.SolidLine,
+                QtCore.Qt.PenCapStyle.RoundCap,
+            )
+        )
         painter.drawLine(QtCore.QPointF(7, 7), QtCore.QPointF(17, 17))
         painter.drawLine(QtCore.QPointF(17, 7), QtCore.QPointF(7, 17))
 
@@ -67,7 +79,14 @@ class Toast(QtWidgets.QFrame):
 
     SHOW_DURATION = 280
     HIDE_DURATION = 180
-    PLACEMENTS = ("top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right")
+    PLACEMENTS = (
+        "top-left",
+        "top-center",
+        "top-right",
+        "bottom-left",
+        "bottom-center",
+        "bottom-right",
+    )
 
     def __init__(
         self,
@@ -79,10 +98,14 @@ class Toast(QtWidgets.QFrame):
     ) -> None:
         if target is not None:
             parent = target.window()
-        flags = QtCore.Qt.WindowType.Widget if parent is not None else (
-            QtCore.Qt.WindowType.FramelessWindowHint
-            | QtCore.Qt.WindowType.ToolTip
-            | QtCore.Qt.WindowType.NoDropShadowWindowHint
+        flags = (
+            QtCore.Qt.WindowType.Widget
+            if parent is not None
+            else (
+                QtCore.Qt.WindowType.FramelessWindowHint
+                | QtCore.Qt.WindowType.ToolTip
+                | QtCore.Qt.WindowType.NoDropShadowWindowHint
+            )
         )
         super().__init__(parent, flags)
         self.setObjectName("fluentToast")
@@ -134,7 +157,9 @@ class Toast(QtWidgets.QFrame):
             label.setWordWrap(True)
             label.setTextFormat(QtCore.Qt.TextFormat.PlainText)
             label.setMinimumSize(0, 0)
-            label.setSizePolicy(QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred)
+            label.setSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred
+            )
         text.addWidget(self._title)
         text.addWidget(self._detail)
         self._detail.setVisible(bool(detail))
@@ -143,8 +168,13 @@ class Toast(QtWidgets.QFrame):
         if self._compact:
             self.close_button.setFixedSize(20, 20)
         self.close_button.clicked.connect(self.close)
-        layout.addWidget(self.close_button, 0,
-                         QtCore.Qt.AlignmentFlag.AlignVCenter if self._compact else QtCore.Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(
+            self.close_button,
+            0,
+            QtCore.Qt.AlignmentFlag.AlignVCenter
+            if self._compact
+            else QtCore.Qt.AlignmentFlag.AlignTop,
+        )
 
         watched = target or parent
         while watched is not None:
@@ -186,9 +216,13 @@ class Toast(QtWidgets.QFrame):
 
     def sizeHint(self) -> QtCore.QSize:
         metrics = self._title.fontMetrics()
-        text_width = max(metrics.horizontalAdvance(self._title.text()),
-                         self._detail.fontMetrics().horizontalAdvance(self._detail.text()))
-        width = min(640, max(220 if self._compact else 300, text_width + (112 if self._compact else 138)))
+        text_width = max(
+            metrics.horizontalAdvance(self._title.text()),
+            self._detail.fontMetrics().horizontalAdvance(self._detail.text()),
+        )
+        width = min(
+            640, max(220 if self._compact else 300, text_width + (112 if self._compact else 138))
+        )
         return QtCore.QSize(width, self.heightForWidth(width))
 
     def hasHeightForWidth(self) -> bool:
@@ -196,10 +230,20 @@ class Toast(QtWidgets.QFrame):
 
     def heightForWidth(self, width: int) -> int:
         text_width = max(1, width - (112 if self._compact else 138))
-        title_height = max(self._title.fontMetrics().height(), self._title.heightForWidth(text_width))
-        detail_height = max(self._detail.fontMetrics().height(), self._detail.heightForWidth(text_width)) if self._detail.text() else 0
-        return max(80 if self._compact else 112,
-                   (50 if self._compact else 64) + title_height + (2 + detail_height if detail_height else 0))
+        title_height = max(
+            self._title.fontMetrics().height(), self._title.heightForWidth(text_width)
+        )
+        detail_height = (
+            max(self._detail.fontMetrics().height(), self._detail.heightForWidth(text_width))
+            if self._detail.text()
+            else 0
+        )
+        return max(
+            80 if self._compact else 112,
+            (50 if self._compact else 64)
+            + title_height
+            + (2 + detail_height if detail_height else 0),
+        )
 
     def show_at(self, placement: str = "top-right") -> None:
         if placement not in self.PLACEMENTS:
@@ -228,8 +272,15 @@ class Toast(QtWidgets.QFrame):
         try:
             parent = self.parentWidget()
             screen = self.screen() or QtGui.QGuiApplication.primaryScreen()
-            base = _notification_rect(parent) if parent is not None else (
-                screen.availableGeometry() if screen is not None else QtCore.QRect(0, 0, 1280, 800))
+            base = (
+                _notification_rect(parent)
+                if parent is not None
+                else (
+                    screen.availableGeometry()
+                    if screen is not None
+                    else QtCore.QRect(0, 0, 1280, 800)
+                )
+            )
             content = parent.centralWidget() if isinstance(parent, QtWidgets.QMainWindow) else None
             if content is not self._position_host:
                 if self._position_host is not None:
@@ -245,7 +296,9 @@ class Toast(QtWidgets.QFrame):
             self.resize(width, min(max(0, base.height()), self.heightForWidth(width)))
             self._arrow_edge = None
             if self._target is not None:
-                anchor = QtCore.QRect(self._target.mapTo(parent, QtCore.QPoint()), self._target.size())
+                anchor = QtCore.QRect(
+                    self._target.mapTo(parent, QtCore.QPoint()), self._target.size()
+                )
                 x = anchor.center().x() - self.width() // 2
                 above = anchor.top() - 6 - (self.height() - 12)
                 below = anchor.bottom() + 2
@@ -255,9 +308,18 @@ class Toast(QtWidgets.QFrame):
                     y, self._arrow_edge = below, "top"
             else:
                 placement = self._placement or "top-right"
-                x = ((base.width() - self.width()) // 2 + base.left() if placement.endswith("center")
-                     else base.right() + 1 - self.width() - 18 if placement.endswith("right") else base.left() + 18)
-                y = base.bottom() + 1 - self.height() - 18 if placement.startswith("bottom") else base.top() + 18
+                x = (
+                    (base.width() - self.width()) // 2 + base.left()
+                    if placement.endswith("center")
+                    else base.right() + 1 - self.width() - 18
+                    if placement.endswith("right")
+                    else base.left() + 18
+                )
+                y = (
+                    base.bottom() + 1 - self.height() - 18
+                    if placement.startswith("bottom")
+                    else base.top() + 18
+                )
             x = max(base.left(), min(x, base.right() + 1 - self.width()))
             y = max(base.top(), min(y, base.bottom() + 1 - self.height()))
             self._base_rect = QtCore.QRect(base)
@@ -266,7 +328,9 @@ class Toast(QtWidgets.QFrame):
             elif (self._placement or "top-right").endswith("center"):
                 self._motion = QtCore.QPoint(0, -1 if self._placement.startswith("top") else 1)
             else:
-                self._motion = QtCore.QPoint(1 if (self._placement or "top-right").endswith("right") else -1, 0)
+                self._motion = QtCore.QPoint(
+                    1 if (self._placement or "top-right").endswith("right") else -1, 0
+                )
             if self._target is not None:
                 self._arrow_x = max(34, min(anchor.center().x() - x, self.width() - 34))
             self.layout().activate()
@@ -282,8 +346,12 @@ class Toast(QtWidgets.QFrame):
 
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
         if self._placement is not None:
-            if event.type() in (QtCore.QEvent.Type.Resize, QtCore.QEvent.Type.Move,
-                                QtCore.QEvent.Type.LayoutRequest, QtCore.QEvent.Type.Show):
+            if event.type() in (
+                QtCore.QEvent.Type.Resize,
+                QtCore.QEvent.Type.Move,
+                QtCore.QEvent.Type.LayoutRequest,
+                QtCore.QEvent.Type.Show,
+            ):
                 self._position()
             elif event.type() == QtCore.QEvent.Type.Hide and watched is not self._position_host:
                 self._allow_close = True
@@ -335,7 +403,9 @@ class Toast(QtWidgets.QFrame):
         self._reveal.setDuration(duration)
         self._reveal.setStartValue(self._reveal_progress)
         self._reveal.setEndValue(end)
-        self._reveal.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic if end else QtCore.QEasingCurve.Type.InCubic)
+        self._reveal.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic if end else QtCore.QEasingCurve.Type.InCubic
+        )
         self._reveal.start()
 
     def _set_reveal_progress(self, value: float) -> None:
@@ -379,11 +449,15 @@ class Toast(QtWidgets.QFrame):
         painter.save()
         painter.translate(0, 2)
         for spread in range(12, 0, -1):
-            painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 1 if theme.mode.value == "light" else 2), spread))
+            painter.setPen(
+                QtGui.QPen(QtGui.QColor(0, 0, 0, 1 if theme.mode.value == "light" else 2), spread)
+            )
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.drawPath(path)
         painter.restore()
-        painter.setPen(QtGui.QPen(QtGui.QColor("#e2e2e2" if theme.mode.value == "light" else "#454545"), 1))
+        painter.setPen(
+            QtGui.QPen(QtGui.QColor("#e2e2e2" if theme.mode.value == "light" else "#454545"), 1)
+        )
         painter.setBrush(QtGui.QColor("#f8f8f8" if theme.mode.value == "light" else "#2b2b2b"))
         painter.drawPath(path)
 

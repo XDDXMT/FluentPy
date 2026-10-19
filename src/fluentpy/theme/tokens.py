@@ -43,9 +43,7 @@ class ThemeTokens:
     @property
     def surface_high_rgba(self) -> str:
         return (
-            "rgba(242, 243, 246, 178)"
-            if self.mode is ThemeMode.LIGHT
-            else "rgba(28, 32, 46, 196)"
+            "rgba(242, 243, 246, 178)" if self.mode is ThemeMode.LIGHT else "rgba(28, 32, 46, 196)"
         )
 
     @property
@@ -55,25 +53,19 @@ class ThemeTokens:
     @property
     def surface_low_rgba(self) -> str:
         return (
-            "rgba(251, 251, 252, 205)"
-            if self.mode is ThemeMode.LIGHT
-            else "rgba(48, 52, 66, 205)"
+            "rgba(251, 251, 252, 205)" if self.mode is ThemeMode.LIGHT else "rgba(48, 52, 66, 205)"
         )
 
     @property
     def acrylic(self) -> str:
         return (
-            "rgba(255, 255, 255, 154)"
-            if self.mode is ThemeMode.LIGHT
-            else "rgba(20, 24, 31, 176)"
+            "rgba(255, 255, 255, 154)" if self.mode is ThemeMode.LIGHT else "rgba(20, 24, 31, 176)"
         )
 
     @property
     def acrylic_strong(self) -> str:
         return (
-            "rgba(255, 255, 255, 218)"
-            if self.mode is ThemeMode.LIGHT
-            else "rgba(28, 32, 42, 224)"
+            "rgba(255, 255, 255, 218)" if self.mode is ThemeMode.LIGHT else "rgba(28, 32, 42, 224)"
         )
 
     @property
@@ -87,25 +79,19 @@ class ThemeTokens:
     @property
     def acrylic_inactive(self) -> str:
         return (
-            "rgba(255, 255, 255, 172)"
-            if self.mode is ThemeMode.LIGHT
-            else "rgba(31, 34, 42, 196)"
+            "rgba(255, 255, 255, 172)" if self.mode is ThemeMode.LIGHT else "rgba(31, 34, 42, 196)"
         )
 
     @property
     def acrylic_strong_inactive(self) -> str:
         return (
-            "rgba(255, 255, 255, 230)"
-            if self.mode is ThemeMode.LIGHT
-            else "rgba(32, 34, 40, 230)"
+            "rgba(255, 255, 255, 230)" if self.mode is ThemeMode.LIGHT else "rgba(32, 34, 40, 230)"
         )
 
     @property
     def acrylic_highlight_inactive(self) -> str:
         return (
-            "rgba(255, 255, 255, 76)"
-            if self.mode is ThemeMode.LIGHT
-            else "rgba(255, 255, 255, 12)"
+            "rgba(255, 255, 255, 76)" if self.mode is ThemeMode.LIGHT else "rgba(255, 255, 255, 12)"
         )
 
     @property

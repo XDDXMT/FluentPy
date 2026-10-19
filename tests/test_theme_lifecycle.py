@@ -3,15 +3,15 @@
 Run each probe in a fresh process: the original failure depended on cyclic GC
 and could poison a later QWidget constructor or surface only during shutdown.
 """
+
 import os
-from pathlib import Path
 import subprocess
 import sys
 import unittest
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-_PROBE = r'''
+_PROBE = r"""
 import gc
 import json
 from pathlib import Path
@@ -152,32 +152,47 @@ assert not errors, errors
 print(json.dumps({'platform': app.platformName(), 'gc_iterations': 8,
                   'dynamic_widget_types': 4, 'keyboard': True, 'mouse': True,
                   'errors': errors}))
-'''
+"""
 
 
 class ThemeLifecycleTests(unittest.TestCase):
     def run_probe(self, platform):
-        env = dict(os.environ, QT_QPA_PLATFORM=platform, QT_SCALE_FACTOR='1')
+        env = dict(os.environ, QT_QPA_PLATFORM=platform, QT_SCALE_FACTOR="1")
         result = subprocess.run(
-            [sys.executable, '-I', '-B', '-X', 'utf8', '-X', 'faulthandler', '-c', _PROBE, str(ROOT)],
-            cwd=ROOT, env=env, text=True, capture_output=True, timeout=30,
+            [
+                sys.executable,
+                "-I",
+                "-B",
+                "-X",
+                "utf8",
+                "-X",
+                "faulthandler",
+                "-c",
+                _PROBE,
+                str(ROOT),
+            ],
+            cwd=ROOT,
+            env=env,
+            text=True,
+            capture_output=True,
+            timeout=30,
         )
-        details = f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}'
+        details = f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         self.assertEqual(result.returncode, 0, details)
         self.assertIn('"gc_iterations": 8', result.stdout, details)
         self.assertIn('"keyboard": true, "mouse": true', result.stdout, details)
         self.assertIn('"errors": []', result.stdout, details)
-        self.assertNotIn('Error calling Python override', result.stderr, details)
-        self.assertNotIn('Traceback', result.stderr, details)
-        self.assertNotIn('SystemError', result.stderr, details)
+        self.assertNotIn("Error calling Python override", result.stderr, details)
+        self.assertNotIn("Traceback", result.stderr, details)
+        self.assertNotIn("SystemError", result.stderr, details)
 
     def test_abandoned_windows_and_dynamic_children_offscreen(self):
-        self.run_probe('offscreen')
+        self.run_probe("offscreen")
 
-    @unittest.skipUnless(sys.platform == 'win32', 'Native Windows Qt platform required')
+    @unittest.skipUnless(sys.platform == "win32", "Native Windows Qt platform required")
     def test_abandoned_windows_and_dynamic_children_native_windows(self):
-        self.run_probe('windows')
+        self.run_probe("windows")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

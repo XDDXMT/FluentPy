@@ -72,15 +72,21 @@ def _extend_frame(hwnd: int, whole_client: bool, integrated: bool = False) -> bo
 
 def _high_contrast_enabled() -> bool | None:
     class _HighContrast(ctypes.Structure):
-        _fields_ = [("cbSize", ctypes.wintypes.UINT),
-                    ("dwFlags", ctypes.wintypes.DWORD),
-                    ("lpszDefaultScheme", ctypes.wintypes.LPWSTR)]
+        _fields_ = [
+            ("cbSize", ctypes.wintypes.UINT),
+            ("dwFlags", ctypes.wintypes.DWORD),
+            ("lpszDefaultScheme", ctypes.wintypes.LPWSTR),
+        ]
 
     value = _HighContrast()
     value.cbSize = ctypes.sizeof(value)
     query = ctypes.windll.user32.SystemParametersInfoW
-    query.argtypes = [ctypes.wintypes.UINT, ctypes.wintypes.UINT,
-                      ctypes.c_void_p, ctypes.wintypes.UINT]
+    query.argtypes = [
+        ctypes.wintypes.UINT,
+        ctypes.wintypes.UINT,
+        ctypes.c_void_p,
+        ctypes.wintypes.UINT,
+    ]
     query.restype = ctypes.wintypes.BOOL
     if not query(0x0042, value.cbSize, ctypes.byref(value), 0):  # SPI_GETHIGHCONTRAST
         return None
@@ -91,9 +97,12 @@ def _transparency_effects_enabled() -> bool:
     # Read the user's switch only. Never write Personalize settings or change
     # the global Windows theme to make a material visible.
     import winreg
+
     try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize") as key:
+        with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+        ) as key:
             value, _ = winreg.QueryValueEx(key, "EnableTransparency")
     except FileNotFoundError:
         # An absent preference uses Windows' default, not a forced opt-out.
@@ -119,8 +128,9 @@ def _backdrop_policy_allows() -> bool:
         return False
 
 
-def apply_system_backdrop(widget: QtWidgets.QWidget, mode: ThemeMode, active: bool,
-                          enabled: bool = True) -> bool:
+def apply_system_backdrop(
+    widget: QtWidgets.QWidget, mode: ThemeMode, active: bool, enabled: bool = True
+) -> bool:
     """Expose DWM's main-window material across a transparent Qt client.
 
     Both the material attribute and frame extension must succeed. The caller
@@ -172,8 +182,11 @@ def capture_window_frame(widget: QtWidgets.QWidget) -> QtGui.QImage:
     This helper is intended for preview generation and focused UI validation.
     """
     application = QtWidgets.QApplication.instance()
-    if (sys.platform != "win32" or application is None
-            or application.platformName().lower() != "windows"):
+    if (
+        sys.platform != "win32"
+        or application is None
+        or application.platformName().lower() != "windows"
+    ):
         return widget.grab().toImage()
 
     hwnd = int(widget.window().winId())
@@ -193,9 +206,15 @@ def capture_window_frame(widget: QtWidgets.QWidget) -> QtGui.QImage:
     gdi32.SelectObject.restype = ctypes.wintypes.HGDIOBJ
     gdi32.DeleteObject.argtypes = [ctypes.wintypes.HGDIOBJ]
     gdi32.DeleteDC.argtypes = [ctypes.wintypes.HDC]
-    gdi32.GetDIBits.argtypes = [ctypes.wintypes.HDC, ctypes.wintypes.HBITMAP,
-                              ctypes.wintypes.UINT, ctypes.wintypes.UINT,
-                              ctypes.c_void_p, ctypes.c_void_p, ctypes.wintypes.UINT]
+    gdi32.GetDIBits.argtypes = [
+        ctypes.wintypes.HDC,
+        ctypes.wintypes.HBITMAP,
+        ctypes.wintypes.UINT,
+        ctypes.wintypes.UINT,
+        ctypes.c_void_p,
+        ctypes.c_void_p,
+        ctypes.wintypes.UINT,
+    ]
     gdi32.GetDIBits.restype = ctypes.c_int
 
     rect = ctypes.wintypes.RECT()
@@ -206,12 +225,19 @@ def capture_window_frame(widget: QtWidgets.QWidget) -> QtGui.QImage:
         raise RuntimeError("Cannot capture an empty window")
 
     class _BitmapHeader(ctypes.Structure):
-        _fields_ = [("size", ctypes.wintypes.DWORD), ("width", ctypes.wintypes.LONG),
-                    ("height", ctypes.wintypes.LONG), ("planes", ctypes.wintypes.WORD),
-                    ("bits", ctypes.wintypes.WORD), ("compression", ctypes.wintypes.DWORD),
-                    ("image_size", ctypes.wintypes.DWORD), ("x_pels", ctypes.wintypes.LONG),
-                    ("y_pels", ctypes.wintypes.LONG), ("colors", ctypes.wintypes.DWORD),
-                    ("important", ctypes.wintypes.DWORD)]
+        _fields_ = [
+            ("size", ctypes.wintypes.DWORD),
+            ("width", ctypes.wintypes.LONG),
+            ("height", ctypes.wintypes.LONG),
+            ("planes", ctypes.wintypes.WORD),
+            ("bits", ctypes.wintypes.WORD),
+            ("compression", ctypes.wintypes.DWORD),
+            ("image_size", ctypes.wintypes.DWORD),
+            ("x_pels", ctypes.wintypes.LONG),
+            ("y_pels", ctypes.wintypes.LONG),
+            ("colors", ctypes.wintypes.DWORD),
+            ("important", ctypes.wintypes.DWORD),
+        ]
 
     source, memory, bitmap, previous = user32.GetWindowDC(hwnd), None, None, None
     if not source:
@@ -226,8 +252,9 @@ def capture_window_frame(widget: QtWidgets.QWidget) -> QtGui.QImage:
             raise RuntimeError("Windows rejected the native frame capture")
         gdi32.SelectObject(memory, previous)
         previous = None
-        header = _BitmapHeader(ctypes.sizeof(_BitmapHeader), width, -height, 1, 32,
-                               0, 0, 0, 0, 0, 0)
+        header = _BitmapHeader(
+            ctypes.sizeof(_BitmapHeader), width, -height, 1, 32, 0, 0, 0, 0, 0, 0
+        )
         pixels = ctypes.create_string_buffer(width * height * 4)
         if gdi32.GetDIBits(memory, bitmap, 0, height, pixels, ctypes.byref(header), 0) != height:
             raise RuntimeError("Cannot read the native frame pixels")
@@ -239,8 +266,9 @@ def capture_window_frame(widget: QtWidgets.QWidget) -> QtGui.QImage:
         if not any(data[0::4]) and not any(data[1::4]) and not any(data[2::4]):
             raise RuntimeError("Windows returned a black frame; capture a mapped window instead")
         data[3::4] = b"\xff" * (width * height)
-        return QtGui.QImage(bytes(data), width, height, width * 4,
-                            QtGui.QImage.Format.Format_ARGB32).copy()
+        return QtGui.QImage(
+            bytes(data), width, height, width * 4, QtGui.QImage.Format.Format_ARGB32
+        ).copy()
     finally:
         if previous and memory:
             gdi32.SelectObject(memory, previous)
@@ -258,8 +286,11 @@ def apply_integrated_window_frame(widget: QtWidgets.QWidget, mode: ThemeMode) ->
     system caption. The buttons are explicitly Qt-rendered in this mode.
     """
     application = QtWidgets.QApplication.instance()
-    if (sys.platform != "win32" or application is None
-            or application.platformName().lower() != "windows"):
+    if (
+        sys.platform != "win32"
+        or application is None
+        or application.platformName().lower() != "windows"
+    ):
         return False
     try:
         hwnd = int(widget.winId())
@@ -270,8 +301,10 @@ def apply_integrated_window_frame(widget: QtWidgets.QWidget, mode: ThemeMode) ->
         # rendering enabled so the actual material and DWM shadow survive.
         style = (old_style & ~0x00C00000) | 0x00040000 | 0x00080000
         flags = widget.windowFlags()
-        for hint, bit in ((QtCore.Qt.WindowType.WindowMinimizeButtonHint, 0x00020000),
-                          (QtCore.Qt.WindowType.WindowMaximizeButtonHint, 0x00010000)):
+        for hint, bit in (
+            (QtCore.Qt.WindowType.WindowMinimizeButtonHint, 0x00020000),
+            (QtCore.Qt.WindowType.WindowMaximizeButtonHint, 0x00010000),
+        ):
             style = style | bit if flags & hint else style & ~bit
         if style != old_style:
             _set_window_long_ptr(hwnd, -16, style)
@@ -282,9 +315,15 @@ def apply_integrated_window_frame(widget: QtWidgets.QWidget, mode: ThemeMode) ->
         _extend_frame(hwnd, getattr(widget, "_backdrop_applied", False) is True, True)
         if style != old_style:
             position = ctypes.windll.user32.SetWindowPos
-            position.argtypes = [ctypes.wintypes.HWND, ctypes.wintypes.HWND,
-                                 ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
-                                 ctypes.wintypes.UINT]
+            position.argtypes = [
+                ctypes.wintypes.HWND,
+                ctypes.wintypes.HWND,
+                ctypes.c_int,
+                ctypes.c_int,
+                ctypes.c_int,
+                ctypes.c_int,
+                ctypes.wintypes.UINT,
+            ]
             position(hwnd, None, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020)
         return rounded
     except (AttributeError, OSError, ValueError):

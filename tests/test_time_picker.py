@@ -1,16 +1,19 @@
 """Canonical time policy, C parity, confirmed editing and flyout lifetime."""
+
 import importlib.util
 import os
-from pathlib import Path
 import random
 import sys
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
-from fluentpy import TimePicker, QT_API, theme
-from fluentpy.backends import time as clock, _time_python
+from fluentpy import QT_API, TimePicker, theme
+from fluentpy.backends import _time_python
+from fluentpy.backends import time as clock
 from fluentpy.qt import QtCore, QtGui, QtWidgets
+
 if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
@@ -34,7 +37,11 @@ class TimePolicyTests(unittest.TestCase):
                 self.assertEqual(clock.display_time(hour, minute)[:2], (hour, minute))
 
     def test_midnight_noon_and_independent_wheel_boundaries(self):
-        for value, expected in (((0, 0), (12, 0, 0)), ((12, 0), (12, 0, 1)), ((23, 59), (11, 59, 1))):
+        for value, expected in (
+            ((0, 0), (12, 0, 0)),
+            ((12, 0), (12, 0, 1)),
+            ((23, 59), (11, 59, 1)),
+        ):
             self.assertEqual(clock.display_time(*value, True), expected)
         self.assertEqual(clock.step_time(23, 59, 0, 1), (0, 59))
         self.assertEqual(clock.step_time(23, 59, 1, 1), (23, 0))
@@ -47,16 +54,26 @@ class TimePolicyTests(unittest.TestCase):
     def test_centered_rows_and_non_repeated_meridiem(self):
         self.assertEqual(clock.column_values(14, 0, 0), tuple(range(10, 19)))
         self.assertEqual(clock.column_values(14, 0, 1), (56, 57, 58, 59, 0, 1, 2, 3, 4))
-        self.assertEqual(clock.column_values(14, 0, 0, use_12_hour=True), (10, 11, 12, 1, 2, 3, 4, 5, 6))
-        self.assertEqual(clock.column_values(14, 0, 2, use_12_hour=True), (None, None, None, 0, 1, None, None, None, None))
+        self.assertEqual(
+            clock.column_values(14, 0, 0, use_12_hour=True), (10, 11, 12, 1, 2, 3, 4, 5, 6)
+        )
+        self.assertEqual(
+            clock.column_values(14, 0, 2, use_12_hour=True),
+            (None, None, None, 0, 1, None, None, None, None),
+        )
 
     def test_invalid_input_is_rejected_without_coercion(self):
         for operation, args, error in (
-            (clock.validate_time, (True, 0), TypeError), (clock.validate_time, (24, 0), ValueError),
-            (clock.validate_time, (0, 60), ValueError), (clock.validate_time, (10**100, 0), ValueError),
-            (clock.display_time, (0, 0, 1), TypeError), (clock.from_display, (0, 0, 0), ValueError),
-            (clock.from_display, (12, 0, True), TypeError), (clock.step_time, (0, 0, 2, 1), ValueError),
-            (clock.step_time, (0, 0, 0, 1.5), TypeError), (clock.column_values, (0, 0, 0, 101), ValueError),
+            (clock.validate_time, (True, 0), TypeError),
+            (clock.validate_time, (24, 0), ValueError),
+            (clock.validate_time, (0, 60), ValueError),
+            (clock.validate_time, (10**100, 0), ValueError),
+            (clock.display_time, (0, 0, 1), TypeError),
+            (clock.from_display, (0, 0, 0), ValueError),
+            (clock.from_display, (12, 0, True), TypeError),
+            (clock.step_time, (0, 0, 2, 1), ValueError),
+            (clock.step_time, (0, 0, 0, 1.5), TypeError),
+            (clock.column_values, (0, 0, 0, 101), ValueError),
         ):
             with self.subTest(args=args, operation=operation.__name__):
                 with self.assertRaises(error):
@@ -72,8 +89,11 @@ class TimePolicyTests(unittest.TestCase):
                     clock.backend_name()
         path = Path(clock.__file__)
         for failure in (ImportError("missing"), OSError("ABI mismatch"), object()):
-            with patch("importlib.import_module", side_effect=failure if isinstance(failure, Exception) else None,
-                       return_value=failure):
+            with patch(
+                "importlib.import_module",
+                side_effect=failure if isinstance(failure, Exception) else None,
+                return_value=failure,
+            ):
                 spec = importlib.util.spec_from_file_location("fluentpy.backends._time_test", path)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
@@ -88,16 +108,29 @@ class TimePolicyTests(unittest.TestCase):
         for _ in range(120):
             hour, minute, twelve = rng.randrange(24), rng.randrange(60), bool(rng.randrange(2))
             for column in range(3 if twelve else 2):
-                steps = rng.choice((-10**500, 10**500, rng.randint(-1000, 1000)))
+                steps = rng.choice((-(10**500), 10**500, rng.randint(-1000, 1000)))
                 radius = rng.choice((0, 4, 100))
-                self.assertEqual(_time_python.step_time(hour, minute, column, steps, twelve), clock._extension.time_step_time(hour, minute, column, steps, twelve))
-                self.assertEqual(_time_python.column_values(hour, minute, column, radius, twelve), clock._extension.time_column_values(hour, minute, column, radius, twelve))
+                self.assertEqual(
+                    _time_python.step_time(hour, minute, column, steps, twelve),
+                    clock._extension.time_step_time(hour, minute, column, steps, twelve),
+                )
+                self.assertEqual(
+                    _time_python.column_values(hour, minute, column, radius, twelve),
+                    clock._extension.time_column_values(hour, minute, column, radius, twelve),
+                )
         for name, args in (
-            ("validate_time", (True, 0)), ("validate_time", (10**500, 0)), ("display_time", (0, 0, 1)),
-            ("from_display", (12, 0, 2)), ("step_time", (0, 0, False, 1)),
-            ("column_values", (0, 0, 0, None)), ("step_time", (0, 0, 2, 1)),
+            ("validate_time", (True, 0)),
+            ("validate_time", (10**500, 0)),
+            ("display_time", (0, 0, 1)),
+            ("from_display", (12, 0, 2)),
+            ("step_time", (0, 0, False, 1)),
+            ("column_values", (0, 0, 0, None)),
+            ("step_time", (0, 0, 2, 1)),
         ):
-            self.assertEqual(outcome(lambda: getattr(_time_python, name)(*args)), outcome(lambda: getattr(clock._extension, "time_"+name)(*args)))
+            self.assertEqual(
+                outcome(lambda: getattr(_time_python, name)(*args)),
+                outcome(lambda: getattr(clock._extension, "time_" + name)(*args)),
+            )
 
 
 class TimePickerTests(unittest.TestCase):
@@ -136,8 +169,11 @@ class TimePickerTests(unittest.TestCase):
         if value is not None:
             self.view.setTime(QtCore.QTime(*value))
         count = 3 if self.view.is_12_hour_clock() else 2
-        QTest.mouseClick(self.view, QtCore.Qt.MouseButton.LeftButton,
-                         pos=QtCore.QPoint(round((column+.5)*self.view.width()/count), 18))
+        QTest.mouseClick(
+            self.view,
+            QtCore.Qt.MouseButton.LeftButton,
+            pos=QtCore.QPoint(round((column + 0.5) * self.view.width() / count), 18),
+        )
         self.app.processEvents()
         self.assertTrue(self.view._popup._opened)
         return self.view._popup
@@ -188,7 +224,9 @@ class TimePickerTests(unittest.TestCase):
             elif action == "escape":
                 QTest.keyClick(popup.wheel, QtCore.Qt.Key.Key_Escape)
             else:
-                QTest.mouseClick(popup, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(740, 580))
+                QTest.mouseClick(
+                    popup, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(740, 580)
+                )
             self.finish_motion(popup)
             self.assertEqual(self.view.time(), QtCore.QTime(14, 0))
             self.assertEqual(self.changed, [])
@@ -234,40 +272,56 @@ class TimePickerTests(unittest.TestCase):
         popup = self.open()
         for mode, amount in (("angle", 30), ("pixel", 11)):
             popup.wheel.set_value((14, 0))
-            pos = QtCore.QPoint(3*popup.wheel.width()//4, popup.wheel.height()//2)
+            pos = QtCore.QPoint(3 * popup.wheel.width() // 4, popup.wheel.height() // 2)
             for index in range(4):
-                event = QtGui.QWheelEvent(QtCore.QPointF(pos), QtCore.QPointF(popup.wheel.mapToGlobal(pos)),
-                    QtCore.QPoint(0, amount if mode == "pixel" else 0), QtCore.QPoint(0, amount if mode == "angle" else 0),
-                    QtCore.Qt.MouseButton.NoButton, QtCore.Qt.KeyboardModifier.NoModifier, QtCore.Qt.ScrollPhase.NoScrollPhase, False)
+                event = QtGui.QWheelEvent(
+                    QtCore.QPointF(pos),
+                    QtCore.QPointF(popup.wheel.mapToGlobal(pos)),
+                    QtCore.QPoint(0, amount if mode == "pixel" else 0),
+                    QtCore.QPoint(0, amount if mode == "angle" else 0),
+                    QtCore.Qt.MouseButton.NoButton,
+                    QtCore.Qt.KeyboardModifier.NoModifier,
+                    QtCore.Qt.ScrollPhase.NoScrollPhase,
+                    False,
+                )
                 self.app.sendEvent(popup.wheel, event)
                 self.assertEqual(popup.wheel.value, (14, 59) if index == 3 else (14, 0))
 
     def test_click_and_drag_use_selected_column(self):
         popup = self.open()
         wheel = popup.wheel
-        QTest.mouseClick(wheel, QtCore.Qt.MouseButton.LeftButton,
-                         pos=QtCore.QPoint(wheel.width()//4, (wheel.RADIUS+1)*44+22))
+        QTest.mouseClick(
+            wheel,
+            QtCore.Qt.MouseButton.LeftButton,
+            pos=QtCore.QPoint(wheel.width() // 4, (wheel.RADIUS + 1) * 44 + 22),
+        )
         self.assertEqual(wheel.value, (15, 0))
-        point = QtCore.QPoint(3*wheel.width()//4, wheel.height()//2)
+        point = QtCore.QPoint(3 * wheel.width() // 4, wheel.height() // 2)
         QTest.mousePress(wheel, QtCore.Qt.MouseButton.LeftButton, pos=point)
-        QTest.mouseMove(wheel, point-QtCore.QPoint(0, 88))
-        QTest.mouseRelease(wheel, QtCore.Qt.MouseButton.LeftButton, pos=point-QtCore.QPoint(0, 88))
+        QTest.mouseMove(wheel, point - QtCore.QPoint(0, 88))
+        QTest.mouseRelease(
+            wheel, QtCore.Qt.MouseButton.LeftButton, pos=point - QtCore.QPoint(0, 88)
+        )
         self.assertEqual(wheel.value, (15, 2))
 
     def test_meridiem_blank_rows_do_not_activate(self):
         self.view.set12HourClock(True)
         popup = self.open((14, 0), column=2)
         wheel = popup.wheel
-        QTest.mouseClick(wheel, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(5*wheel.width()//6, 22))
+        QTest.mouseClick(
+            wheel, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(5 * wheel.width() // 6, 22)
+        )
         self.assertEqual(wheel.value, (14, 0))
 
     def test_partial_drag_snaps_back_with_animation_and_does_not_commit(self):
         popup = self.open()
         wheel = popup.wheel
-        point = QtCore.QPoint(wheel.width()//4, wheel.height()//2)
+        point = QtCore.QPoint(wheel.width() // 4, wheel.height() // 2)
         QTest.mousePress(wheel, QtCore.Qt.MouseButton.LeftButton, pos=point)
-        QTest.mouseMove(wheel, point+QtCore.QPoint(0, 15))
-        QTest.mouseRelease(wheel, QtCore.Qt.MouseButton.LeftButton, pos=point+QtCore.QPoint(0, 15))
+        QTest.mouseMove(wheel, point + QtCore.QPoint(0, 15))
+        QTest.mouseRelease(
+            wheel, QtCore.Qt.MouseButton.LeftButton, pos=point + QtCore.QPoint(0, 15)
+        )
         self.assertEqual(wheel.value, (14, 0))
         self.assertEqual(wheel._animations[0].state(), QtCore.QAbstractAnimation.State.Running)
         self.assertEqual(wheel._animations[0].startValue(), 15.0)

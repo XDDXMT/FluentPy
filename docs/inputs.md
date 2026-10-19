@@ -10,7 +10,7 @@ from fluentpy import AffixLineEdit
 
 address = AffixLineEdit("example.hostname", prefix="https://", suffix=".com")
 address.setText("fluentpy")
-print(address.text())       # fluentpy
+print(address.text())  # fluentpy
 print(address.full_text())  # https://fluentpy.com
 address.set_prefix("http://")
 address.set_suffix(".cn")

@@ -85,16 +85,16 @@ class FramelessDialog(QtWidgets.QDialog):
         self._prepare_geometry()
         super().open()
 
-    def setContentWidget(self, widget: QtWidgets.QWidget) -> None:  # noqa: N802 - Qt API friendly
+    def setContentWidget(self, widget: QtWidgets.QWidget) -> None:
         self.add_content_widget(widget)
 
     def add_content_widget(self, widget: QtWidgets.QWidget) -> None:
         self._content_layout.addWidget(widget)
 
-    def setYesButtonText(self, text: str) -> None:  # noqa: N802
+    def setYesButtonText(self, text: str) -> None:
         self.yes_button.setText(text)
 
-    def setCancelButtonText(self, text: str) -> None:  # noqa: N802
+    def setCancelButtonText(self, text: str) -> None:
         self.cancel_button.setText(text)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -107,7 +107,9 @@ class FramelessDialog(QtWidgets.QDialog):
             layout.activate()
         self.adjustSize()
         hint = self.sizeHint()
-        self.resize(max(self.minimumWidth(), hint.width()), max(self.minimumHeight(), hint.height()))
+        self.resize(
+            max(self.minimumWidth(), hint.width()), max(self.minimumHeight(), hint.height())
+        )
         parent = self.parentWidget()
         if parent is not None:
             owner = parent.window()
@@ -116,7 +118,9 @@ class FramelessDialog(QtWidgets.QDialog):
                 self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
         else:
             screen = QtWidgets.QApplication.primaryScreen()
-            available = screen.availableGeometry() if screen is not None else QtCore.QRect(0, 0, 1200, 800)
+            available = (
+                screen.availableGeometry() if screen is not None else QtCore.QRect(0, 0, 1200, 800)
+            )
             center = available.center()
         screen = QtGui.QGuiApplication.screenAt(center) or QtWidgets.QApplication.primaryScreen()
         available = screen.availableGeometry() if screen else QtCore.QRect(0, 0, 1200, 800)
@@ -250,7 +254,11 @@ class MaskedDialog(QtWidgets.QWidget):
         theme.subscribe(self, self._apply_theme)
 
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
-        if watched is self.parentWidget() and event.type() == QtCore.QEvent.Type.Resize and self.isVisible():
+        if (
+            watched is self.parentWidget()
+            and event.type() == QtCore.QEvent.Type.Resize
+            and self.isVisible()
+        ):
             self._fit_to_parent()
         return super().eventFilter(watched, event)
 
@@ -309,22 +317,22 @@ class MaskedDialog(QtWidgets.QWidget):
         self._fade.finished.connect(self._fade_done_slot)
         self._fade.start()
 
-    def setClosableOnMaskClicked(self, closable: bool) -> None:  # noqa: N802
+    def setClosableOnMaskClicked(self, closable: bool) -> None:
         self._closable_on_mask_clicked = closable
 
-    def isClosableOnMaskClicked(self) -> bool:  # noqa: N802
+    def isClosableOnMaskClicked(self) -> bool:
         return self._closable_on_mask_clicked
 
-    def setContentWidget(self, widget: QtWidgets.QWidget) -> None:  # noqa: N802
+    def setContentWidget(self, widget: QtWidgets.QWidget) -> None:
         self.add_content_widget(widget)
 
     def add_content_widget(self, widget: QtWidgets.QWidget) -> None:
         self._content_layout.addWidget(widget)
 
-    def setYesButtonText(self, text: str) -> None:  # noqa: N802
+    def setYesButtonText(self, text: str) -> None:
         self.yes_button.setText(text)
 
-    def setCancelButtonText(self, text: str) -> None:  # noqa: N802
+    def setCancelButtonText(self, text: str) -> None:
         self.cancel_button.setText(text)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
@@ -353,10 +361,10 @@ class MaskedDialog(QtWidgets.QWidget):
             self.rejected.emit()
         self.finished.emit(result)
 
-    def getMaskOpacity(self) -> float:  # noqa: N802
+    def getMaskOpacity(self) -> float:
         return self._mask_opacity
 
-    def setMaskOpacity(self, opacity: float) -> None:  # noqa: N802
+    def setMaskOpacity(self, opacity: float) -> None:
         self._mask_opacity = max(0.0, min(1.0, float(opacity)))
         self.update()
 
@@ -368,7 +376,9 @@ class MaskedDialog(QtWidgets.QWidget):
             self.setGeometry(parent.rect())
         else:
             screen = QtWidgets.QApplication.primaryScreen()
-            self.setGeometry(screen.availableGeometry() if screen is not None else QtCore.QRect(0, 0, 960, 640))
+            self.setGeometry(
+                screen.availableGeometry() if screen is not None else QtCore.QRect(0, 0, 960, 640)
+            )
 
     def _apply_theme(self) -> None:
         tokens = theme.tokens

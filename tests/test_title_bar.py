@@ -1,14 +1,15 @@
 """Qt title-bar ownership, extension points and native-window delegation."""
+
 import os
 import sys
 import unittest
 from unittest.mock import Mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-from fluentpy.qt import QtCore, QtGui, QtWidgets, QT_API
+from fluentpy.qt import QT_API, QtCore, QtGui, QtWidgets
 from fluentpy.theme import theme
-from fluentpy.widgets.title_bar import FluentTitleBar
 from fluentpy.widgets.button import Button
+from fluentpy.widgets.title_bar import FluentTitleBar
 
 if QT_API == "PySide6":
     from PySide6.QtTest import QTest
@@ -124,8 +125,10 @@ class TitleBarTests(unittest.TestCase):
         self.app.processEvents()
         self.assertEqual(self.bar.title_label.accessibleName(), title)
         self.assertNotEqual(self.bar.title_label.text(), title)
-        self.assertLessEqual(self.bar.title_label.fontMetrics().horizontalAdvance(
-            self.bar.title_label.text()), self.bar.title_label.width())
+        self.assertLessEqual(
+            self.bar.title_label.fontMetrics().horizontalAdvance(self.bar.title_label.text()),
+            self.bar.title_label.width(),
+        )
         self.assertEqual(self.bar.title_label.toolTip(), title)
         self.owner.setWindowTitle("文件")
         self.assertEqual(self.bar.title_label.text(), "文件")
@@ -139,7 +142,9 @@ class TitleBarTests(unittest.TestCase):
         self.assertEqual(self.owner.windowFlags(), flags)
 
     def test_blank_and_title_drag_use_only_an_existing_window_handle(self):
-        self.owner.winId = Mock(side_effect=AssertionError("drag must not allocate a native handle"))
+        self.owner.winId = Mock(
+            side_effect=AssertionError("drag must not allocate a native handle")
+        )
         QTest.mousePress(self.bar, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(300, 20))
         self.owner.native_handle.startSystemMove.assert_called_once_with()
         self.owner.native_handle.startSystemMove.reset_mock()
@@ -220,20 +225,30 @@ class TitleBarTests(unittest.TestCase):
         theme.toggle()
         theme.set_mode(old_mode)
 
-    def test_theme_switch_paints_owner_background_and_readable_title_and_captions_over_stale_qss(self):
+    def test_theme_switch_paints_owner_background_and_readable_title_and_captions_over_stale_qss(
+        self,
+    ):
         old_mode = theme.mode
         # Reproduce an ancestor's stale scoped foreground while the window
         # coordinator has already supplied its new palette background.
         self.owner.setStyleSheet("QLabel {color:#1b1d22;} QWidget {font-size:14px;}")
         self.owner.setWindowTitle("Theme title")
         self.owner._resolved_background_color = lambda: self.owner._caption_test_background
+
         def contains_color(image, color):
-            return any(max(abs(image.pixelColor(x, y).red() - color.red()),
-                           abs(image.pixelColor(x, y).green() - color.green()),
-                           abs(image.pixelColor(x, y).blue() - color.blue())) <= 3
-                       for y in range(image.height()) for x in range(image.width()))
-        for mode in ('dark', 'light', 'dark'):
-            background = QtGui.QColor('#20242f' if mode == 'dark' else '#f3f5fb')
+            return any(
+                max(
+                    abs(image.pixelColor(x, y).red() - color.red()),
+                    abs(image.pixelColor(x, y).green() - color.green()),
+                    abs(image.pixelColor(x, y).blue() - color.blue()),
+                )
+                <= 3
+                for y in range(image.height())
+                for x in range(image.width())
+            )
+
+        for mode in ("dark", "light", "dark"):
+            background = QtGui.QColor("#20242f" if mode == "dark" else "#f3f5fb")
             self.owner._caption_test_background = background
             palette = self.owner.palette()
             palette.setColor(QtGui.QPalette.ColorRole.Window, background)
@@ -243,14 +258,26 @@ class TitleBarTests(unittest.TestCase):
             self.app.processEvents()
             image = self.bar.grab().toImage()
             self.assertEqual(image.pixelColor(image.width() // 2, image.height() - 1), background)
-            self.assertTrue(contains_color(self.bar.title_label.grab().toImage(), QtGui.QColor(theme.tokens.text)))
-            for button in (self.bar.minimize_button, self.bar.maximize_button, self.bar.close_button):
+            self.assertTrue(
+                contains_color(
+                    self.bar.title_label.grab().toImage(), QtGui.QColor(theme.tokens.text)
+                )
+            )
+            for button in (
+                self.bar.minimize_button,
+                self.bar.maximize_button,
+                self.bar.close_button,
+            ):
                 button._reset_interaction()
-                self.assertTrue(contains_color(button.grab().toImage(), QtGui.QColor(theme.tokens.text)))
+                self.assertTrue(
+                    contains_color(button.grab().toImage(), QtGui.QColor(theme.tokens.text))
+                )
                 self.assertEqual(button.height(), 48)
         theme.set_mode(old_mode)
 
-    def test_configured_height_survives_native_refresh_theme_changes_and_qt_fixed_height_entry(self):
+    def test_configured_height_survives_native_refresh_theme_changes_and_qt_fixed_height_entry(
+        self,
+    ):
         self.assertEqual(self.bar.bar_height(), 48)
         for height, setter in ((60, self.bar.set_bar_height), (56, self.bar.setFixedHeight)):
             setter(height)
@@ -260,8 +287,13 @@ class TitleBarTests(unittest.TestCase):
             self.app.processEvents()
             self.assertEqual(self.bar.bar_height(), height)
             self.assertEqual(self.bar.height(), height)
-            for button in (self.bar.back_button, self.bar.forward_button, self.bar.minimize_button,
-                           self.bar.maximize_button, self.bar.close_button):
+            for button in (
+                self.bar.back_button,
+                self.bar.forward_button,
+                self.bar.minimize_button,
+                self.bar.maximize_button,
+                self.bar.close_button,
+            ):
                 self.assertEqual(button.height(), height)
         for invalid in (0, 31, True, 48.5):
             with self.assertRaises(ValueError):

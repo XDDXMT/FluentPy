@@ -1,7 +1,8 @@
 """Two time-picker formats. Run: python examples/time_picker.py."""
+
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -40,12 +41,19 @@ class TimeExamples(QtWidgets.QWidget):
             result.setWordWrap(True)
             self.results.append(result)
             card.body_layout.addWidget(result)
-            picker.timeChanged.connect(lambda value, label=result: label.setText(
-                "当前时间 · " + value.toString("HH:mm") if value.isValid() else "尚未选择时间"))
-            picker.timeAccepted.connect(lambda value, label=result: label.setText("已确认 · " + value.toString("HH:mm")))
+            picker.timeChanged.connect(
+                lambda value, label=result: label.setText(
+                    "当前时间 · " + value.toString("HH:mm") if value.isValid() else "尚未选择时间"
+                )
+            )
+            picker.timeAccepted.connect(
+                lambda value, label=result: label.setText("已确认 · " + value.toString("HH:mm"))
+            )
             row = QtWidgets.QHBoxLayout()
             current = Button("当前时间")
-            current.clicked.connect(lambda _checked=False, view=picker: view.setTime(QtCore.QTime.currentTime()))
+            current.clicked.connect(
+                lambda _checked=False, view=picker: view.setTime(QtCore.QTime.currentTime())
+            )
             clear = Button("清空")
             clear.clicked.connect(picker.clear)
             row.addWidget(current)
@@ -101,7 +109,9 @@ class TimePickerDemo(QtWidgets.QWidget):
         footer.setObjectName("muted")
         footer.setWordWrap(True)
         layout.addWidget(footer)
-        self.backend = QtWidgets.QLabel("后端：" + self.examples.picker24.acceleration_backend() + " · C优先，Python兼容")
+        self.backend = QtWidgets.QLabel(
+            "后端：" + self.examples.picker24.acceleration_backend() + " · C优先，Python兼容"
+        )
         self.backend.setObjectName("muted")
         layout.addWidget(self.backend)
         theme.subscribe(self, self._refresh_theme)

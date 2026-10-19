@@ -1,19 +1,32 @@
 """Workbench preferences composed exclusively from existing library controls."""
+
 from __future__ import annotations
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from fluentpy import (
-    Button, ComboBox, ExpandableCardWidget, FluentIcon, GroupHeaderCardWidget,
-    HyperlinkButton, Slider, TextEdit, ToggleSwitch, __version__, theme,
+    Button,
+    ComboBox,
+    ExpandableCardWidget,
+    FluentIcon,
+    GroupHeaderCardWidget,
+    HyperlinkButton,
+    Slider,
+    TextEdit,
+    ToggleSwitch,
+    __version__,
+    theme,
 )
-from fluentpy.qt import QtCore, QtWidgets, QT_API, Signal
-
+from fluentpy.qt import QT_API, QtCore, QtWidgets, Signal
 
 DEFAULT_PREFERENCES = {
-    "theme": "light", "accent": "default", "sidebar_width": 216,
-    "sidebar_expanded": True, "page_animation": True, "show_backend": True,
+    "theme": "light",
+    "accent": "default",
+    "sidebar_width": 216,
+    "sidebar_expanded": True,
+    "page_animation": True,
+    "show_backend": True,
     "mica_enabled": True,
 }
 ACCENTS = {
@@ -74,6 +87,7 @@ def accent_color(preferences: dict):
 
 class WorkbenchSettings(QtWidgets.QWidget):
     """A form of public FluentPy controls; the owning workbench applies changes."""
+
     preferenceChanged = Signal(str, object)
     resetRequested = Signal()
 
@@ -91,18 +105,31 @@ class WorkbenchSettings(QtWidgets.QWidget):
         self.accent_choice.addItems([item[0] for item in ACCENTS.values()])
         self.accent_choice.setFixedWidth(160)
         self.accent_choice.setAccessibleName("工作台强调色")
-        appearance.add_group(FluentIcon.DESKTOP, "主题", "与窗口右上方的主题开关保持同步", self.theme_choice)
-        appearance.add_group(FluentIcon.COLOR, "强调色", "用于按钮、选中标记与滑块", self.accent_choice)
+        appearance.add_group(
+            FluentIcon.DESKTOP, "主题", "与窗口右上方的主题开关保持同步", self.theme_choice
+        )
+        appearance.add_group(
+            FluentIcon.COLOR, "强调色", "用于按钮、选中标记与滑块", self.accent_choice
+        )
         self.mica_toggle = ToggleSwitch()
         self.mica_toggle.setAccessibleName("云母效果（Windows 11）")
-        appearance.add_group(FluentIcon.DESKTOP, "云母效果（Windows 11）",
-                             "让标题栏与导航使用系统材质；不支持时使用普通背景", self.mica_toggle)
+        appearance.add_group(
+            FluentIcon.DESKTOP,
+            "云母效果（Windows 11）",
+            "让标题栏与导航使用系统材质；不支持时使用普通背景",
+            self.mica_toggle,
+        )
         root.addWidget(appearance)
 
         navigation = GroupHeaderCardWidget("导航", self)
         self.expanded_toggle = ToggleSwitch()
         self.expanded_toggle.setAccessibleName("展开导航栏")
-        navigation.add_group(FluentIcon.NAVIGATION, "展开导航栏", "关闭后只显示图标，底部设置入口仍可使用", self.expanded_toggle)
+        navigation.add_group(
+            FluentIcon.NAVIGATION,
+            "展开导航栏",
+            "关闭后只显示图标，底部设置入口仍可使用",
+            self.expanded_toggle,
+        )
         width_control = QtWidgets.QWidget()
         width_control.setFixedWidth(210)
         width_layout = QtWidgets.QHBoxLayout(width_control)
@@ -115,7 +142,9 @@ class WorkbenchSettings(QtWidgets.QWidget):
         self.width_value.setFixedWidth(30)
         width_layout.addWidget(self.width_slider, 1)
         width_layout.addWidget(self.width_value)
-        navigation.add_group(FluentIcon.LAYOUT_ROW_THREE, "展开宽度", "调整导航栏展开后的宽度", width_control)
+        navigation.add_group(
+            FluentIcon.LAYOUT_ROW_THREE, "展开宽度", "调整导航栏展开后的宽度", width_control
+        )
         root.addWidget(navigation)
 
         behavior = GroupHeaderCardWidget("交互与状态", self)
@@ -123,8 +152,18 @@ class WorkbenchSettings(QtWidgets.QWidget):
         self.animation_toggle.setAccessibleName("页面切换动画")
         self.backend_toggle = ToggleSwitch()
         self.backend_toggle.setAccessibleName("显示后端状态")
-        behavior.add_group(FluentIcon.ARROW_SWAP, "页面切换动画", "在组件页面之间使用淡入与位移动画", self.animation_toggle)
-        behavior.add_group(FluentIcon.INFO, "显示后端状态", "在窗口底栏显示当前使用的 C 或 Python 后端", self.backend_toggle)
+        behavior.add_group(
+            FluentIcon.ARROW_SWAP,
+            "页面切换动画",
+            "在组件页面之间使用淡入与位移动画",
+            self.animation_toggle,
+        )
+        behavior.add_group(
+            FluentIcon.INFO,
+            "显示后端状态",
+            "在窗口底栏显示当前使用的 C 或 Python 后端",
+            self.backend_toggle,
+        )
         root.addWidget(behavior)
 
         footer = QtWidgets.QHBoxLayout()
@@ -139,11 +178,15 @@ class WorkbenchSettings(QtWidgets.QWidget):
         self.about_card = GroupHeaderCardWidget("关于 FluentPy", self)
         self.documentation_link = HyperlinkButton("官网与文档", url=DOCUMENTATION_URL)
         self.version_row = self.about_card.add_group(
-            FluentIcon.INFO, "FluentPy " + __version__,
-            f"{QT_API} · Qt {QtCore.qVersion()}", self.documentation_link)
+            FluentIcon.INFO,
+            "FluentPy " + __version__,
+            f"{QT_API} · Qt {QtCore.qVersion()}",
+            self.documentation_link,
+        )
         self.author_link = HyperlinkButton("GitHub 主页", url=AUTHOR_PROFILE)
         self.author_row = self.about_card.add_group(
-            FluentIcon.CONTACT_CARD, AUTHOR_NAME, "项目作者 · GitHub：XDDXMT", self.author_link)
+            FluentIcon.CONTACT_CARD, AUTHOR_NAME, "项目作者 · GitHub：XDDXMT", self.author_link
+        )
         project_links = QtWidgets.QWidget()
         links_layout = QtWidgets.QHBoxLayout(project_links)
         links_layout.setContentsMargins(0, 0, 0, 0)
@@ -153,13 +196,15 @@ class WorkbenchSettings(QtWidgets.QWidget):
         links_layout.addWidget(self.repository_link)
         links_layout.addWidget(self.issues_link)
         self.project_row = self.about_card.add_group(
-            FluentIcon.CODE, "源码与反馈", "代码与文档公开，问题可通过项目仓库反馈。", project_links)
+            FluentIcon.CODE, "源码与反馈", "代码与文档公开，问题可通过项目仓库反馈。", project_links
+        )
         root.addWidget(self.about_card)
 
         self.declarations_card = ExpandableCardWidget("许可与第三方声明", self)
         self.declaration_summary = QtWidgets.QLabel(
             "FluentPy 使用 MIT 许可证。发行时须保留版权声明与许可证文本。"
-            "组件独立实现；Qt、图标等第三方依赖和资源遵循各自许可证。")
+            "组件独立实现；Qt、图标等第三方依赖和资源遵循各自许可证。"
+        )
         self.declaration_summary.setWordWrap(True)
         self.declaration_summary.setTextFormat(QtCore.Qt.TextFormat.PlainText)
         self.declaration_summary.setMinimumWidth(0)
@@ -176,12 +221,24 @@ class WorkbenchSettings(QtWidgets.QWidget):
         root.addWidget(self.declarations_card)
 
         self.set_preferences(preferences)
-        self.theme_choice.currentIndexChanged.connect(lambda index: self.preferenceChanged.emit("theme", "dark" if index else "light"))
-        self.accent_choice.currentIndexChanged.connect(lambda index: self.preferenceChanged.emit("accent", tuple(ACCENTS)[index]))
-        self.width_slider.valueChanged.connect(lambda width: self.preferenceChanged.emit("sidebar_width", width))
-        for key, control in (("sidebar_expanded", self.expanded_toggle), ("page_animation", self.animation_toggle),
-                             ("show_backend", self.backend_toggle), ("mica_enabled", self.mica_toggle)):
-            control.toggled.connect(lambda checked, name=key: self.preferenceChanged.emit(name, checked))
+        self.theme_choice.currentIndexChanged.connect(
+            lambda index: self.preferenceChanged.emit("theme", "dark" if index else "light")
+        )
+        self.accent_choice.currentIndexChanged.connect(
+            lambda index: self.preferenceChanged.emit("accent", tuple(ACCENTS)[index])
+        )
+        self.width_slider.valueChanged.connect(
+            lambda width: self.preferenceChanged.emit("sidebar_width", width)
+        )
+        for key, control in (
+            ("sidebar_expanded", self.expanded_toggle),
+            ("page_animation", self.animation_toggle),
+            ("show_backend", self.backend_toggle),
+            ("mica_enabled", self.mica_toggle),
+        ):
+            control.toggled.connect(
+                lambda checked, name=key: self.preferenceChanged.emit(name, checked)
+            )
         theme.subscribe(self, self._refresh_theme)
         self._refresh_theme()
 
@@ -200,12 +257,24 @@ class WorkbenchSettings(QtWidgets.QWidget):
         self.width_value.setText(str(preferences["sidebar_width"]))
 
     def _refresh_theme(self):
-        self.width_value.setStyleSheet(f"color: {theme.tokens.text_muted}; background: transparent;")
+        self.width_value.setStyleSheet(
+            f"color: {theme.tokens.text_muted}; background: transparent;"
+        )
         self.result.setStyleSheet(f"color: {theme.tokens.text_muted}; background: transparent;")
         # The shared link control's compact size hint leaves too little room
         # for its icon and text. Reserve the actual rendered font width here
         # without changing the library control or padding the visible label.
-        for link in (self.documentation_link, self.author_link, self.repository_link, self.issues_link):
+        for link in (
+            self.documentation_link,
+            self.author_link,
+            self.repository_link,
+            self.issues_link,
+        ):
             icon, gap, side_padding, allowance = 14, 8, 20, 6
-            link.setFixedWidth(link.fontMetrics().horizontalAdvance(link.text())
-                               + icon + gap + side_padding + allowance)
+            link.setFixedWidth(
+                link.fontMetrics().horizontalAdvance(link.text())
+                + icon
+                + gap
+                + side_padding
+                + allowance
+            )

@@ -8,7 +8,9 @@ from ..theme.fonts import ui_font
 class CheckBox(QtWidgets.QAbstractButton):
     stateChanged = Signal(int)
 
-    def __init__(self, text: str = "", parent: QtWidgets.QWidget | None = None, *, description: str = "") -> None:
+    def __init__(
+        self, text: str = "", parent: QtWidgets.QWidget | None = None, *, description: str = ""
+    ) -> None:
         super().__init__(parent)
         self._description = str(description)
         self._keyboard_focus = False
@@ -38,7 +40,7 @@ class CheckBox(QtWidgets.QAbstractButton):
         self.updateGeometry()
         self.update()
 
-    def setDescription(self, text: str) -> None:  # noqa: N802 - Qt API
+    def setDescription(self, text: str) -> None:
         self.set_description(text)
 
     def _description_font(self) -> QtGui.QFont:
@@ -49,21 +51,24 @@ class CheckBox(QtWidgets.QAbstractButton):
     def _content_height(self) -> int:
         if not self._description:
             return max(32, self.fontMetrics().height() + 8)
-        return max(40, self.fontMetrics().height() + QtGui.QFontMetrics(self._description_font()).height() + 9)
+        return max(
+            40,
+            self.fontMetrics().height() + QtGui.QFontMetrics(self._description_font()).height() + 9,
+        )
 
     def _update_minimum_height(self) -> None:
         self.setMinimumHeight(self._content_height())
 
-    def setTristate(self, enabled: bool = True) -> None:  # noqa: N802 - Qt API
+    def setTristate(self, enabled: bool = True) -> None:
         self._tristate = enabled
 
-    def isTristate(self) -> bool:  # noqa: N802 - Qt API
+    def isTristate(self) -> bool:
         return self._tristate
 
-    def checkState(self) -> QtCore.Qt.CheckState:  # noqa: N802 - Qt API
+    def checkState(self) -> QtCore.Qt.CheckState:
         return self._state
 
-    def setCheckState(self, state: QtCore.Qt.CheckState) -> None:  # noqa: N802 - Qt API
+    def setCheckState(self, state: QtCore.Qt.CheckState) -> None:
         if state == self._state:
             return
         self._state = state
@@ -75,7 +80,9 @@ class CheckBox(QtWidgets.QAbstractButton):
         return self._state == QtCore.Qt.CheckState.Checked
 
     def setChecked(self, checked: bool) -> None:
-        self.setCheckState(QtCore.Qt.CheckState.Checked if checked else QtCore.Qt.CheckState.Unchecked)
+        self.setCheckState(
+            QtCore.Qt.CheckState.Checked if checked else QtCore.Qt.CheckState.Unchecked
+        )
 
     def nextCheckState(self) -> None:
         if self._tristate:
@@ -91,7 +98,10 @@ class CheckBox(QtWidgets.QAbstractButton):
     def sizeHint(self) -> QtCore.QSize:
         width = self.fontMetrics().horizontalAdvance(self.text())
         if self._description:
-            width = max(width, QtGui.QFontMetrics(self._description_font()).horizontalAdvance(self._description))
+            width = max(
+                width,
+                QtGui.QFontMetrics(self._description_font()).horizontalAdvance(self._description),
+            )
         return QtCore.QSize(max(24, width + 34), self._content_height())
 
     def minimumSizeHint(self) -> QtCore.QSize:
@@ -104,8 +114,11 @@ class CheckBox(QtWidgets.QAbstractButton):
             self.updateGeometry()
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        self._keyboard_focus = event.reason() in (QtCore.Qt.FocusReason.TabFocusReason,
-            QtCore.Qt.FocusReason.BacktabFocusReason, QtCore.Qt.FocusReason.ShortcutFocusReason)
+        self._keyboard_focus = event.reason() in (
+            QtCore.Qt.FocusReason.TabFocusReason,
+            QtCore.Qt.FocusReason.BacktabFocusReason,
+            QtCore.Qt.FocusReason.ShortcutFocusReason,
+        )
         super().focusInEvent(event)
         self.update()
 
@@ -140,7 +153,9 @@ class CheckBox(QtWidgets.QAbstractButton):
         del event
         tokens = theme.tokens
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
+        painter.setRenderHints(
+            QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing
+        )
         painter.setFont(self.font())
 
         rtl = self.isRightToLeft()
@@ -149,10 +164,14 @@ class CheckBox(QtWidgets.QAbstractButton):
             secondary_height = QtGui.QFontMetrics(self._description_font()).height()
             top = max(2.0, (self.height() - title_height - secondary_height - 1) / 2)
             box_y = max(2.0, top + title_height / 2 - 10)
-            title_rect = QtCore.QRectF(2 if rtl else 32, top, max(0, self.width() - 34), title_height)
+            title_rect = QtCore.QRectF(
+                2 if rtl else 32, top, max(0, self.width() - 34), title_height
+            )
         else:
             box_y = self.height() / 2 - 10
-            title_rect = QtCore.QRectF(2 if rtl else 32, 0, max(0, self.width() - 34), self.height())
+            title_rect = QtCore.QRectF(
+                2 if rtl else 32, 0, max(0, self.width() - 34), self.height()
+            )
         box = QtCore.QRectF(self.width() - 22 if rtl else 2, box_y, 20, 20)
         painter.save()
         if not self.isEnabled():
@@ -177,29 +196,53 @@ class CheckBox(QtWidgets.QAbstractButton):
         painter.drawRoundedRect(box, 4, 4)
 
         if self._state == QtCore.Qt.CheckState.Checked:
-            pen = QtGui.QPen(QtGui.QColor("#ffffff"), 1.7, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap, QtCore.Qt.PenJoinStyle.RoundJoin)
+            pen = QtGui.QPen(
+                QtGui.QColor("#ffffff"),
+                1.7,
+                QtCore.Qt.PenStyle.SolidLine,
+                QtCore.Qt.PenCapStyle.RoundCap,
+                QtCore.Qt.PenJoinStyle.RoundJoin,
+            )
             painter.setPen(pen)
-            painter.drawLine(QtCore.QLineF(box.left() + 5, box.center().y(), box.left() + 9, box.bottom() - 6))
-            painter.drawLine(QtCore.QLineF(box.left() + 9, box.bottom() - 6, box.right() - 5, box.top() + 6))
+            painter.drawLine(
+                QtCore.QLineF(box.left() + 5, box.center().y(), box.left() + 9, box.bottom() - 6)
+            )
+            painter.drawLine(
+                QtCore.QLineF(box.left() + 9, box.bottom() - 6, box.right() - 5, box.top() + 6)
+            )
         elif self._state == QtCore.Qt.CheckState.PartiallyChecked:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(QtGui.QColor("#ffffff"))
-            painter.drawRoundedRect(QtCore.QRectF(box.left() + 5, box.center().y() - 1.5, 10, 3), 1.5, 1.5)
+            painter.drawRoundedRect(
+                QtCore.QRectF(box.left() + 5, box.center().y() - 1.5, 10, 3), 1.5, 1.5
+            )
 
         painter.restore()
 
         text_color = QtGui.QColor(tokens.text if self.isEnabled() else tokens.disabled)
         painter.setPen(text_color)
         title_rect.translate(0, -3)
-        alignment = QtCore.Qt.AlignmentFlag.AlignVCenter | (QtCore.Qt.AlignmentFlag.AlignRight if rtl else QtCore.Qt.AlignmentFlag.AlignLeft)
-        title = self.fontMetrics().elidedText(self.text(), QtCore.Qt.TextElideMode.ElideRight, int(title_rect.width()))
+        alignment = QtCore.Qt.AlignmentFlag.AlignVCenter | (
+            QtCore.Qt.AlignmentFlag.AlignRight if rtl else QtCore.Qt.AlignmentFlag.AlignLeft
+        )
+        title = self.fontMetrics().elidedText(
+            self.text(), QtCore.Qt.TextElideMode.ElideRight, int(title_rect.width())
+        )
         painter.drawText(title_rect, alignment, title)
         if self._description:
             font = self._description_font()
             painter.setFont(font)
             painter.setPen(QtGui.QColor(tokens.text_muted if self.isEnabled() else tokens.disabled))
-            description = QtGui.QFontMetrics(font).elidedText(self._description, QtCore.Qt.TextElideMode.ElideRight, int(title_rect.width()))
-            painter.drawText(QtCore.QRectF(title_rect.left(), title_rect.bottom() + 1, title_rect.width(), secondary_height), alignment, description)
+            description = QtGui.QFontMetrics(font).elidedText(
+                self._description, QtCore.Qt.TextElideMode.ElideRight, int(title_rect.width())
+            )
+            painter.drawText(
+                QtCore.QRectF(
+                    title_rect.left(), title_rect.bottom() + 1, title_rect.width(), secondary_height
+                ),
+                alignment,
+                description,
+            )
         if self.hasFocus() and self._keyboard_focus:
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.setPen(QtGui.QPen(QtGui.QColor(tokens.accent), 1))

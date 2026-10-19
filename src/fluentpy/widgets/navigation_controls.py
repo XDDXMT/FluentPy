@@ -86,7 +86,9 @@ QLabel#breadcrumbSeparator {{
             button.setProperty("routeKey", route_key)
             button.setProperty("selected", route_key == self._current)
             if route_key:
-                button.clicked.connect(lambda _checked=False, key=route_key: self.set_current_item(key))
+                button.clicked.connect(
+                    lambda _checked=False, key=route_key: self.set_current_item(key)
+                )
             else:
                 button.setCursor(QtCore.Qt.CursorShape.ArrowCursor)
                 button.setEnabled(False)
@@ -257,7 +259,11 @@ class Pivot(QtWidgets.QWidget):
         if self._segmented:
             bg = QtGui.QColor("#ffffff" if theme.tokens.mode.value == "light" else "#ffffff")
             bg.setAlpha(142 if theme.tokens.mode.value == "light" else 15)
-            border = QtGui.QColor(0, 0, 0, 20) if theme.tokens.mode.value == "light" else QtGui.QColor(255, 255, 255, 18)
+            border = (
+                QtGui.QColor(0, 0, 0, 20)
+                if theme.tokens.mode.value == "light"
+                else QtGui.QColor(255, 255, 255, 18)
+            )
             painter.setBrush(bg)
             painter.setPen(QtGui.QPen(border, 1))
             painter.drawRoundedRect(QtCore.QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5), 5, 5)
@@ -265,10 +271,16 @@ class Pivot(QtWidgets.QWidget):
             selected.setAlpha(180 if theme.tokens.mode.value == "light" else 18)
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(selected)
-            painter.drawRoundedRect(QtCore.QRectF(self._indicator_x, 2, self._indicator_w, self.height() - 4), 5, 5)
+            painter.drawRoundedRect(
+                QtCore.QRectF(self._indicator_x, 2, self._indicator_w, self.height() - 4), 5, 5
+            )
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(QtGui.QColor(theme.tokens.accent))
-        painter.drawRoundedRect(QtCore.QRectF(self._indicator_x + self._indicator_w / 2 - 8, self.height() - 3, 16, 3), 1.5, 1.5)
+        painter.drawRoundedRect(
+            QtCore.QRectF(self._indicator_x + self._indicator_w / 2 - 8, self.height() - 3, 16, 3),
+            1.5,
+            1.5,
+        )
 
     def _indicator_target(self, widget: QtWidgets.QWidget) -> tuple[float, float]:
         return float(widget.x()), float(widget.width())
@@ -308,7 +320,9 @@ class _PivotButton(QtWidgets.QAbstractButton):
 
     def sizeHint(self) -> QtCore.QSize:
         width = self.fontMetrics().horizontalAdvance(self.text()) + (42 if self._segmented else 16)
-        return QtCore.QSize(max(width, 82 if self._segmented else 42), 30 if self._segmented else 38)
+        return QtCore.QSize(
+            max(width, 82 if self._segmented else 42), 30 if self._segmented else 38
+        )
 
     def enterEvent(self, event: QtCore.QEvent) -> None:
         self._hover = True
@@ -373,7 +387,11 @@ class SegmentedToolWidget(QtWidgets.QWidget):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         bg = QtGui.QColor("#ffffff" if theme.tokens.mode.value == "light" else "#ffffff")
         bg.setAlpha(105 if theme.tokens.mode.value == "light" else 12)
-        border = QtGui.QColor(0, 0, 0, 20) if theme.tokens.mode.value == "light" else QtGui.QColor(255, 255, 255, 18)
+        border = (
+            QtGui.QColor(0, 0, 0, 20)
+            if theme.tokens.mode.value == "light"
+            else QtGui.QColor(255, 255, 255, 18)
+        )
         painter.setBrush(bg)
         painter.setPen(QtGui.QPen(border, 1))
         painter.drawRoundedRect(QtCore.QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5), 5, 5)
@@ -414,7 +432,9 @@ class _ToolSegmentButton(QtWidgets.QAbstractButton):
             painter.setBrush(hover)
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.drawRoundedRect(QtCore.QRectF(self.rect()).adjusted(2, 2, -2, -2), 4, 4)
-        icon_color = QtGui.QColor("#000000" if selected and theme.tokens.mode.value == "dark" else theme.tokens.text)
+        icon_color = QtGui.QColor(
+            "#000000" if selected and theme.tokens.mode.value == "dark" else theme.tokens.text
+        )
         _draw_tinted_icon(painter, self._icon, QtCore.QRect(17, 9, 16, 16), icon_color)
 
 
@@ -456,7 +476,9 @@ class TabBar(QtWidgets.QWidget):
         self.add_tab(routeKey, text, icon)
 
     def set_current_tab(self, route_key: str) -> None:
-        if route_key == self._current or not any(item.route_key == route_key for item in self._items):
+        if route_key == self._current or not any(
+            item.route_key == route_key for item in self._items
+        ):
             return
         self._current = route_key
         for item in self._items:
@@ -522,7 +544,9 @@ class _TabButton(QtWidgets.QAbstractButton):
         self._hover = False
 
     def sizeHint(self) -> QtCore.QSize:
-        return QtCore.QSize(min(200, max(108, self.fontMetrics().horizontalAdvance(self.text()) + 68)), 36)
+        return QtCore.QSize(
+            min(200, max(108, self.fontMetrics().horizontalAdvance(self.text()) + 68)), 36
+        )
 
     def enterEvent(self, event: QtCore.QEvent) -> None:
         self._hover = True
@@ -536,7 +560,9 @@ class _TabButton(QtWidgets.QAbstractButton):
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         close_rect = QtCore.QRect(self.width() - 30, 6, 24, 24)
-        if event.button() == QtCore.Qt.MouseButton.LeftButton and close_rect.contains(event.position().toPoint()):
+        if event.button() == QtCore.Qt.MouseButton.LeftButton and close_rect.contains(
+            event.position().toPoint()
+        ):
             self.closeRequested.emit()
             return
         super().mouseReleaseEvent(event)
@@ -544,11 +570,15 @@ class _TabButton(QtWidgets.QAbstractButton):
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         del event
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
+        painter.setRenderHints(
+            QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing
+        )
         selected = bool(self.property("selected"))
         if selected or self._hover:
             bg = QtGui.QColor("#ffffff" if theme.tokens.mode.value == "light" else "#ffffff")
-            bg.setAlpha(180 if selected and theme.tokens.mode.value == "light" else 24 if selected else 14)
+            bg.setAlpha(
+                180 if selected and theme.tokens.mode.value == "light" else 24 if selected else 14
+            )
             painter.setBrush(bg)
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.drawRoundedRect(QtCore.QRectF(self.rect()).adjusted(0.5, 2.5, -0.5, -0.5), 5, 5)
@@ -557,8 +587,14 @@ class _TabButton(QtWidgets.QAbstractButton):
             color = QtGui.QColor(theme.tokens.text_muted)
         _draw_tinted_icon(painter, self._icon, QtCore.QRect(13, 10, 16, 16), color)
         painter.setPen(color)
-        painter.drawText(QtCore.QRectF(36, 0, self.width() - 68, self.height()), QtCore.Qt.AlignmentFlag.AlignVCenter, self.text())
-        painter.setPen(QtGui.QPen(color, 1.4, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
+        painter.drawText(
+            QtCore.QRectF(36, 0, self.width() - 68, self.height()),
+            QtCore.Qt.AlignmentFlag.AlignVCenter,
+            self.text(),
+        )
+        painter.setPen(
+            QtGui.QPen(color, 1.4, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
+        )
         x = self.width() - 18
         painter.drawLine(QtCore.QLineF(x - 4, 14, x + 4, 22))
         painter.drawLine(QtCore.QLineF(x + 4, 14, x - 4, 22))

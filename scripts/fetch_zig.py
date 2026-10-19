@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
 import platform
 import urllib.request
 import zipfile
-
+from pathlib import Path
 
 VERSION = "0.14.1"
 ARCHIVE = f"zig-x86_64-windows-{VERSION}.zip"
@@ -18,7 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> None:
     if platform.system() != "Windows" or platform.machine().lower() not in {"amd64", "x86_64"}:
-        raise SystemExit("This bootstrap is for Windows x64. Use your platform's C compiler instead.")
+        raise SystemExit(
+            "This bootstrap is for Windows x64. Use your platform's C compiler instead."
+        )
     destination = ROOT / ".toolchains"
     destination.mkdir(exist_ok=True)
     archive = destination / ARCHIVE

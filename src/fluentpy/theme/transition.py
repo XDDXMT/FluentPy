@@ -1,4 +1,5 @@
 """Whole-window theme compositing, without per-frame style recalculation."""
+
 from __future__ import annotations
 
 import weakref
@@ -25,7 +26,9 @@ class _ThemeFrame(QtWidgets.QWidget):
             painter = QtGui.QPainter(self)
             # Cover every pixel opaquely first: Qt need not repaint the entire
             # live control tree underneath this layer on every animation tick.
-            painter.drawPixmap(QtCore.QPoint(), self.target_frame if not self.target_frame.isNull() else self.frame)
+            painter.drawPixmap(
+                QtCore.QPoint(), self.target_frame if not self.target_frame.isNull() else self.frame
+            )
             painter.setOpacity(self.opacity)
             painter.drawPixmap(QtCore.QPoint(), self.frame)
 
@@ -66,7 +69,7 @@ class WindowThemeTransition(QtCore.QObject):
 
     @property
     def owner(self):
-        reference = self.__dict__.get('_owner_ref')
+        reference = self.__dict__.get("_owner_ref")
         return reference() if reference is not None else None
 
     def set_enabled(self, enabled):
@@ -86,7 +89,7 @@ class WindowThemeTransition(QtCore.QObject):
 
     @staticmethod
     def _capture_frame(owner):
-        capture = getattr(owner, '_capture_theme_frame', None)
+        capture = getattr(owner, "_capture_theme_frame", None)
         return capture() if callable(capture) else owner.grab()
 
     def is_running(self):
@@ -97,8 +100,13 @@ class WindowThemeTransition(QtCore.QObject):
         if window is None:
             return
         self._warm_timer.stop()
-        if (not self.enabled or not window.isVisible() or window.isMinimized()
-                or not window.updatesEnabled() or self.duration <= 0):
+        if (
+            not self.enabled
+            or not window.isVisible()
+            or window.isMinimized()
+            or not window.updatesEnabled()
+            or self.duration <= 0
+        ):
             self.finish()
             return
         self.animation.stop()
@@ -187,19 +195,36 @@ class WindowThemeTransition(QtCore.QObject):
         if watched is owner and kind == QtCore.QEvent.Type.Show and self.enabled:
             self._warm_timer.start(80)
         if watched is owner and kind in (
-                QtCore.QEvent.Type.Resize, QtCore.QEvent.Type.Hide,
-                QtCore.QEvent.Type.Close, QtCore.QEvent.Type.WindowStateChange):
+            QtCore.QEvent.Type.Resize,
+            QtCore.QEvent.Type.Hide,
+            QtCore.QEvent.Type.Close,
+            QtCore.QEvent.Type.WindowStateChange,
+        ):
             self.finish()
             self._warm_timer.stop()
-        elif (kind in (QtCore.QEvent.Type.KeyPress, QtCore.QEvent.Type.InputMethod,
-                       QtCore.QEvent.Type.MouseButtonRelease, QtCore.QEvent.Type.Wheel,
-                       QtCore.QEvent.Type.MouseMove)
-              and self.enabled and self.is_running() and isinstance(watched, QtWidgets.QWidget)
-              and (watched is owner or owner.isAncestorOf(watched))):
-            release = kind in (QtCore.QEvent.Type.KeyPress, QtCore.QEvent.Type.InputMethod,
-                               QtCore.QEvent.Type.MouseButtonRelease, QtCore.QEvent.Type.Wheel)
-            dragging = (kind == QtCore.QEvent.Type.MouseMove
-                        and bool(event.buttons() & QtCore.Qt.MouseButton.LeftButton))
+        elif (
+            kind
+            in (
+                QtCore.QEvent.Type.KeyPress,
+                QtCore.QEvent.Type.InputMethod,
+                QtCore.QEvent.Type.MouseButtonRelease,
+                QtCore.QEvent.Type.Wheel,
+                QtCore.QEvent.Type.MouseMove,
+            )
+            and self.enabled
+            and self.is_running()
+            and isinstance(watched, QtWidgets.QWidget)
+            and (watched is owner or owner.isAncestorOf(watched))
+        ):
+            release = kind in (
+                QtCore.QEvent.Type.KeyPress,
+                QtCore.QEvent.Type.InputMethod,
+                QtCore.QEvent.Type.MouseButtonRelease,
+                QtCore.QEvent.Type.Wheel,
+            )
+            dragging = kind == QtCore.QEvent.Type.MouseMove and bool(
+                event.buttons() & QtCore.Qt.MouseButton.LeftButton
+            )
             if release or dragging:
                 self._cancel_generation = self._generation
                 self._input_timer.start(0)

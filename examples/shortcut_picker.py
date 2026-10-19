@@ -1,9 +1,10 @@
 """Record, preview and save a shortcut. Run: python examples/shortcut_picker.py."""
+
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -29,7 +30,10 @@ class ShortcutExamples(QtWidgets.QWidget):
         self.shortcut.activated.connect(self._triggered)
         self._count = 0
         self.picker.sequenceChanged.connect(self._update_shortcut)
-        note = QtWidgets.QLabel("点击铅笔后按下组合键；保存才会回填。保存后可在本窗口按下快捷键体验，Ctrl+S、Ctrl+O在此示例中标为已占用。", self)
+        note = QtWidgets.QLabel(
+            "点击铅笔后按下组合键；保存才会回填。保存后可在本窗口按下快捷键体验，Ctrl+S、Ctrl+O在此示例中标为已占用。",
+            self,
+        )
         note.setWordWrap(True)
         layout.addWidget(note)
         row = QtWidgets.QHBoxLayout()
@@ -76,7 +80,9 @@ class ShortcutDemo(QtWidgets.QWidget):
         self.examples = ShortcutExamples(self)
         layout.addWidget(self.examples)
         layout.addStretch()
-        backend = "C 加速" if self.examples.picker.acceleration_backend() == "native" else "Python 兼容"
+        backend = (
+            "C 加速" if self.examples.picker.acceleration_backend() == "native" else "Python 兼容"
+        )
         bottom = QtWidgets.QLabel(f"Qt 原生按键事件 · {backend}组合键校验 · 页内浮层", self)
         bottom.setObjectName("muted")
         layout.addWidget(bottom)
@@ -86,10 +92,10 @@ class ShortcutDemo(QtWidgets.QWidget):
     def _apply_theme(self):
         self.setFont(ui_font(14))
         self.setStyleSheet(
-            f'QWidget#shortcutDemo {{ background: {theme.tokens.background}; }}'
-            f'QLabel {{ color: {theme.tokens.text}; background: transparent; font-size: 14px; }}'
-            'QLabel#demoTitle { font-size: 22px; font-weight: 600; }'
-            f'QLabel#muted {{ color: {theme.tokens.text_muted}; font-size: 12px; }}'
+            f"QWidget#shortcutDemo {{ background: {theme.tokens.background}; }}"
+            f"QLabel {{ color: {theme.tokens.text}; background: transparent; font-size: 14px; }}"
+            "QLabel#demoTitle { font-size: 22px; font-weight: 600; }"
+            f"QLabel#muted {{ color: {theme.tokens.text_muted}; font-size: 12px; }}"
         )
 
 

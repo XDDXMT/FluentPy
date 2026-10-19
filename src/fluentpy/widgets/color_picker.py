@@ -1,4 +1,5 @@
 """Transactional color popups composed from FluentPy's native Qt controls."""
+
 from __future__ import annotations
 
 from ..icons import FluentIcon, fluent_icon
@@ -13,6 +14,7 @@ from .scroll_bar import FluentScrollBar
 
 class ColorDialog(MaskedDialog):
     """An in-window modal editor; only accepting commits the draft color."""
+
     colorSelected = Signal(QtGui.QColor)
     currentColorChanged = Signal(QtGui.QColor)
 
@@ -30,11 +32,15 @@ class ColorDialog(MaskedDialog):
         self._scroll.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self._scroll.setWidgetResizable(True)
         self._scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._scroll.setVerticalScrollBar(FluentScrollBar(QtCore.Qt.Orientation.Vertical, self._scroll))
+        self._scroll.setVerticalScrollBar(
+            FluentScrollBar(QtCore.Qt.Orientation.Vertical, self._scroll)
+        )
         self.editor = ColorPickerPanel(self._committed, enable_alpha=enable_alpha)
         self._scroll.setWidget(self.editor)
         self.editor.setAutoFillBackground(False)
-        self._scroll.setStyleSheet("QScrollArea, QScrollArea > QWidget > QWidget { background: transparent; border: none; }")
+        self._scroll.setStyleSheet(
+            "QScrollArea, QScrollArea > QWidget > QWidget { background: transparent; border: none; }"
+        )
         self.add_content_widget(self._scroll)
         self.editor.colorChanged.connect(self.currentColorChanged)
         self.editor.validationChanged.connect(self.yes_button.setEnabled)
@@ -102,17 +108,34 @@ class ColorDialog(MaskedDialog):
                     self._fit_editor()
                 elif kind in (QtCore.QEvent.Type.Hide, QtCore.QEvent.Type.Close):
                     self.reject()
-            if kind == QtCore.QEvent.Type.KeyPress and isinstance(watched, QtWidgets.QWidget) and (watched is self or self.isAncestorOf(watched)):
+            if (
+                kind == QtCore.QEvent.Type.KeyPress
+                and isinstance(watched, QtWidgets.QWidget)
+                and (watched is self or self.isAncestorOf(watched))
+            ):
                 if event.key() == QtCore.Qt.Key.Key_Escape:
                     self.reject()
                     return True
                 if event.key() in (QtCore.Qt.Key.Key_Tab, QtCore.Qt.Key.Key_Backtab):
-                    focusable = [w for w in self._panel.findChildren(QtWidgets.QWidget) if w.isVisible() and w.isEnabled() and w.focusPolicy() & QtCore.Qt.FocusPolicy.TabFocus]
+                    focusable = [
+                        w
+                        for w in self._panel.findChildren(QtWidgets.QWidget)
+                        if w.isVisible()
+                        and w.isEnabled()
+                        and w.focusPolicy() & QtCore.Qt.FocusPolicy.TabFocus
+                    ]
                     if focusable:
                         current = QtWidgets.QApplication.focusWidget()
-                        step = -1 if event.key() == QtCore.Qt.Key.Key_Backtab or event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier else 1
+                        step = (
+                            -1
+                            if event.key() == QtCore.Qt.Key.Key_Backtab
+                            or event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier
+                            else 1
+                        )
                         index = focusable.index(current) if current in focusable else -1
-                        focusable[(index + step) % len(focusable)].setFocus(QtCore.Qt.FocusReason.TabFocusReason)
+                        focusable[(index + step) % len(focusable)].setFocus(
+                            QtCore.Qt.FocusReason.TabFocusReason
+                        )
                     return True
         return super().eventFilter(watched, event)
 
@@ -123,12 +146,17 @@ class ColorDialog(MaskedDialog):
     def _color_theme(self):
         self._shadow.setBlurRadius(22)
         self._shadow.setOffset(0, 4)
-        self._shadow.setColor(QtGui.QColor(0, 0, 0, 38 if theme.tokens.mode.value == "light" else 65))
-        self._title_label.setStyleSheet(f"font-size: 18px; font-weight: 600; color: {theme.tokens.text}; background: transparent;")
+        self._shadow.setColor(
+            QtGui.QColor(0, 0, 0, 38 if theme.tokens.mode.value == "light" else 65)
+        )
+        self._title_label.setStyleSheet(
+            f"font-size: 18px; font-weight: 600; color: {theme.tokens.text}; background: transparent;"
+        )
 
 
 class ColorPickerButton(Button):
     """Compact chip button hosting a ColorPickerPanel in the existing ActionMenu."""
+
     colorChanged = Signal(QtGui.QColor)
     colorPreviewed = Signal(QtGui.QColor)
 
@@ -214,7 +242,12 @@ class ColorPickerButton(Button):
         painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
         painter.drawRoundedRect(chip, 4, 4)
         icon = fluent_icon(FluentIcon.CHEVRON_DOWN)
-        self._draw_tinted_icon(painter, QtCore.QRect(round(rect.right() - 20), round(rect.center().y() - 7), 14, 14), color, icon)
+        self._draw_tinted_icon(
+            painter,
+            QtCore.QRect(round(rect.right() - 20), round(rect.center().y() - 7), 14, 14),
+            color,
+            icon,
+        )
 
     def hideEvent(self, event):
         if self._popup is not None:
@@ -224,10 +257,13 @@ class ColorPickerButton(Button):
 
 class ColorPaletteButton(ColorPickerButton):
     """Theme palette with automatic color and an optional full color dialog."""
+
     automaticSelected = Signal()
 
     def __init__(self, color="#0078d4", parent=None, *, enable_alpha=False):
-        super().__init__(color if color is not None else "#0078d4", parent, enable_alpha=enable_alpha)
+        super().__init__(
+            color if color is not None else "#0078d4", parent, enable_alpha=enable_alpha
+        )
         self.palette = None
         self.dialog = None
         if color is None:
@@ -281,5 +317,7 @@ class ColorPaletteButton(ColorPickerButton):
             self.dialog = ColorDialog(parent=self.window(), enable_alpha=self._enable_alpha)
             self.destroyed.connect(self.dialog.deleteLater)
             self.dialog.colorSelected.connect(self.set_color)
-        self.dialog.set_color(self._color if self._color.isValid() else QtGui.QColor(theme.tokens.text))
+        self.dialog.set_color(
+            self._color if self._color.isValid() else QtGui.QColor(theme.tokens.text)
+        )
         self.dialog.open()

@@ -2,14 +2,13 @@ import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from dataclasses import FrozenInstanceError
 import sys
 import unittest
+from dataclasses import FrozenInstanceError
 from unittest import mock
 
 import fluentpy
-from fluentpy import NoteEvent, NoteTimeline, ThemeMode, theme
-from fluentpy import widgets
+from fluentpy import NoteEvent, NoteTimeline, ThemeMode, theme, widgets
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 
 
@@ -97,13 +96,26 @@ class NoteTimelineTests(unittest.TestCase):
     def test_invalid_update_preserves_notes_duration_position_and_drawing(self):
         self.view.set_notes([NoteEvent(0, 2, 60)], duration=4)
         self.view.set_position(1)
-        before = (self.view.notes(), self.view.duration(), self.view.position(), self.view.pitch_range())
+        before = (
+            self.view.notes(),
+            self.view.duration(),
+            self.view.position(),
+            self.view.pitch_range(),
+        )
         before_image = self.render()
         for duration in [-1, float("nan"), float("inf"), True, "4"]:
             with self.subTest(duration=duration):
                 with self.assertRaises((TypeError, ValueError)):
                     self.view.set_notes([NoteEvent(0, 1, 80)], duration=duration)
-                self.assertEqual((self.view.notes(), self.view.duration(), self.view.position(), self.view.pitch_range()), before)
+                self.assertEqual(
+                    (
+                        self.view.notes(),
+                        self.view.duration(),
+                        self.view.position(),
+                        self.view.pitch_range(),
+                    ),
+                    before,
+                )
         with self.assertRaises(TypeError):
             self.view.set_notes([NoteEvent(0, 1, 80), (0, 1, 60)])
 
@@ -113,7 +125,15 @@ class NoteTimelineTests(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             self.view.set_notes(interrupted_notes())
-        self.assertEqual((self.view.notes(), self.view.duration(), self.view.position(), self.view.pitch_range()), before)
+        self.assertEqual(
+            (
+                self.view.notes(),
+                self.view.duration(),
+                self.view.position(),
+                self.view.pitch_range(),
+            ),
+            before,
+        )
         self.assertEqual(self.render(), before_image)
 
     def test_position_clamps_and_only_changed_values_emit(self):
@@ -138,7 +158,15 @@ class NoteTimelineTests(unittest.TestCase):
         self.view.set_pitch_range(0, 127)
         self.view.set_notes([NoteEvent(0, 1, 60)])
         self.assertEqual(self.view.pitch_range(), (0, 127))
-        for bounds in [(61, 60), (-1, 127), (0, 128), (True, 80), (60.5, 80), (None, 80), (60, None)]:
+        for bounds in [
+            (61, 60),
+            (-1, 127),
+            (0, 128),
+            (True, 80),
+            (60.5, 80),
+            (None, 80),
+            (60, None),
+        ]:
             with self.subTest(bounds=bounds):
                 with self.assertRaises((TypeError, ValueError)):
                     self.view.set_pitch_range(*bounds)
@@ -212,11 +240,15 @@ class NoteTimelineTests(unittest.TestCase):
         self.assertEqual(self.view.empty_text(), "Drop a MIDI file here")
         with self.assertRaises(TypeError):
             self.view.set_empty_text(None)
-        self.assertEqual((self.view.notes(), self.view.duration(), self.view.position()), ((), 0, 0))
+        self.assertEqual(
+            (self.view.notes(), self.view.duration(), self.view.position()), ((), 0, 0)
+        )
 
     def test_position_updates_reuse_static_note_layer(self):
         self.view.set_notes([NoteEvent(0, 1, 60), NoteEvent(2, 1, 72)])
-        with mock.patch.object(self.view, "_make_background", wraps=self.view._make_background) as rebuild:
+        with mock.patch.object(
+            self.view, "_make_background", wraps=self.view._make_background
+        ) as rebuild:
             self.render()
             initial_count = rebuild.call_count
             self.assertGreater(initial_count, 0)
@@ -230,7 +262,9 @@ class NoteTimelineTests(unittest.TestCase):
 
     def test_resize_and_device_pixel_ratio_refresh_cached_layer(self):
         self.view.set_notes([NoteEvent(0, 1, 60)])
-        with mock.patch.object(self.view, "_make_background", wraps=self.view._make_background) as rebuild:
+        with mock.patch.object(
+            self.view, "_make_background", wraps=self.view._make_background
+        ) as rebuild:
             self.render()
             initial_count = rebuild.call_count
             self.view.resize(420, 110)

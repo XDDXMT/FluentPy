@@ -22,9 +22,13 @@ notice.finish("下载完成", timeout_ms=1800)
 
 ```python
 for index in range(4):
-    ProgressToast.start("正在下载文件中，请稍候…", parent=window,
-                        placement="bottom-right", indeterminate=True,
-                        severity="warning")
+    ProgressToast.start(
+        "正在下载文件中，请稍候…",
+        parent=window,
+        placement="bottom-right",
+        indeterminate=True,
+        severity="warning",
+    )
 ```
 
 `severity="warning"` 显示琥珀色状态图标与进度线；默认 `info` 保留主题强调色。单段移动进度线、完成／失败和自动关闭的行为保持一致。

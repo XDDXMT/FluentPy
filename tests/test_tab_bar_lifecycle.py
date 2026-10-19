@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import unittest
@@ -44,8 +45,9 @@ class TabBarLifecycleTests(unittest.TestCase):
 
     def click_close(self, key):
         button = next(item.widget for item in self.tabs._items if item.route_key == key)
-        QTest.mouseClick(button, QtCore.Qt.MouseButton.LeftButton,
-                         pos=QtCore.QPoint(button.width() - 18, 18))
+        QTest.mouseClick(
+            button, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(button.width() - 18, 18)
+        )
 
     def test_duplicate_add_is_ignored_without_signal_or_extra_widget(self):
         self.add("first", "second")
@@ -64,7 +66,9 @@ class TabBarLifecycleTests(unittest.TestCase):
         self.tabs.set_current_tab("missing")
         self.tabs.setCurrentTab("")
         self.assertEqual(self.tabs._current, "first")
-        self.assertEqual([bool(item.widget.property("selected")) for item in self.tabs._items], [True, False])
+        self.assertEqual(
+            [bool(item.widget.property("selected")) for item in self.tabs._items], [True, False]
+        )
         self.assertEqual(self.events, [])
 
     def test_closing_selected_tab_keeps_close_before_replacement_signal(self):
@@ -109,9 +113,11 @@ class TabBarLifecycleTests(unittest.TestCase):
     def test_close_callback_can_remove_another_tab_without_invalid_fallback_index(self):
         self.add("first", "second", "third")
         self.tabs.set_current_tab("third")
+
         def remove_second(index):
             if index == 2:
                 self.tabs._close_tab("second")
+
         self.tabs.tabCloseRequested.connect(remove_second)
         self.events.clear()
         self.click_close("third")
@@ -125,8 +131,10 @@ class TabBarLifecycleTests(unittest.TestCase):
         stack.addWidget(empty)
         keys, pages = [], {}
         counter = [0]
+
         def select(key):
             stack.setCurrentWidget(pages.get(key, empty))
+
         def add_document():
             key = f"document-{counter[0]}"
             counter[0] += 1
@@ -136,11 +144,13 @@ class TabBarLifecycleTests(unittest.TestCase):
             stack.addWidget(page)
             self.tabs.add_tab(key, key)
             self.tabs.set_current_tab(key)
+
         def remove_document(index):
             key = keys.pop(index)
             page = pages.pop(key)
             stack.removeWidget(page)
             page.deleteLater()
+
         self.tabs.currentChanged.connect(select)
         self.tabs.tabAddRequested.connect(add_document)
         self.tabs.tabCloseRequested.connect(remove_document)

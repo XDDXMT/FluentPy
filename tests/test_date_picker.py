@@ -6,13 +6,13 @@ import os
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 import json
-from pathlib import Path
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
-from fluentpy import DatePicker, QT_API, theme
+from fluentpy import QT_API, DatePicker, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.widgets import date_picker as picker_module
 
@@ -58,7 +58,7 @@ class DatePickerTests(unittest.TestCase):
         if date is not None:
             self.view.set_date(QtCore.QDate(*date))
         position = QtCore.QPoint(
-            int((column + .5) * self.view.width() / 3), self.view.height() // 2
+            int((column + 0.5) * self.view.width() / 3), self.view.height() // 2
         )
         QTest.mouseClick(self.view, QtCore.Qt.MouseButton.LeftButton, pos=position)
         self.app.processEvents()
@@ -67,9 +67,7 @@ class DatePickerTests(unittest.TestCase):
         return self.view._popup
 
     def send_wheel(self, wheel, column, *, angle=0, pixels=0):
-        position = QtCore.QPoint(
-            int((column + .5) * wheel.width() / 3), wheel.height() // 2
-        )
+        position = QtCore.QPoint(int((column + 0.5) * wheel.width() / 3), wheel.height() // 2)
         event = QtGui.QWheelEvent(
             QtCore.QPointF(position),
             QtCore.QPointF(wheel.mapToGlobal(position)),
@@ -182,7 +180,9 @@ class DatePickerTests(unittest.TestCase):
                 if action == "cancel":
                     QTest.mouseClick(popup.cancel_button, QtCore.Qt.MouseButton.LeftButton)
                 else:
-                    QTest.keyClick(popup.wheel if action == "wheel_escape" else popup, QtCore.Qt.Key.Key_Escape)
+                    QTest.keyClick(
+                        popup.wheel if action == "wheel_escape" else popup, QtCore.Qt.Key.Key_Escape
+                    )
                 self.app.processEvents()
                 self.assertFalse(popup.isVisible())
                 self.assertEqual(self.view.date(), QtCore.QDate(2024, 6, 15))
@@ -246,7 +246,7 @@ class DatePickerTests(unittest.TestCase):
         for column, date in enumerate(expected):
             with self.subTest(column=column):
                 point = QtCore.QPoint(
-                    int((column + .5) * wheel.width() / 3),
+                    int((column + 0.5) * wheel.width() / 3),
                     int((wheel.RADIUS + 1.5) * wheel.ROW_HEIGHT),
                 )
                 QTest.mouseClick(wheel, QtCore.Qt.MouseButton.LeftButton, pos=point)
@@ -396,12 +396,14 @@ class DatePickerTests(unittest.TestCase):
             for column in range(3):
                 with self.subTest(mode=mode, column=column):
                     position = QtCore.QPoint(
-                        int((column + .5) * wheel.width() / 3),
-                        int((wheel.RADIUS + .5) * wheel.ROW_HEIGHT),
+                        int((column + 0.5) * wheel.width() / 3),
+                        int((wheel.RADIUS + 0.5) * wheel.ROW_HEIGHT),
                     )
                     QTest.mouseClick(wheel, QtCore.Qt.MouseButton.LeftButton, pos=position)
                     self.app.processEvents()
-                    self.assertTrue(wheel.hasFocus(), "Visual regression must exercise actual focus")
+                    self.assertTrue(
+                        wheel.hasFocus(), "Visual regression must exercise actual focus"
+                    )
                     self.assertEqual(wheel.column, column)
                     image = wheel.grab().toImage()
                     ratio = image.devicePixelRatio()
@@ -432,7 +434,10 @@ class DatePickerTests(unittest.TestCase):
         for mode in ("python", "native"):
             if mode == "native" and not calendar.native_available():
                 continue
-            with self.subTest(text_backend=mode), patch.dict(os.environ, {"FLUENTPY_BACKEND": mode}):
+            with (
+                self.subTest(text_backend=mode),
+                patch.dict(os.environ, {"FLUENTPY_BACKEND": mode}),
+            ):
                 with patch.object(calendar, "clamp_date", wraps=calendar.clamp_date) as clamp:
                     self.view.set_date(QtCore.QDate(2024, 2, 29))
                     self.assertTrue(clamp.called)
@@ -448,6 +453,7 @@ class DatePickerTests(unittest.TestCase):
         message = "DatePicker requires the compiled fluentpy._native C extension"
         with patch.object(picker_module.calendar, "clamp_date", side_effect=RuntimeError(message)):
             import fluentpy
+
             self.assertIs(fluentpy.DatePicker, DatePicker)
             with self.assertRaisesRegex(RuntimeError, "compiled.*C extension"):
                 DatePicker(self.host)
@@ -455,7 +461,7 @@ class DatePickerTests(unittest.TestCase):
 
     def test_fresh_import_still_succeeds_when_native_module_cannot_load(self):
         source = str(Path(__file__).resolve().parents[1] / "src")
-        probe = r'''
+        probe = r"""
 import importlib.abc, json, sys
 sys.path.insert(0, sys.argv[1])
 class BlockNative(importlib.abc.MetaPathFinder):
@@ -474,14 +480,18 @@ assert picker.date().getDate() == (2024, 2, 29)
 picker.set_date_range(QtCore.QDate(2025, 2, 1), QtCore.QDate(2025, 2, 28))
 assert picker.date().getDate() == (2025, 2, 1)
 print(json.dumps({'imported': True, 'backend': picker.acceleration_backend()}))
-'''
+"""
         env = os.environ.copy()
         env["QT_QPA_PLATFORM"] = "offscreen"
         env["FLUENTPY_BACKEND"] = "auto"
         result = subprocess.run(
             [sys.executable, "-I", "-B", "-X", "utf8", "-c", probe, source],
-            cwd=Path(__file__).resolve().parents[1], env=env,
-            text=True, encoding="utf-8", capture_output=True, timeout=20,
+            cwd=Path(__file__).resolve().parents[1],
+            env=env,
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            timeout=20,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue(json.loads(result.stdout)["imported"])

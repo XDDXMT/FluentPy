@@ -1,16 +1,19 @@
 """The demo must compose the library controls and retain native scrolling."""
 
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from pathlib import Path
 import sys
 import unittest
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 from expandable_cards import ExpandableCardsDemo
+
 from fluentpy import FluentScrollBar, ToggleSwitch, theme
-from fluentpy.qt import QtCore, QtWidgets, QT_API
+from fluentpy.qt import QT_API, QtCore, QtWidgets
+
 if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
@@ -35,7 +38,11 @@ class ExpandableDemoTests(unittest.TestCase):
         theme.set_mode(self.mode)
 
     def test_demo_uses_existing_switches_and_scrollbars_in_both_themes(self):
-        for widget in (self.demo.dark_toggle, self.demo.content.sharp_enabled, self.demo.exclusive_toggle):
+        for widget in (
+            self.demo.dark_toggle,
+            self.demo.content.sharp_enabled,
+            self.demo.exclusive_toggle,
+        ):
             self.assertIs(type(widget), ToggleSwitch)
         self.assertIs(type(self.demo.scroll.verticalScrollBar()), FluentScrollBar)
         self.assertIs(type(self.demo.scroll.horizontalScrollBar()), FluentScrollBar)
@@ -52,7 +59,9 @@ class ExpandableDemoTests(unittest.TestCase):
             slider = self.demo.content.sharpness
             point = slider.mapTo(self.demo.scroll.viewport(), slider.rect().center())
             self.assertTrue(self.demo.scroll.viewport().rect().contains(point))
-            self.assertLessEqual(self.demo.scroll.widget().width(), self.demo.scroll.viewport().width())
+            self.assertLessEqual(
+                self.demo.scroll.widget().width(), self.demo.scroll.viewport().width()
+            )
 
     def test_default_switch_matches_explicit_unchecked_rendering(self):
         for mode in ("light", "dark"):

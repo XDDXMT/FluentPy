@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from fluentpy import Toast, theme
-from fluentpy.qt import QtCore, QtGui, QtWidgets
+from fluentpy.qt import QtCore, QtWidgets
 
 if "PySide6" in QtCore.__name__:
     from PySide6.QtTest import QTest
@@ -39,7 +39,11 @@ class _TopLevelLabelShows(QtCore.QObject):
         self.events = []
 
     def eventFilter(self, watched, event):
-        if event.type() == QtCore.QEvent.Type.Show and isinstance(watched, QtWidgets.QLabel) and watched.isWindow():
+        if (
+            event.type() == QtCore.QEvent.Type.Show
+            and isinstance(watched, QtWidgets.QLabel)
+            and watched.isWindow()
+        ):
             self.events.append(watched.text())
         return False
 
@@ -122,7 +126,11 @@ class ToastTests(unittest.TestCase):
             control.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
             control.show()
             self.app.processEvents()
-            self.assertEqual(monitor.events, ["monitor control"], "The global monitor must detect transient orphan-label shows")
+            self.assertEqual(
+                monitor.events,
+                ["monitor control"],
+                "The global monitor must detect transient orphan-label shows",
+            )
             control.close()
             control.deleteLater()
             self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
@@ -240,7 +248,9 @@ class ToastTests(unittest.TestCase):
             self.assertTrue(path.contains(sample))
             image = toast.grab().toImage()
             ratio = image.devicePixelRatio()
-            self.assertEqual(image.pixelColor(round(sample.x() * ratio), round(sample.y() * ratio)).name(), fill)
+            self.assertEqual(
+                image.pixelColor(round(sample.x() * ratio), round(sample.y() * ratio)).name(), fill
+            )
             self.assertTrue(self.parent.rect().contains(toast.geometry()))
             self.assertFalse(toast.isWindow())
 
@@ -266,7 +276,9 @@ class ToastTests(unittest.TestCase):
         target.move(260, 5)
         self.app.processEvents()
         self.assertEqual(toast._arrow_edge, "top")
-        self.assertGreater(toast.y() + toast._card_path().boundingRect().top(), target.geometry().bottom())
+        self.assertGreater(
+            toast.y() + toast._card_path().boundingRect().top(), target.geometry().bottom()
+        )
         self.assertTrue(self.parent.rect().contains(toast.geometry()))
 
     def test_target_and_ancestor_moves_follow_without_showing_another_window(self):

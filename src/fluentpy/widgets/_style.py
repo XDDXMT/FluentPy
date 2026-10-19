@@ -8,10 +8,24 @@ def qss_color(value: str) -> str:
 
 
 def input_stylesheet(tokens: ThemeTokens) -> str:
-    bg = "rgba(255, 255, 255, 0.7)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.0605)"
-    hover = "rgba(249, 249, 249, 0.5)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.0837)"
-    pressed = "rgba(249, 249, 249, 0.3)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.0326)"
-    border = "rgba(0, 0, 0, 0.073)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.053)"
+    bg = (
+        "rgba(255, 255, 255, 0.7)"
+        if tokens.mode.value == "light"
+        else "rgba(255, 255, 255, 0.0605)"
+    )
+    hover = (
+        "rgba(249, 249, 249, 0.5)"
+        if tokens.mode.value == "light"
+        else "rgba(255, 255, 255, 0.0837)"
+    )
+    pressed = (
+        "rgba(249, 249, 249, 0.3)"
+        if tokens.mode.value == "light"
+        else "rgba(255, 255, 255, 0.0326)"
+    )
+    border = (
+        "rgba(0, 0, 0, 0.073)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.053)"
+    )
     lower = "rgba(0, 0, 0, 0.183)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.08)"
     return f"""
 QLineEdit {{

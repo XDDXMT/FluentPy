@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from importlib import resources
 from pathlib import Path
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from fluentpy import AccentButton, Button, ComboBox, ProgressToast, ToggleSwitch, theme
+from fluentpy import Button, ComboBox, ProgressToast, ToggleSwitch, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets, Slot
 from fluentpy.theme.fonts import ui_font
 
@@ -35,17 +35,27 @@ class ProgressToastExamples(QtWidgets.QWidget):
         modes.addStretch()
         layout.addLayout(modes)
         corners = QtWidgets.QGridLayout()
-        for index, (placement, caption) in enumerate((("top-left", "左上角"), ("top-center", "顶部居中"), ("top-right", "右上角"),
-                                   ("bottom-left", "左下角"), ("bottom-center", "底部居中"), ("bottom-right", "右下角"))):
+        for index, (placement, caption) in enumerate(
+            (
+                ("top-left", "左上角"),
+                ("top-center", "顶部居中"),
+                ("top-right", "右上角"),
+                ("bottom-left", "左下角"),
+                ("bottom-center", "底部居中"),
+                ("bottom-right", "右下角"),
+            )
+        ):
             button = Button(caption, self)
             button.clicked.connect(lambda _checked=False, p=placement: self.start_task(p))
-            corners.addWidget(button,index//3,index%3)
+            corners.addWidget(button, index // 3, index % 3)
         layout.addLayout(corners)
-        self.caption = QtWidgets.QLabel("可重复点击：底部向上叠放，顶部向下叠放；关闭后自动补位。", self)
+        self.caption = QtWidgets.QLabel(
+            "可重复点击：底部向上叠放，顶部向下叠放；关闭后自动补位。", self
+        )
         self.caption.setWordWrap(True)
         layout.addWidget(self.caption)
         actions = QtWidgets.QHBoxLayout()
-        repeat = Button("连发三条",self)
+        repeat = Button("连发三条", self)
         repeat.clicked.connect(self.start_batch)
         actions.addWidget(repeat)
         failure = Button("模拟失败", self)
@@ -58,15 +68,21 @@ class ProgressToastExamples(QtWidgets.QWidget):
         layout.addLayout(actions)
 
     def start_task(self, placement):
-        self._last_placement=placement
-        self._begin(placement,self.mode.currentIndex()==1)
+        self._last_placement = placement
+        self._begin(placement, self.mode.currentIndex() == 1)
 
     def start_batch(self):
-        for _ in range(3):self.start_task(self._last_placement)
+        for _ in range(3):
+            self.start_task(self._last_placement)
 
     def _begin(self, placement, indeterminate):
-        toast = ProgressToast.start("正在下载文件，请稍候…", parent=self.window(),
-                                    placement=placement, indeterminate=indeterminate,severity="warning")
+        toast = ProgressToast.start(
+            "正在下载文件，请稍候…",
+            parent=self.window(),
+            placement=placement,
+            indeterminate=indeterminate,
+            severity="warning",
+        )
         self._serial += 1
         toast.setProperty("demoPlacement", placement)
         toast.setProperty("demoIdentity", self._serial)
@@ -110,7 +126,9 @@ class ProgressToastDemo(QtWidgets.QWidget):
         theme.set_mode("dark" if dark else "light")
         self.setObjectName("progressToastDemo")
         self.setWindowTitle("FluentPy · 任务进度提示")
-        self.setWindowIcon(QtGui.QIcon(str(resources.files('fluentpy.assets').joinpath('brand/fluentpy.svg'))))
+        self.setWindowIcon(
+            QtGui.QIcon(str(resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg")))
+        )
         self.resize(900, 600)
         self.setMinimumSize(640, 460)
         root = QtWidgets.QVBoxLayout(self)
@@ -167,11 +185,11 @@ class ProgressToastDemo(QtWidgets.QWidget):
     def _apply_theme(self):
         self.setFont(ui_font(14))
         self.setStyleSheet(
-            f'QWidget#progressToastDemo {{ background: {theme.tokens.background}; }}'
-            f'QLabel {{ color: {theme.tokens.text}; background: transparent; font-size: 14px; }}'
-            f'QLabel#demoTitle {{ font-size: 22px; font-weight: 600; }}'
-            f'QLabel#demoSubtitle {{ font-size: 20px; }}'
-            f'QLabel#demoFooter {{ color: {theme.tokens.text_muted}; font-size: 12px; }}'
+            f"QWidget#progressToastDemo {{ background: {theme.tokens.background}; }}"
+            f"QLabel {{ color: {theme.tokens.text}; background: transparent; font-size: 14px; }}"
+            f"QLabel#demoTitle {{ font-size: 22px; font-weight: 600; }}"
+            f"QLabel#demoSubtitle {{ font-size: 20px; }}"
+            f"QLabel#demoFooter {{ color: {theme.tokens.text_muted}; font-size: 12px; }}"
         )
 
 

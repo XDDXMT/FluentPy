@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -38,7 +38,9 @@ class DatePickerDemo(QtWidgets.QWidget):
         title = QtWidgets.QLabel("为下一件事，选个日子。")
         title.setObjectName("title")
         root.addWidget(title)
-        subtitle = QtWidgets.QLabel("点击年、月、日，展开三列滚轮。确认后才会保存，取消时保留原来的选择。")
+        subtitle = QtWidgets.QLabel(
+            "点击年、月、日，展开三列滚轮。确认后才会保存，取消时保留原来的选择。"
+        )
         subtitle.setObjectName("muted")
         subtitle.setWordWrap(True)
         root.addWidget(subtitle)
@@ -87,7 +89,10 @@ class DatePickerDemo(QtWidgets.QWidget):
         for title_text, detail in (
             ("01  三列独立选择", "滚轮或拖动选择年、月、日。点击相邻行，也能直接切换。"),
             ("02  确认才保存", "✓ 或 Enter 确认，×、Esc 或点击外部取消。左右方向键切换列。"),
-            ("03  日历运算自动适配", "优先C运算，缺少扩展时使用Python；2月29日切换年份会调整为有效日期。"),
+            (
+                "03  日历运算自动适配",
+                "优先C运算，缺少扩展时使用Python；2月29日切换年份会调整为有效日期。",
+            ),
         ):
             label = QtWidgets.QLabel(title_text)
             label.setObjectName("noteTitle")
@@ -114,12 +119,14 @@ class DatePickerDemo(QtWidgets.QWidget):
         theme.subscribe(self, self._apply_theme)
 
     def _changed(self, date: QtCore.QDate) -> None:
-        self.result.setText(date.toString("yyyy 年 M 月 d 日") if date.isValid() else "尚未选择日期")
+        self.result.setText(
+            date.toString("yyyy 年 M 月 d 日") if date.isValid() else "尚未选择日期"
+        )
 
     def _apply_theme(self) -> None:
         tokens = theme.tokens
         self.setFont(ui_font(14, self.font()))
-        self.setStyleSheet(f'''
+        self.setStyleSheet(f"""
 QWidget#dateDemo {{ background: {tokens.background}; }}
 QLabel {{ color: {tokens.text}; background: transparent; font-family: "Segoe UI", "Microsoft YaHei UI"; font-size: 14px; }}
 QLabel#eyebrow {{ color: {tokens.accent}; font-size: 11px; font-weight: 600; }}
@@ -129,7 +136,7 @@ QLabel#noteTitle {{ font-size: 14px; font-weight: 600; }}
 QLabel#muted {{ color: {tokens.text_muted}; font-size: 12px; }}
 QLabel#dateResult {{ color: {tokens.accent}; font-size: 14px; }}
 QFrame#demoCard {{ background: {tokens.surface}; border: 1px solid {tokens.border}; border-radius: 10px; }}
-''')
+""")
 
     def save_preview(self, path: Path, *, popup: bool = False) -> None:
         """Render this demo's own Qt surfaces, including its real popup."""
@@ -171,10 +178,12 @@ def main() -> int:
         window.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
     window.show()
     if args.screenshot:
+
         def capture():
             window.save_preview(args.screenshot.resolve(), popup=args.open)
             if args.quit_after_screenshot:
                 app.quit()
+
         QtCore.QTimer.singleShot(160, capture)
     elif args.open:
         QtCore.QTimer.singleShot(100, window.picker.show_popup)

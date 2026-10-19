@@ -12,7 +12,7 @@ from fluentpy.backends.text import native_available
 
 editor = CodeEdit()
 editor.set_code('{"name": "FluentPy", "enabled": true}')
-print(native_available())             # 当前解释器能否导入 C 扩展
+print(native_available())  # 当前解释器能否导入 C 扩展
 print(editor.acceleration_backend())  # 当前高亮器使用 native 或 python
 ```
 

@@ -1,5 +1,7 @@
 """C-first color policy with compatible Python fallback, including old binaries."""
+
 from importlib import import_module
+
 from . import _color_python
 from ._compat import select_backend
 
@@ -13,7 +15,9 @@ else:
     _native_import_error = None
     if not all(callable(getattr(_extension, name, None)) for name in _METHODS):
         _extension = None
-        _native_import_error = "The installed fluentpy._native extension predates the color backend."
+        _native_import_error = (
+            "The installed fluentpy._native extension predates the color backend."
+        )
 
 
 def native_available():
@@ -29,7 +33,11 @@ def backend_name():
 
 
 def parse_hex(text):
-    return (_extension.color_parse_hex(text) if backend_name() == "native" else _color_python.parse_hex(text))
+    return (
+        _extension.color_parse_hex(text)
+        if backend_name() == "native"
+        else _color_python.parse_hex(text)
+    )
 
 
 def format_hex(red, green, blue, alpha=255, include_alpha=False):
@@ -39,10 +47,16 @@ def format_hex(red, green, blue, alpha=255, include_alpha=False):
 
 
 def rgb_to_hsv(red, green, blue):
-    return (_extension.color_rgb_to_hsv(red, green, blue) if backend_name() == "native"
-            else _color_python.rgb_to_hsv(red, green, blue))
+    return (
+        _extension.color_rgb_to_hsv(red, green, blue)
+        if backend_name() == "native"
+        else _color_python.rgb_to_hsv(red, green, blue)
+    )
 
 
 def hsv_to_rgba(hue, saturation, value, alpha=255):
-    return (_extension.color_hsv_to_rgba(hue, saturation, value, alpha) if backend_name() == "native"
-            else _color_python.hsv_to_rgba(hue, saturation, value, alpha))
+    return (
+        _extension.color_hsv_to_rgba(hue, saturation, value, alpha)
+        if backend_name() == "native"
+        else _color_python.hsv_to_rgba(hue, saturation, value, alpha)
+    )

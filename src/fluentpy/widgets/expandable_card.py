@@ -21,7 +21,9 @@ class _ExpandHeader(QtWidgets.QAbstractButton):
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.setFixedHeight(48)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         self._refresh_theme()
         theme.subscribe(self, self._refresh_theme)
 
@@ -53,7 +55,8 @@ class _ExpandHeader(QtWidgets.QAbstractButton):
 
     def focusInEvent(self, event):
         self._keyboard_focus = event.reason() in (
-            QtCore.Qt.FocusReason.TabFocusReason, QtCore.Qt.FocusReason.BacktabFocusReason,
+            QtCore.Qt.FocusReason.TabFocusReason,
+            QtCore.Qt.FocusReason.BacktabFocusReason,
             QtCore.Qt.FocusReason.ShortcutFocusReason,
         )
         super().focusInEvent(event)
@@ -89,16 +92,35 @@ class _ExpandHeader(QtWidgets.QAbstractButton):
         color = QtGui.QColor(tokens.text if self.isEnabled() else tokens.text_muted)
         painter.setPen(color)
         text_rect = self.rect().adjusted(18, 0, -48, 0)
-        text = self.fontMetrics().elidedText(self.text(), QtCore.Qt.TextElideMode.ElideRight, text_rect.width())
-        painter.drawText(text_rect, QtCore.Qt.AlignmentFlag.AlignVCenter | QtCore.Qt.AlignmentFlag.AlignLeft, text)
+        text = self.fontMetrics().elidedText(
+            self.text(), QtCore.Qt.TextElideMode.ElideRight, text_rect.width()
+        )
+        painter.drawText(
+            text_rect,
+            QtCore.Qt.AlignmentFlag.AlignVCenter | QtCore.Qt.AlignmentFlag.AlignLeft,
+            text,
+        )
         painter.save()
         painter.translate(self.width() - 22, self.height() / 2)
         painter.rotate(180 * self._progress)
-        painter.setPen(QtGui.QPen(color, 1.2, QtCore.Qt.PenStyle.SolidLine,
-                                 QtCore.Qt.PenCapStyle.RoundCap, QtCore.Qt.PenJoinStyle.RoundJoin))
-        painter.drawPolyline(QtGui.QPolygonF([
-            QtCore.QPointF(-3.5, -1.5), QtCore.QPointF(0, 2), QtCore.QPointF(3.5, -1.5),
-        ]))
+        painter.setPen(
+            QtGui.QPen(
+                color,
+                1.2,
+                QtCore.Qt.PenStyle.SolidLine,
+                QtCore.Qt.PenCapStyle.RoundCap,
+                QtCore.Qt.PenJoinStyle.RoundJoin,
+            )
+        )
+        painter.drawPolyline(
+            QtGui.QPolygonF(
+                [
+                    QtCore.QPointF(-3.5, -1.5),
+                    QtCore.QPointF(0, 2),
+                    QtCore.QPointF(3.5, -1.5),
+                ]
+            )
+        )
         painter.restore()
         if self.hasFocus() and self._keyboard_focus:
             painter.setPen(QtGui.QPen(QtGui.QColor(tokens.accent), 1.5))
@@ -116,8 +138,13 @@ class ExpandableCardWidget(SimpleCardWidget):
 
     expandedChanged = Signal(bool)
 
-    def __init__(self, title: str | QtWidgets.QWidget = "", parent: QtWidgets.QWidget | None = None,
-                 *, expanded: bool = False):
+    def __init__(
+        self,
+        title: str | QtWidgets.QWidget = "",
+        parent: QtWidgets.QWidget | None = None,
+        *,
+        expanded: bool = False,
+    ):
         if isinstance(title, QtWidgets.QWidget):
             if parent is not None:
                 raise TypeError("parent was provided twice")
@@ -127,7 +154,9 @@ class ExpandableCardWidget(SimpleCardWidget):
         self._progress = 1.0 if expanded else 0.0
         self._natural_height = 24
         self._syncing_content = False
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         self._root = QtWidgets.QVBoxLayout(self)
         self._root.setContentsMargins(1, 1, 1, 1)
         self._root.setSpacing(0)
@@ -140,7 +169,9 @@ class ExpandableCardWidget(SimpleCardWidget):
         # The viewport has no layout: its children's minimum sizes must not prevent
         # it from shrinking to zero. The full-size body is clipped as it slides shut.
         self._viewport = QtWidgets.QWidget(self)
-        self._viewport.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self._viewport.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         self._viewport.setFixedHeight(0)
         self._root.addWidget(self._viewport)
         self.view = QtWidgets.QWidget(self._viewport)
@@ -184,7 +215,11 @@ class ExpandableCardWidget(SimpleCardWidget):
             self.header_button.setChecked(expanded)
         self._refresh_accessibility()
         focus = QtWidgets.QApplication.focusWidget()
-        if not expanded and focus is not None and (focus is self.view or self.view.isAncestorOf(focus)):
+        if (
+            not expanded
+            and focus is not None
+            and (focus is self.view or self.view.isAncestorOf(focus))
+        ):
             self.header_button.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
         self._viewport.setEnabled(expanded)
         if expanded:
@@ -211,11 +246,17 @@ class ExpandableCardWidget(SimpleCardWidget):
     isExpanded = is_expanded
 
     def _refresh_accessibility(self):
-        self.header_button.setAccessibleDescription("展开的设置组" if self._expanded else "折叠的设置组")
+        self.header_button.setAccessibleDescription(
+            "展开的设置组" if self._expanded else "折叠的设置组"
+        )
 
     def _body_height(self, width):
         layout = self.body_layout
-        height = layout.totalHeightForWidth(width) if layout.hasHeightForWidth() else layout.sizeHint().height()
+        height = (
+            layout.totalHeightForWidth(width)
+            if layout.hasHeightForWidth()
+            else layout.sizeHint().height()
+        )
         return max(0, height, layout.minimumSize().height(), self.view.minimumHeight())
 
     def _sync_content(self):
@@ -280,12 +321,17 @@ class ExpandableCardWidget(SimpleCardWidget):
         if hasattr(self, "_viewport") and self._viewport.height() > 0:
             painter = QtGui.QPainter(self)
             painter.setPen(QtGui.QColor(theme.tokens.border))
-            painter.drawLine(1, self.header_button.geometry().bottom() + 1,
-                             self.width() - 2, self.header_button.geometry().bottom() + 1)
+            painter.drawLine(
+                1,
+                self.header_button.geometry().bottom() + 1,
+                self.width() - 2,
+                self.header_button.geometry().bottom() + 1,
+            )
 
 
 class _AccordionLink(QtCore.QObject):
     """Qt-owned receivers disconnect automatically when the container is deleted."""
+
     def __init__(self, owner, card):
         super().__init__(owner)
         self.owner_ref = weakref.ref(owner)
@@ -369,7 +415,9 @@ class AccordionWidget(QtWidgets.QWidget):
         if self._exclusive:
             opened = [card for card in self._cards if card.is_expanded()]
             if opened:
-                self._card_expanded(self._last_expanded if self._last_expanded in opened else opened[0])
+                self._card_expanded(
+                    self._last_expanded if self._last_expanded in opened else opened[0]
+                )
 
     def _card_expanded(self, card):
         self._last_expanded = card

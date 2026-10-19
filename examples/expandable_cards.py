@@ -3,20 +3,28 @@
 Capture the complete native demo with --screenshot PATH --quit-after-screenshot.
 ExpandableSettings is embeddable and never changes the application's theme.
 """
+
 from __future__ import annotations
 
 import argparse
-from importlib import resources
 import os
-from pathlib import Path
 import sys
+from importlib import resources
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from fluentpy import (
-    AccentButton, AccordionWidget, Button, ComboBox, ExpandableCardWidget, FluentScrollBar,
-    Slider, ToggleSwitch, theme,
+    AccentButton,
+    AccordionWidget,
+    Button,
+    ComboBox,
+    ExpandableCardWidget,
+    FluentScrollBar,
+    Slider,
+    ToggleSwitch,
+    theme,
 )
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.theme.fonts import ui_font
@@ -40,8 +48,9 @@ class ExpandableSettings(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(12)
         self.accordion = AccordionWidget(self)
-        self.accordion.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
-                                     QtWidgets.QSizePolicy.Policy.Fixed)
+        self.accordion.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         layout.addWidget(self.accordion)
 
         self.blend_card = ExpandableCardWidget("混合", expanded=True)
@@ -107,7 +116,9 @@ class ExpandableSettings(QtWidgets.QWidget):
         self.sharpness.setAccessibleName("锐化强度百分比")
         self.sharpness.setEnabled(False)
         self.sharp_enabled.toggled.connect(self.sharpness.setEnabled)
-        self.sharpness.valueChanged.connect(lambda value: self.sharp_value.setText(f"强度 · {value}%"))
+        self.sharpness.valueChanged.connect(
+            lambda value: self.sharp_value.setText(f"强度 · {value}%")
+        )
         self.sharp_card.body_layout.addWidget(self.sharp_value)
         self.sharp_card.body_layout.addWidget(self.sharpness)
         self.accordion.add_card(self.sharp_card)
@@ -119,7 +130,9 @@ class ExpandableSettings(QtWidgets.QWidget):
         self._apply_theme()
 
     def _apply(self):
-        sharpening = f"锐化 {self.sharpness.value()}%" if self.sharp_enabled.isChecked() else "锐化关闭"
+        sharpening = (
+            f"锐化 {self.sharpness.value()}%" if self.sharp_enabled.isChecked() else "锐化关闭"
+        )
         self.result.setText(
             f"已应用：{self.mode.currentText()} · {self.opacity.value()}% 不透明度\n"
             f"色相 {self.hue.value()}° · {sharpening}"
@@ -151,7 +164,9 @@ class ExpandableCardsDemo(QtWidgets.QWidget):
         theme.set_mode("dark" if dark else "light")
         self.setObjectName("expandableCardsDemo")
         self.setWindowTitle("FluentPy · 折叠设置卡片")
-        self.setWindowIcon(QtGui.QIcon(str(resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg"))))
+        self.setWindowIcon(
+            QtGui.QIcon(str(resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg")))
+        )
         self.resize(422, 570)
         self.setMinimumWidth(350)
         layout = QtWidgets.QVBoxLayout(self)
@@ -162,7 +177,9 @@ class ExpandableCardsDemo(QtWidgets.QWidget):
         heading.addWidget(_label("深色", "muted"))
         self.dark_toggle = ToggleSwitch()
         self.dark_toggle.setChecked(dark)
-        self.dark_toggle.toggled.connect(lambda checked: theme.set_mode("dark" if checked else "light"))
+        self.dark_toggle.toggled.connect(
+            lambda checked: theme.set_mode("dark" if checked else "light")
+        )
         heading.addWidget(self.dark_toggle)
         layout.addLayout(heading)
         layout.addWidget(_label("点击标题展开设置，收起后保留各项数值。", "muted"))
@@ -170,7 +187,9 @@ class ExpandableCardsDemo(QtWidgets.QWidget):
         self.scroll.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self.scroll.setWidgetResizable(True)
         self.scroll.setVerticalScrollBar(FluentScrollBar(parent=self.scroll))
-        self.scroll.setHorizontalScrollBar(FluentScrollBar(QtCore.Qt.Orientation.Horizontal, self.scroll))
+        self.scroll.setHorizontalScrollBar(
+            FluentScrollBar(QtCore.Qt.Orientation.Horizontal, self.scroll)
+        )
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         inner = QtWidgets.QWidget()
         inner_layout = QtWidgets.QVBoxLayout(inner)
@@ -220,6 +239,7 @@ def main() -> int:
     demo.show()
     failures = []
     if args.screenshot:
+
         def save():
             try:
                 target = args.screenshot.resolve()
@@ -233,6 +253,7 @@ def main() -> int:
             finally:
                 if args.quit_after_screenshot or failures:
                     app.quit()
+
         QtCore.QTimer.singleShot(300, save)
     result = app.exec()
     return 1 if failures else result

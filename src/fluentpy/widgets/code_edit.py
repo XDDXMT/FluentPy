@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import re
 
-from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..backends.text import backend_name, json_spans_native, json_spans_python
+from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..theme import theme
 from .scroll_bar import FluentScrollBar
 
@@ -36,7 +36,7 @@ class _JsonHighlighter(QtGui.QSyntaxHighlighter):
             self.formats[name] = text_format
         self.rehighlight()
 
-    def highlightBlock(self, text: str) -> None:  # noqa: N802 - Qt API
+    def highlightBlock(self, text: str) -> None:
         if self.language != "json" or not self.formats:
             return
         for start, length, kind in self._scan(text):
@@ -67,7 +67,15 @@ class _TextArea(QtWidgets.QPlainTextEdit):
         self.setHorizontalScrollBar(FluentScrollBar(QtCore.Qt.Orientation.Horizontal, self))
         self.document().setDocumentMargin(6)
         font = QtGui.QFont()
-        font.setFamilies(["Consolas", "Cascadia Code", "Microsoft YaHei UI", "Noto Sans Mono CJK SC", "DejaVu Sans Mono"])
+        font.setFamilies(
+            [
+                "Consolas",
+                "Cascadia Code",
+                "Microsoft YaHei UI",
+                "Noto Sans Mono CJK SC",
+                "DejaVu Sans Mono",
+            ]
+        )
         font.setStyleHint(QtGui.QFont.StyleHint.Monospace)
         font.setPixelSize(theme.tokens.font_size)
         self.setFont(font)
@@ -132,7 +140,7 @@ class _TextArea(QtWidgets.QPlainTextEdit):
                 break
             if block.isVisible() and rect.bottom() >= event.rect().top():
                 text = block.text()
-                whitespace = text[:len(text) - len(text.lstrip(" \t"))]
+                whitespace = text[: len(text) - len(text.lstrip(" \t"))]
                 columns = len(whitespace.expandtabs(self.indent_size))
                 origin = rect.left() + self.document().documentMargin()
                 for column in range(0, columns, self.indent_size):
@@ -156,10 +164,18 @@ class _TextArea(QtWidgets.QPlainTextEdit):
                 break
             if block.isVisible() and top + height >= event.rect().top():
                 if self.hasFocus() and block.blockNumber() == current:
-                    painter.fillRect(QtCore.QRectF(0, top, self.gutter_width(), height), QtGui.QColor(self.colors["line"]))
+                    painter.fillRect(
+                        QtCore.QRectF(0, top, self.gutter_width(), height),
+                        QtGui.QColor(self.colors["line"]),
+                    )
                 painter.setPen(QtGui.QColor(self.colors["gutter"]))
                 painter.drawText(
-                    QtCore.QRectF(0, top, self.gutter_width() - self.fontMetrics().horizontalAdvance(" ") * 3.75, self.fontMetrics().height()),
+                    QtCore.QRectF(
+                        0,
+                        top,
+                        self.gutter_width() - self.fontMetrics().horizontalAdvance(" ") * 3.75,
+                        self.fontMetrics().height(),
+                    ),
                     QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter,
                     str(block.blockNumber() + 1),
                 )
@@ -178,14 +194,19 @@ class _TextArea(QtWidgets.QPlainTextEdit):
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         key = event.key()
         if key in (QtCore.Qt.Key.Key_Tab, QtCore.Qt.Key.Key_Backtab) and not self.isReadOnly():
-            self._indent(key == QtCore.Qt.Key.Key_Backtab or bool(event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier))
+            self._indent(
+                key == QtCore.Qt.Key.Key_Backtab
+                or bool(event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier)
+            )
             event.accept()
             return
         if key in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter) and not self.isReadOnly():
             cursor = self.textCursor()
             prefix = QtGui.QTextCursor(self.document())
             prefix.setPosition(cursor.selectionStart())
-            prefix.movePosition(QtGui.QTextCursor.MoveOperation.StartOfBlock, QtGui.QTextCursor.MoveMode.KeepAnchor)
+            prefix.movePosition(
+                QtGui.QTextCursor.MoveOperation.StartOfBlock, QtGui.QTextCursor.MoveMode.KeepAnchor
+            )
             before = prefix.selectedText()
             indentation = re.match(r"[ \t]*", before).group()
             if before.rstrip().endswith(("{", "[")):
@@ -200,7 +221,9 @@ class _TextArea(QtWidgets.QPlainTextEdit):
     def _indent(self, unindent: bool) -> None:
         cursor = self.textCursor()
         if not cursor.hasSelection() and not unindent:
-            cursor.insertText(" " * (self.indent_size - cursor.positionInBlock() % self.indent_size))
+            cursor.insertText(
+                " " * (self.indent_size - cursor.positionInBlock() % self.indent_size)
+            )
             return
         first = self.document().findBlock(cursor.selectionStart())
         last = self.document().findBlock(cursor.selectionEnd())
@@ -213,7 +236,11 @@ class _TextArea(QtWidgets.QPlainTextEdit):
             edit.setPosition(block.position())
             if unindent:
                 text = block.text()
-                count = 1 if text.startswith("\t") else min(self.indent_size, len(text) - len(text.lstrip(" ")))
+                count = (
+                    1
+                    if text.startswith("\t")
+                    else min(self.indent_size, len(text) - len(text.lstrip(" ")))
+                )
                 edit.setPosition(block.position() + count, QtGui.QTextCursor.MoveMode.KeepAnchor)
                 edit.removeSelectedText()
             else:
@@ -302,16 +329,16 @@ class CodeEdit(QtWidgets.QWidget):
     def indent_size(self) -> int:
         return self.text_edit.indent_size
 
-    def setReadOnly(self, read_only: bool) -> None:  # noqa: N802
+    def setReadOnly(self, read_only: bool) -> None:
         self.text_edit.setReadOnly(read_only)
 
-    def isReadOnly(self) -> bool:  # noqa: N802
+    def isReadOnly(self) -> bool:
         return self.text_edit.isReadOnly()
 
-    def setPlainText(self, text: str) -> None:  # noqa: N802
+    def setPlainText(self, text: str) -> None:
         self.set_code(text)
 
-    def toPlainText(self) -> str:  # noqa: N802
+    def toPlainText(self) -> str:
         return self.code()
 
     def _focus_changed(self, focused: bool) -> None:
@@ -336,17 +363,19 @@ class CodeEdit(QtWidgets.QWidget):
             "guide": "#e8eaf0" if light else "#34373d",
         }
         self.text_edit.setStyleSheet(
-            f'QPlainTextEdit {{ background: {self._background}; color: {text}; border: none;'
+            f"QPlainTextEdit {{ background: {self._background}; color: {text}; border: none;"
             f' font-family: "Consolas", "Cascadia Code", "Microsoft YaHei UI", "Noto Sans Mono CJK SC", "DejaVu Sans Mono", monospace; font-size: {self._font_size}px;'
-            f' selection-background-color: {"#b8e8eb" if light else "#264f78"};'
-            f' selection-color: {text}; }}'
+            f" selection-background-color: {'#b8e8eb' if light else '#264f78'};"
+            f" selection-color: {text}; }}"
         )
-        self._highlighter.set_colors({
-            "key": "#9640AD" if light else "#c179b6",
-            "string": "#00a42f" if light else "#68a850",
-            "number": "#0059ff" if light else "#00b8cc",
-            "literal": "#003fff" if light else "#dc8b55",
-        })
+        self._highlighter.set_colors(
+            {
+                "key": "#9640AD" if light else "#c179b6",
+                "string": "#00a42f" if light else "#68a850",
+                "number": "#0059ff" if light else "#00b8cc",
+                "literal": "#003fff" if light else "#dc8b55",
+            }
+        )
         self.text_edit.update_gutter_width()
         self.text_edit.highlight_current_line()
         self.update()
@@ -365,4 +394,11 @@ class CodeEdit(QtWidgets.QWidget):
             painter.setClipPath(clip)
             width = rect.width() * self._focus_progress
             painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.accent), 2))
-            painter.drawLine(QtCore.QLineF(rect.center().x() - width / 2, rect.bottom() - 0.5, rect.center().x() + width / 2, rect.bottom() - 0.5))
+            painter.drawLine(
+                QtCore.QLineF(
+                    rect.center().x() - width / 2,
+                    rect.bottom() - 0.5,
+                    rect.center().x() + width / 2,
+                    rect.bottom() - 0.5,
+                )
+            )

@@ -1,5 +1,7 @@
 """Reference color parsing and HSV conversion, independent of Qt."""
+
 import math
+
 from ._compat import strict_int
 
 
@@ -31,21 +33,33 @@ def parse_hex(text):
     if len(digits) == 3:
         digits = "".join(char * 2 for char in digits)
     value = int(digits, 16)
-    return (value >> 16 & 255, value >> 8 & 255, value & 255, value >> 24 if len(digits) == 8 else 255)
+    return (
+        value >> 16 & 255,
+        value >> 8 & 255,
+        value & 255,
+        value >> 24 if len(digits) == 8 else 255,
+    )
 
 
 def format_hex(red, green, blue, alpha=255, include_alpha=False):
-    red, green, blue, alpha = (_channel(value, name) for value, name in zip(
-        (red, green, blue, alpha), ("red", "green", "blue", "alpha")))
+    red, green, blue, alpha = (
+        _channel(value, name)
+        for value, name in zip((red, green, blue, alpha), ("red", "green", "blue", "alpha"))
+    )
     if not isinstance(include_alpha, bool):
         raise TypeError("include_alpha must be a bool")
-    return (f"#{alpha:02x}{red:02x}{green:02x}{blue:02x}" if include_alpha
-            else f"#{red:02x}{green:02x}{blue:02x}")
+    return (
+        f"#{alpha:02x}{red:02x}{green:02x}{blue:02x}"
+        if include_alpha
+        else f"#{red:02x}{green:02x}{blue:02x}"
+    )
 
 
 def rgb_to_hsv(red, green, blue):
-    r, g, b = (_channel(value, name) / 255 for value, name in zip(
-        (red, green, blue), ("red", "green", "blue")))
+    r, g, b = (
+        _channel(value, name) / 255
+        for value, name in zip((red, green, blue), ("red", "green", "blue"))
+    )
     maximum, minimum = max(r, g, b), min(r, g, b)
     delta = maximum - minimum
     if delta == 0:
@@ -69,4 +83,4 @@ def hsv_to_rgba(hue, saturation, value, alpha=255):
     m = v - c
     candidates = ((c, x, 0), (x, c, 0), (0, c, x), (0, x, c), (x, 0, c), (c, 0, x))
     components = candidates[int(h) % 6]
-    return tuple(math.floor((component + m) * 255 + .5) for component in components) + (a,)
+    return tuple(math.floor((component + m) * 255 + 0.5) for component in components) + (a,)

@@ -1,5 +1,6 @@
 import os
-os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 import sys
 import unittest
@@ -7,7 +8,7 @@ import unittest
 from fluentpy import CheckBox, theme
 from fluentpy.qt import QT_API, QtCore, QtWidgets
 
-if QT_API == 'PySide6':
+if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
     from PyQt6.QtTest import QTest
@@ -25,7 +26,7 @@ class CheckBoxTests(unittest.TestCase):
         self.old_mode = theme.mode
         self.window = QtWidgets.QWidget()
         self.window.resize(300, 180)
-        self.check = CheckBox('Other files', self.window, description='760.0 KB')
+        self.check = CheckBox("Other files", self.window, description="760.0 KB")
         self.check.move(16, 16)
         self.check.resize(self.check.sizeHint())
         self.window.show()
@@ -45,8 +46,11 @@ class CheckBoxTests(unittest.TestCase):
         self.check.clicked.connect(lambda checked=False: clicks.append(checked))
         self.check.toggled.connect(toggles.append)
         self.check.stateChanged.connect(states.append)
-        QTest.mouseClick(self.check, QtCore.Qt.MouseButton.LeftButton,
-                         pos=QtCore.QPoint(50, self.check.height()-8))
+        QTest.mouseClick(
+            self.check,
+            QtCore.Qt.MouseButton.LeftButton,
+            pos=QtCore.QPoint(50, self.check.height() - 8),
+        )
         self.assertTrue(self.check.isChecked())
         self.assertEqual(len(clicks), 1)
         self.assertEqual(toggles, [True])
@@ -67,22 +71,26 @@ class CheckBoxTests(unittest.TestCase):
         toggles = []
         self.check.toggled.connect(toggles.append)
         self.check.setChecked(True)
-        self.assertEqual(self.check.accessibleDescription(), '760.0 KB')
+        self.assertEqual(self.check.accessibleDescription(), "760.0 KB")
         described_height = self.check.sizeHint().height()
-        self.check.setDescription('A much longer secondary description')
-        self.assertEqual(self.check.description(), 'A much longer secondary description')
+        self.check.setDescription("A much longer secondary description")
+        self.assertEqual(self.check.description(), "A much longer secondary description")
         self.assertGreater(self.check.sizeHint().width(), 150)
         self.assertEqual(self.check.accessibleDescription(), self.check.description())
-        self.check.set_description('')
+        self.check.set_description("")
         self.assertLess(self.check.sizeHint().height(), described_height)
         self.assertEqual(self.check.minimumHeight(), self.check.sizeHint().height())
-        self.assertEqual(self.check.accessibleDescription(), '')
+        self.assertEqual(self.check.accessibleDescription(), "")
         self.assertTrue(self.check.isChecked())
         self.assertEqual(toggles, [True])
 
     def test_tristate_still_cycles_with_description(self):
         self.check.setTristate(True)
-        expected = [QtCore.Qt.CheckState.PartiallyChecked, QtCore.Qt.CheckState.Checked, QtCore.Qt.CheckState.Unchecked]
+        expected = [
+            QtCore.Qt.CheckState.PartiallyChecked,
+            QtCore.Qt.CheckState.Checked,
+            QtCore.Qt.CheckState.Unchecked,
+        ]
         for state in expected:
             self.check.click()
             self.assertEqual(self.check.checkState(), state)
@@ -93,7 +101,7 @@ class CheckBoxTests(unittest.TestCase):
         self.check.setEnabled(False)
         toggles = []
         self.check.toggled.connect(toggles.append)
-        for mode in ('light', 'dark'):
+        for mode in ("light", "dark"):
             theme.set_mode(mode)
             QTest.mouseClick(self.check, QtCore.Qt.MouseButton.LeftButton)
             QTest.keyClick(self.check, QtCore.Qt.Key.Key_Space)
@@ -115,5 +123,5 @@ class CheckBoxTests(unittest.TestCase):
         self.assertTrue(self.check.isChecked())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

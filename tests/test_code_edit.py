@@ -7,8 +7,8 @@ import unittest
 from unittest.mock import patch
 
 from fluentpy import CodeEdit, theme
-from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.backends.text import native_available
+from fluentpy.qt import QtCore, QtGui, QtWidgets
 
 
 class CodeEditTests(unittest.TestCase):
@@ -81,14 +81,19 @@ class CodeEditTests(unittest.TestCase):
         self.app.processEvents()
         self.assertGreater(self.area.firstVisibleBlock().blockNumber(), 0)
         self.assertEqual(self.area.line_numbers.height(), self.area.viewport().height())
-        y = self.area.blockBoundingGeometry(cursor.block()).translated(self.area.contentOffset()).center().y()
+        y = (
+            self.area.blockBoundingGeometry(cursor.block())
+            .translated(self.area.contentOffset())
+            .center()
+            .y()
+        )
         gutter = self.area.line_numbers.grab().toImage()
         body = self.area.viewport().grab().toImage()
         self.assertEqual(gutter.pixelColor(2, int(y)).name(), "#f3f6fa")
         self.assertEqual(body.pixelColor(body.width() - 5, int(y)).name(), "#f3f6fa")
 
     def test_indent_guides_follow_text_during_horizontal_scroll(self):
-        self.view.set_code('{\n' + ' ' * 40 + '"value": "' + 'x' * 150 + '"\n}')
+        self.view.set_code("{\n" + " " * 40 + '"value": "' + "x" * 150 + '"\n}')
         self.area.clearFocus()
         cursor = QtGui.QTextCursor(self.area.document().findBlockByNumber(1))
         cursor.setPosition(cursor.position() + 16)
@@ -98,7 +103,9 @@ class CodeEditTests(unittest.TestCase):
             rect = self.area.cursorRect(cursor)
             image = self.area.viewport().grab().toImage()
             x, y = rect.left(), rect.center().y()
-            self.assertTrue(any(image.pixelColor(x + dx, y).name() == "#e8eaf0" for dx in (-1, 0, 1)))
+            self.assertTrue(
+                any(image.pixelColor(x + dx, y).name() == "#e8eaf0" for dx in (-1, 0, 1))
+            )
         self.assertGreater(self.area.horizontalScrollBar().value(), 0)
 
     def test_custom_indent_width_controls_editing_and_survives_theme(self):
@@ -217,7 +224,10 @@ class CodeEditTests(unittest.TestCase):
         previous_hook = sys.excepthook
         sys.excepthook = lambda kind, error, traceback: errors.append(error)
         try:
-            with patch("fluentpy.backends.text._extension", None), patch.dict(os.environ, {"FLUENTPY_BACKEND": "native"}):
+            with (
+                patch("fluentpy.backends.text._extension", None),
+                patch.dict(os.environ, {"FLUENTPY_BACKEND": "native"}),
+            ):
                 with self.assertRaises(RuntimeError):
                     CodeEdit()
                 with self.assertRaises(RuntimeError):

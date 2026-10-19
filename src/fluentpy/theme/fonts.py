@@ -2,7 +2,6 @@
 
 from ..qt import QtGui
 
-
 UI_FONT_FAMILIES = (
     "Segoe UI Variable Text",
     "Segoe UI",

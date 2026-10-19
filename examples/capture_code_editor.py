@@ -1,10 +1,12 @@
 """Render the real CodeEdit in both themes, with a light-only website preview."""
-from pathlib import Path
+
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from code_editor import SAMPLE
+
 from fluentpy import CodeEdit, theme
 from fluentpy.qt import QtCore, QtWidgets
 from fluentpy.theme.fonts import ui_font

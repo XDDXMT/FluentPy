@@ -1,15 +1,27 @@
 """Build and capture a small workspace using real FluentPy components."""
-from pathlib import Path
+
 import sys
+from pathlib import Path
 
 SITE = Path(__file__).resolve().parent
 from source_project import source_root
+
 ROOT = source_root()
 sys.path.insert(0, str(ROOT / "src"))
 
 from fluentpy import (
-    AccentButton, Button, Card, CodeEdit, ComboBox, FluentIcon, NavigationView,
-    ProgressBar, LineEdit, ToggleSwitch, fluent_icon, theme,
+    AccentButton,
+    Button,
+    Card,
+    CodeEdit,
+    ComboBox,
+    FluentIcon,
+    LineEdit,
+    NavigationView,
+    ProgressBar,
+    ToggleSwitch,
+    fluent_icon,
+    theme,
 )
 from fluentpy.qt import QtCore, QtWidgets
 from fluentpy.theme.fonts import ui_font
@@ -95,11 +107,17 @@ def create_overview():
     content.addLayout(row, 1)
     content.addWidget(label("导航  /  卡片  /  输入  /  按钮  /  状态反馈", 11, muted=True))
     navigation.add_sub_interface(page, fluent_icon(FluentIcon.HOME), "工作台", "workspace")
-    navigation.add_sub_interface(QtWidgets.QLabel("项目"), fluent_icon(FluentIcon.DOCUMENT_SAVE), "我的项目", "projects")
-    navigation.add_sub_interface(QtWidgets.QLabel("设置"), fluent_icon(FluentIcon.SETTINGS), "设置", "settings", "bottom")
+    navigation.add_sub_interface(
+        QtWidgets.QLabel("项目"), fluent_icon(FluentIcon.DOCUMENT_SAVE), "我的项目", "projects"
+    )
+    navigation.add_sub_interface(
+        QtWidgets.QLabel("设置"), fluent_icon(FluentIcon.SETTINGS), "设置", "settings", "bottom"
+    )
     navigation.sidebar.set_expanded_width(170)
     navigation.sidebar.set_expanded(True)
-    navigation.sidebar._width_animation.setCurrentTime(navigation.sidebar._width_animation.duration())
+    navigation.sidebar._width_animation.setCurrentTime(
+        navigation.sidebar._width_animation.duration()
+    )
     navigation.set_current_route("workspace", animated=False)
     root.resize(920, 400)
     return root
@@ -109,7 +127,9 @@ def create_code_summary():
     editor = CodeEdit()
     editor.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
     editor.set_indent_size(2)
-    editor.set_code('{\n  "project": {\n    "name": "FluentPy",\n    "enabled": true,\n    "indentSize": 2\n  }\n}')
+    editor.set_code(
+        '{\n  "project": {\n    "name": "FluentPy",\n    "enabled": true,\n    "indentSize": 2\n  }\n}'
+    )
     editor.resize(420, 170)
     return editor
 

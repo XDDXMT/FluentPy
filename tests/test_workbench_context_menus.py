@@ -1,15 +1,26 @@
 """Existing Qt editor actions, scoped routing and safe menu lifetimes."""
+
 import os
-from pathlib import Path
 import sys
 import unittest
+from pathlib import Path
 
-os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'examples'))
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 from workbench_context_menus import WorkbenchContextMenus
-from fluentpy import ActionMenu, CodeEdit, EditableComboBox, LineEdit, PinCodeEdit, SpinBox, TextEdit
-from fluentpy.qt import QtCore, QtGui, QtWidgets, QT_API
-if QT_API == 'PySide6':
+
+from fluentpy import (
+    ActionMenu,
+    CodeEdit,
+    EditableComboBox,
+    LineEdit,
+    PinCodeEdit,
+    SpinBox,
+    TextEdit,
+)
+from fluentpy.qt import QT_API, QtCore, QtGui, QtWidgets
+
+if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
     from PyQt6.QtTest import QTest
@@ -28,7 +39,7 @@ class WorkbenchContextMenuTests(unittest.TestCase):
         self.root.resize(850, 700)
         self.body = QtWidgets.QVBoxLayout(self.root)
         self.line = LineEdit()
-        self.line.setText('alpha beta')
+        self.line.setText("alpha beta")
         self.body.addWidget(self.line)
         self.manager = WorkbenchContextMenus(self.root)
         self.root.show()
@@ -50,7 +61,11 @@ class WorkbenchContextMenuTests(unittest.TestCase):
     def open(self, widget=None, *, keyboard=False, point=None):
         widget = widget or self.line
         point = point or QtCore.QPoint(28, 16)
-        reason = QtGui.QContextMenuEvent.Reason.Keyboard if keyboard else QtGui.QContextMenuEvent.Reason.Mouse
+        reason = (
+            QtGui.QContextMenuEvent.Reason.Keyboard
+            if keyboard
+            else QtGui.QContextMenuEvent.Reason.Mouse
+        )
         event = QtGui.QContextMenuEvent(reason, point, widget.mapToGlobal(point))
         QtWidgets.QApplication.sendEvent(widget, event)
         self.assertTrue(event.isAccepted())
@@ -71,39 +86,45 @@ class WorkbenchContextMenuTests(unittest.TestCase):
         self.line.setSelection(0, 5)
         menu = self.open()
         native = self.manager.native_menu
-        copy = self.action('edit-copy')
+        copy = self.action("edit-copy")
         self.assertIn(copy, native.actions())
         self.assertIs(copy.parent(), native)
-        self.assertEqual(copy.text(), '复制')
+        self.assertEqual(copy.text(), "复制")
         menu._activate(copy)
-        self.assertEqual(self.app.clipboard().text(), 'alpha')
+        self.assertEqual(self.app.clipboard().text(), "alpha")
         menu._reveal.setCurrentTime(menu.HIDE_DURATION)
         self.flush()
         self.line.setCursorPosition(len(self.line.text()))
-        self.app.clipboard().setText('!')
+        self.app.clipboard().setText("!")
         menu = self.open()
-        menu._activate(self.action('edit-paste'))
-        self.assertEqual(self.line.text(), 'alpha beta!')
+        menu._activate(self.action("edit-paste"))
+        self.assertEqual(self.line.text(), "alpha beta!")
         menu._reveal.setCurrentTime(menu.HIDE_DURATION)
         self.flush()
         menu = self.open()
-        self.assertTrue(self.action('edit-undo').isEnabled())
-        menu._activate(self.action('edit-undo'))
-        self.assertEqual(self.line.text(), 'alpha beta')
+        self.assertTrue(self.action("edit-undo").isEnabled())
+        menu._activate(self.action("edit-undo"))
+        self.assertEqual(self.line.text(), "alpha beta")
 
     def test_readonly_and_password_fields_keep_native_action_restrictions(self):
         self.line.setReadOnly(True)
         self.line.selectAll()
         self.open()
-        self.assertTrue(self.action('edit-copy').isEnabled())
-        self.assertFalse(any(a.isEnabled() for a in self.manager.menu.actions() if a.objectName() in ('edit-cut', 'edit-paste', 'edit-delete')))
+        self.assertTrue(self.action("edit-copy").isEnabled())
+        self.assertFalse(
+            any(
+                a.isEnabled()
+                for a in self.manager.menu.actions()
+                if a.objectName() in ("edit-cut", "edit-paste", "edit-delete")
+            )
+        )
         self.finish()
         self.line.setReadOnly(False)
         self.line.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
         self.line.selectAll()
         self.open()
-        self.assertFalse(self.action('edit-copy').isEnabled())
-        self.assertFalse(self.action('edit-cut').isEnabled())
+        self.assertFalse(self.action("edit-copy").isEnabled())
+        self.assertFalse(self.action("edit-cut").isEnabled())
 
     def test_standard_chinese_action_labels_fit_beside_their_native_shortcuts(self):
         menu = self.open()
@@ -115,8 +136,13 @@ class WorkbenchContextMenuTests(unittest.TestCase):
             # The rendered action row reserves its icon/check column and the
             # shortcut column. Verify the actual remaining label can fit.
             rect = row._paint_rect()
-            available = round(rect.right() - (rect.left() + 35) - 12 - shortcut_width - (18 if shortcut else 0))
-            self.assertEqual(row.fontMetrics().elidedText(label, QtCore.Qt.TextElideMode.ElideRight, available), label)
+            available = round(
+                rect.right() - (rect.left() + 35) - 12 - shortcut_width - (18 if shortcut else 0)
+            )
+            self.assertEqual(
+                row.fontMetrics().elidedText(label, QtCore.Qt.TextElideMode.ElideRight, available),
+                label,
+            )
 
     def test_dynamic_code_text_spin_combo_and_pin_editors_are_found_without_hooks(self):
         code = CodeEdit()
@@ -127,16 +153,22 @@ class WorkbenchContextMenuTests(unittest.TestCase):
         for widget in (code, text, spin, combo, pin):
             self.body.addWidget(widget)
         self.app.processEvents()
-        targets = (code.text_edit.viewport(), text.viewport(), spin.lineEdit(), combo.lineEdit(), pin.cells()[0])
+        targets = (
+            code.text_edit.viewport(),
+            text.viewport(),
+            spin.lineEdit(),
+            combo.lineEdit(),
+            pin.cells()[0],
+        )
         sources = (code.text_edit, text, spin.lineEdit(), combo.lineEdit(), pin.cells()[0])
         for target, source in zip(targets, sources):
             self.open(target)
             self.assertIs(self.manager.current_source, source)
             self.finish()
-        self.app.clipboard().setText('1234')
+        self.app.clipboard().setText("1234")
         self.open(pin.cells()[0])
-        self.manager.menu._activate(self.action('edit-paste'))
-        self.assertEqual(pin.text(), '1234')
+        self.manager.menu._activate(self.action("edit-paste"))
+        self.assertEqual(pin.text(), "1234")
 
     def test_keyboard_context_menu_uses_caret_and_its_native_shortcut_works(self):
         self.line.setFocus()
@@ -146,23 +178,27 @@ class WorkbenchContextMenuTests(unittest.TestCase):
         self.assertTrue(menu._opened)
         self.assertEqual(menu._context_position, self.manager._caret_point(self.line))
         menu._reveal.setCurrentTime(menu.SHOW_DURATION)
-        QTest.keyClick(self.app.focusWidget(), QtCore.Qt.Key.Key_C, QtCore.Qt.KeyboardModifier.ControlModifier)
-        self.assertEqual(self.app.clipboard().text(), 'beta')
+        QTest.keyClick(
+            self.app.focusWidget(), QtCore.Qt.Key.Key_C, QtCore.Qt.KeyboardModifier.ControlModifier
+        )
+        self.assertEqual(self.app.clipboard().text(), "beta")
         self.assertTrue(menu._closing)
 
     def test_registered_parent_bubbles_from_children_and_uses_local_coordinates(self):
         card = QtWidgets.QFrame()
         layout = QtWidgets.QVBoxLayout(card)
-        label = QtWidgets.QLabel('卡片标题')
+        label = QtWidgets.QLabel("卡片标题")
         nested = LineEdit()
         layout.addWidget(label)
         layout.addWidget(nested)
         self.body.addWidget(card)
         self.app.processEvents()
         points, calls = [], []
+
         def build(menu, point):
             points.append(point)
-            menu.add_action('查看示例', callback=lambda: calls.append(True))
+            menu.add_action("查看示例", callback=lambda: calls.append(True))
+
         self.manager.register(card, build)
         point = QtCore.QPoint(12, 10)
         menu = self.open(label, point=point)
@@ -179,14 +215,14 @@ class WorkbenchContextMenuTests(unittest.TestCase):
         view = QtWidgets.QTableWidget(2, 2)
         for row in range(2):
             for column in range(2):
-                view.setItem(row, column, QtWidgets.QTableWidgetItem(f'{row},{column}'))
+                view.setItem(row, column, QtWidgets.QTableWidgetItem(f"{row},{column}"))
         self.body.addWidget(view)
         self.app.processEvents()
         view.selectAll()
         menu = self.open(view.viewport())
-        self.assertEqual([action.objectName() for action in menu.actions()], ['view-copy'])
+        self.assertEqual([action.objectName() for action in menu.actions()], ["view-copy"])
         menu._activate(menu.actions()[0])
-        self.assertEqual(self.app.clipboard().text(), '0,0\t0,1\n1,0\t1,1')
+        self.assertEqual(self.app.clipboard().text(), "0,0\t0,1\n1,0\t1,1")
 
     def test_original_native_actions_live_until_exit_animation_finishes(self):
         menu = self.open()
@@ -211,18 +247,18 @@ class WorkbenchContextMenuTests(unittest.TestCase):
         self.app.processEvents()
         menu = self.open(spin, point=QtCore.QPoint(spin.width() - 5, 8))
         self.assertIs(self.manager.current_source, spin)
-        self.assertIn(self.action('edit-copy'), self.manager.native_menu.actions())
-        menu._activate(self.action('spin-step-up'))
+        self.assertIn(self.action("edit-copy"), self.manager.native_menu.actions())
+        menu._activate(self.action("spin-step-up"))
         self.assertEqual(spin.value(), 2)
         menu._reveal.setCurrentTime(menu.HIDE_DURATION)
         self.flush()
         self.open(spin)
-        self.assertFalse(self.action('spin-step-up').isEnabled())
+        self.assertFalse(self.action("spin-step-up").isEnabled())
         self.finish()
         spin.setReadOnly(True)
         self.open(spin)
-        self.assertFalse(self.action('spin-step-up').isEnabled())
-        self.assertFalse(self.action('spin-step-down').isEnabled())
+        self.assertFalse(self.action("spin-step-up").isEnabled())
+        self.assertFalse(self.action("spin-step-down").isEnabled())
 
     def test_native_scrollbar_menu_uses_qt_actions_and_inverted_position_mapping(self):
         scroll = QtWidgets.QScrollBar(QtCore.Qt.Orientation.Horizontal)
@@ -233,20 +269,20 @@ class WorkbenchContextMenuTests(unittest.TestCase):
         self.app.processEvents()
         menu = self.open(scroll, point=QtCore.QPoint(scroll.width() // 4, 5))
         self.assertIs(self.manager.current_source, scroll)
-        menu._activate(self.action('scroll-step-add'))
+        menu._activate(self.action("scroll-step-add"))
         self.assertEqual(scroll.value(), 3)
         menu._reveal.setCurrentTime(menu.HIDE_DURATION)
         self.flush()
         point = QtCore.QPoint(scroll.width() // 4, 5)
         menu = self.open(scroll, point=point)
-        menu._activate(self.action('scroll-here'))
+        menu._activate(self.action("scroll-here"))
         regular = scroll.value()
         self.assertLess(regular, 50)
         menu._reveal.setCurrentTime(menu.HIDE_DURATION)
         self.flush()
         scroll.setInvertedAppearance(True)
         menu = self.open(scroll, point=point)
-        menu._activate(self.action('scroll-here'))
+        menu._activate(self.action("scroll-here"))
         self.assertGreater(scroll.value(), 50)
         menu._reveal.setCurrentTime(menu.HIDE_DURATION)
         self.flush()
@@ -292,8 +328,8 @@ class WorkbenchContextMenuTests(unittest.TestCase):
             self.open()
             self.finish()
         self.assertEqual(self.root.findChildren(QtWidgets.QMenu), [])
-        target = QtWidgets.QLabel('注册目标', self.root)
-        self.manager.register(target, lambda menu, point: menu.add_action('测试'))
+        target = QtWidgets.QLabel("注册目标", self.root)
+        self.manager.register(target, lambda menu, point: menu.add_action("测试"))
         target.deleteLater()
         self.flush()
         self.assertEqual(self.manager._registrations, {})
@@ -304,5 +340,5 @@ class WorkbenchContextMenuTests(unittest.TestCase):
         self.assertIsNone(self.manager.menu)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

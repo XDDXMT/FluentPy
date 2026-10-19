@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import importlib.util
 import os
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 from setuptools.errors import ExecError
-
 
 ROOT = Path(__file__).resolve().parent
 MODE = os.environ.get("FLUENTPY_BUILD_NATIVE", "auto").lower()
@@ -37,11 +36,30 @@ class OptionalNativeBuild(build_ext):
 
 
 setup(
-    ext_modules=[] if MODE == "0" else [
+    ext_modules=[]
+    if MODE == "0"
+    else [
         Extension(
             "fluentpy._native",
-            sources=["native/text_accel.c", "native/date_accel.c", "native/drop_accel.c", "native/shortcut_accel.c", "native/time_accel.c", "native/calendar_accel.c", "native/color_accel.c", "native/input_accel.c"],
-            depends=["native/date_accel.h", "native/drop_accel.h", "native/shortcut_accel.h", "native/time_accel.h", "native/calendar_accel.h", "native/color_accel.h", "native/input_accel.h"],
+            sources=[
+                "native/text_accel.c",
+                "native/date_accel.c",
+                "native/drop_accel.c",
+                "native/shortcut_accel.c",
+                "native/time_accel.c",
+                "native/calendar_accel.c",
+                "native/color_accel.c",
+                "native/input_accel.c",
+            ],
+            depends=[
+                "native/date_accel.h",
+                "native/drop_accel.h",
+                "native/shortcut_accel.h",
+                "native/time_accel.h",
+                "native/calendar_accel.h",
+                "native/color_accel.h",
+                "native/input_accel.h",
+            ],
             optional=MODE != "1",
         )
     ],

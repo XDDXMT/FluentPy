@@ -12,9 +12,14 @@
 from fluentpy import InfoBar
 
 bar = InfoBar.success(
-    "保存完成", detail="当前设置已经写入本地文件。", parent=window,
-    orientation="horizontal", placement="top-center", timeout_ms=4000,
-    action_text="打开目录", action_callback=open_output_directory,
+    "保存完成",
+    detail="当前设置已经写入本地文件。",
+    parent=window,
+    orientation="horizontal",
+    placement="top-center",
+    timeout_ms=4000,
+    action_text="打开目录",
+    action_callback=open_output_directory,
 )
 ```
 
@@ -29,8 +34,9 @@ bar = InfoBar.success(
 ```python
 from fluentpy import Button, InfoBar, LineEdit
 
-bar = InfoBar("检查设置", "请确认输出目录。", window,
-              tone="warning", orientation="vertical", closable=False)
+bar = InfoBar(
+    "检查设置", "请确认输出目录。", window, tone="warning", orientation="vertical", closable=False
+)
 editor = LineEdit("输入目录", bar.content_widget)
 bar.content_layout.addWidget(editor)
 confirm = Button("确认目录", bar.content_widget)
@@ -53,8 +59,7 @@ bar.show()
 ```python
 from fluentpy import ProgressInfoBar
 
-task = ProgressInfoBar.start("正在导出", detail="正在准备文件…",
-                            parent=window, indeterminate=True)
+task = ProgressInfoBar.start("正在导出", detail="正在准备文件…", parent=window, indeterminate=True)
 task.set_progress(65)
 task.set_detail("已处理 65%，正在写入剩余文件。")
 task.finish("导出完成", timeout_ms=1800)

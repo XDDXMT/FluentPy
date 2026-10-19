@@ -8,13 +8,12 @@ Run directly with ``python -B -m unittest discover -s tests -p test_native_backe
 import importlib.util
 import json
 import os
-from pathlib import Path
 import random
 import sys
 import types
 import unittest
+from pathlib import Path
 from unittest.mock import patch
-
 
 _SOURCE = Path(__file__).resolve().parents[1] / "src" / "fluentpy"
 _NAMESPACE = "_fluentpy_accel_test_package"
@@ -22,7 +21,8 @@ _package = types.ModuleType(_NAMESPACE)
 _package.__path__ = [str(_SOURCE)]
 sys.modules[_NAMESPACE] = _package
 _spec = importlib.util.spec_from_file_location(
-    f"{_NAMESPACE}.backends", _SOURCE / "backends" / "__init__.py",
+    f"{_NAMESPACE}.backends",
+    _SOURCE / "backends" / "__init__.py",
     submodule_search_locations=[str(_SOURCE / "backends")],
 )
 _backends = importlib.util.module_from_spec(_spec)
@@ -39,11 +39,16 @@ class BackendSelectionTests(unittest.TestCase):
 
     def test_auto_uses_native_when_available(self):
         with patch.dict(os.environ, {"FLUENTPY_BACKEND": "auto"}):
-            self.assertEqual(backend.backend_name(), "native" if backend.native_available() else "python")
+            self.assertEqual(
+                backend.backend_name(), "native" if backend.native_available() else "python"
+            )
             self.assertEqual(backend.json_spans("-1.5e+2"), [(0, 7, 2)])
 
     def test_missing_extension_falls_back_and_forced_mode_is_visible(self):
-        with patch.object(backend, "_extension", None), patch.object(backend, "_native_import_error", "test binary missing"):
+        with (
+            patch.object(backend, "_extension", None),
+            patch.object(backend, "_native_import_error", "test binary missing"),
+        ):
             self.assertFalse(backend.native_available())
             self.assertEqual(backend.native_error(), "test binary missing")
             with patch.dict(os.environ, {"FLUENTPY_BACKEND": "auto"}):
@@ -65,7 +70,9 @@ class BackendSelectionTests(unittest.TestCase):
         subpackage.__path__ = [str(_SOURCE / "backends")]
         module_name = f"{namespace}.backends.text"
         with patch.dict(sys.modules, {namespace: package, subpackage.__name__: subpackage}):
-            spec = importlib.util.spec_from_file_location(module_name, _SOURCE / "backends" / "text.py")
+            spec = importlib.util.spec_from_file_location(
+                module_name, _SOURCE / "backends" / "text.py"
+            )
             missing = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(missing)
             self.assertFalse(missing.native_available())
@@ -92,7 +99,9 @@ class BackendSelectionTests(unittest.TestCase):
         self.assertEqual(backend.json_spans_python(text), expected)
 
 
-@unittest.skipUnless(backend.native_available(), "native extension is not built for this interpreter")
+@unittest.skipUnless(
+    backend.native_available(), "native extension is not built for this interpreter"
+)
 class NativeScannerTests(unittest.TestCase):
     def assert_same(self, source):
         expected = backend.json_spans_python(source)
@@ -109,10 +118,19 @@ class NativeScannerTests(unittest.TestCase):
 
     def test_unicode_escaped_and_incomplete_input_matches_reference(self):
         samples = [
-            "", "{}", "[]", '""', '{"": ""}', '"🎵": "😀"',
+            "",
+            "{}",
+            "[]",
+            '""',
+            '{"": ""}',
+            '"🎵": "😀"',
             '{"title": "🎵 true \\"quoted\\"", "gain": -1.5e+2, "ready": false}',
-            '"unterminated', '"escaped\\"', '"tail\\', '"a\\\n"b"',
-            '"a\nb" : 5', '"a\r\nb"\u2003: true',
+            '"unterminated',
+            '"escaped\\"',
+            '"tail\\',
+            '"a\\\n"b"',
+            '"a\nb" : 5',
+            '"a\r\nb"\u2003: true',
             "true false null True FALSE NULL true_ xnull null中 true² ²null",
             "1 -2 0 -0 01 -01 1. 1..2 1.2 1e2 1e+2 1e- 1e+ 1e2. --2 .2 x2 2x",
             "1٢٣ 1.٢ 1e٢ ٢ ² 1² 𐒠1 1𐒠 1𐒠.٢",
@@ -134,8 +152,12 @@ class NativeScannerTests(unittest.TestCase):
     def test_structured_ten_thousand_line_document_matches_reference(self):
         # Pretty JSON with Unicode strings, not a repeated short ASCII token.
         source = json.dumps(
-            [{"id": index, "name": f"音符 🎵 {index}", "ready": index % 2 == 0, "gain": -1.25e3}
-             for index in range(2000)], ensure_ascii=False, indent=2,
+            [
+                {"id": index, "name": f"音符 🎵 {index}", "ready": index % 2 == 0, "gain": -1.25e3}
+                for index in range(2000)
+            ],
+            ensure_ascii=False,
+            indent=2,
         )
         self.assertGreaterEqual(source.count("\n"), 10_000)
         self.assert_same(source)

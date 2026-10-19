@@ -1,10 +1,11 @@
 """An owned startup surface, independent of any third-party splash widget."""
+
 from __future__ import annotations
 
 import weakref
 
-from ..qt import QtCore, QtGui, QtWidgets, Signal, Slot
 from ..icons import FluentIcon, fluent_icon
+from ..qt import QtCore, QtGui, QtWidgets, Signal, Slot
 from ..theme import theme
 from ..theme.fonts import ui_font
 
@@ -21,12 +22,12 @@ class SplashScreen(QtWidgets.QWidget):
 
     def __init__(self, icon=None, parent: QtWidgets.QWidget | None = None):
         if not isinstance(parent, QtWidgets.QWidget):
-            raise TypeError('SplashScreen requires a QWidget parent')
+            raise TypeError("SplashScreen requires a QWidget parent")
         super().__init__(parent)
         self._host_ref = weakref.ref(parent)
         self._icon = QtGui.QIcon()
         self._icon_size = QtCore.QSize(96, 96)
-        self._text = ''
+        self._text = ""
         self._loading = False
         self._background_colors = None
         self._opacity = 1.0
@@ -46,11 +47,11 @@ class SplashScreen(QtWidgets.QWidget):
         self._spinner.setEndValue(1.0)
         self._spinner.setLoopCount(-1)
         self._spinner.valueChanged.connect(self._set_rotation)
-        self.setObjectName('fluentSplashScreen')
+        self.setObjectName("fluentSplashScreen")
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_NoSystemBackground)
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_OpaquePaintEvent)
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
-        self.setAccessibleName('启动页面')
+        self.setAccessibleName("启动页面")
         self.set_icon(icon)
         self._apply_theme()
         theme.subscribe(self, self._apply_theme)
@@ -67,7 +68,7 @@ class SplashScreen(QtWidgets.QWidget):
         elif isinstance(icon, (QtGui.QIcon, QtGui.QPixmap, str)):
             value = QtGui.QIcon(icon)
         else:
-            raise TypeError('icon must be QIcon, QPixmap, FluentIcon, a path, or None')
+            raise TypeError("icon must be QIcon, QPixmap, FluentIcon, a path, or None")
         self._icon = QtGui.QIcon(value)
         self.update()
 
@@ -78,7 +79,7 @@ class SplashScreen(QtWidgets.QWidget):
         if isinstance(size, int) and not isinstance(size, bool):
             size = QtCore.QSize(size, size)
         if not isinstance(size, QtCore.QSize) or size.width() <= 0 or size.height() <= 0:
-            raise ValueError('icon size must be a positive int or QSize')
+            raise ValueError("icon size must be a positive int or QSize")
         self._icon_size = QtCore.QSize(size)
         self.update()
 
@@ -104,7 +105,7 @@ class SplashScreen(QtWidgets.QWidget):
     def set_background_colors(self, light, dark) -> None:
         colors = (QtGui.QColor(light), QtGui.QColor(dark))
         if any(not color.isValid() or color.alpha() != 255 for color in colors):
-            raise ValueError('splash backgrounds must be valid opaque colors')
+            raise ValueError("splash backgrounds must be valid opaque colors")
         self._background_colors = colors
         self.update()
         self._refresh_caption()
@@ -158,8 +159,11 @@ class SplashScreen(QtWidgets.QWidget):
         self._refresh_caption()
 
     def _resolved_background_color(self):
-        return (QtGui.QColor(self._background_colors[1 if theme.mode.value == 'dark' else 0])
-                if self._background_colors else QtGui.QColor(theme.tokens.background))
+        return (
+            QtGui.QColor(self._background_colors[1 if theme.mode.value == "dark" else 0])
+            if self._background_colors
+            else QtGui.QColor(theme.tokens.background)
+        )
 
     def _refresh_caption(self):
         caption = self._caption_ref() if self._caption_ref is not None else None
@@ -172,8 +176,12 @@ class SplashScreen(QtWidgets.QWidget):
     def _sync_caption(self):
         host = self._host_ref()
         caption = host.menuWidget() if isinstance(host, QtWidgets.QMainWindow) else None
-        if (caption is None or caption.isHidden() or not self.isVisible()
-                or not callable(getattr(caption, '_register_startup_splash', None))):
+        if (
+            caption is None
+            or caption.isHidden()
+            or not self.isVisible()
+            or not callable(getattr(caption, "_register_startup_splash", None))
+        ):
             caption = None
         old = self._caption_ref() if self._caption_ref is not None else None
         if old is caption:
@@ -227,17 +235,27 @@ class SplashScreen(QtWidgets.QWidget):
     def eventFilter(self, watched, event):
         # The parent is watched for geometry for the entire child's lifetime.
         # The application input filter exists only while the splash is visible.
-        host_ref = self.__dict__.get('_host_ref')
+        host_ref = self.__dict__.get("_host_ref")
         if host_ref is None:
             return False
         if watched is host_ref() and event.type() in (
-                QtCore.QEvent.Type.Resize, QtCore.QEvent.Type.LayoutRequest,
-                QtCore.QEvent.Type.Show):
+            QtCore.QEvent.Type.Resize,
+            QtCore.QEvent.Type.LayoutRequest,
+            QtCore.QEvent.Type.Show,
+        ):
             self._fit_to_parent()
-        if self.isVisible() and event.type() in (
-                QtCore.QEvent.Type.KeyPress, QtCore.QEvent.Type.KeyRelease,
-                QtCore.QEvent.Type.Shortcut, QtCore.QEvent.Type.ShortcutOverride,
-                QtCore.QEvent.Type.InputMethod) and self._covered(watched):
+        if (
+            self.isVisible()
+            and event.type()
+            in (
+                QtCore.QEvent.Type.KeyPress,
+                QtCore.QEvent.Type.KeyRelease,
+                QtCore.QEvent.Type.Shortcut,
+                QtCore.QEvent.Type.ShortcutOverride,
+                QtCore.QEvent.Type.InputMethod,
+            )
+            and self._covered(watched)
+        ):
             event.accept()
             return True
         return super().eventFilter(watched, event)
@@ -245,10 +263,17 @@ class SplashScreen(QtWidgets.QWidget):
     def focusNextPrevChild(self, next):
         candidate = self.nextInFocusChain() if next else self.previousInFocusChain()
         while candidate is not self:
-            if (not self._covered(candidate) and candidate.isVisible() and candidate.isEnabled()
-                    and candidate.focusPolicy() & QtCore.Qt.FocusPolicy.TabFocus):
-                candidate.setFocus(QtCore.Qt.FocusReason.TabFocusReason if next
-                                   else QtCore.Qt.FocusReason.BacktabFocusReason)
+            if (
+                not self._covered(candidate)
+                and candidate.isVisible()
+                and candidate.isEnabled()
+                and candidate.focusPolicy() & QtCore.Qt.FocusPolicy.TabFocus
+            ):
+                candidate.setFocus(
+                    QtCore.Qt.FocusReason.TabFocusReason
+                    if next
+                    else QtCore.Qt.FocusReason.BacktabFocusReason
+                )
                 return True
             candidate = candidate.nextInFocusChain() if next else candidate.previousInFocusChain()
         return False
@@ -262,7 +287,9 @@ class SplashScreen(QtWidgets.QWidget):
         self._fit_to_parent()
         self.raise_()
         previous = QtWidgets.QApplication.focusWidget()
-        self._previous_focus = weakref.ref(previous) if previous is not None and previous is not self else None
+        self._previous_focus = (
+            weakref.ref(previous) if previous is not None and previous is not self else None
+        )
         self.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
         app = QtWidgets.QApplication.instance()
         if app is not None and not self._input_filter_installed:
@@ -284,8 +311,12 @@ class SplashScreen(QtWidgets.QWidget):
         self._previous_focus = None
         if previous is not None:
             try:
-                if (app is not None and previous.isVisible() and previous.isEnabled()
-                        and (self.hasFocus() or app.focusWidget() is None)):
+                if (
+                    app is not None
+                    and previous.isVisible()
+                    and previous.isEnabled()
+                    and (self.hasFocus() or app.focusWidget() is None)
+                ):
                     previous.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
             except RuntimeError:  # Its page may have been removed while loading.
                 pass
@@ -302,9 +333,14 @@ class SplashScreen(QtWidgets.QWidget):
             return QtCore.QRectF(), QtCore.QRectF(), QtCore.QRectF()
         text_height = min(self.fontMetrics().height() * 2, area.height() / 3) if self._text else 0
         loading_height = 22 if self._loading else 0
-        extra = (20 + text_height if text_height else 0) + (18 + loading_height if loading_height else 0)
-        factor = min(1.0, area.width() / self._icon_size.width(),
-                     max(0, area.height() - extra) / self._icon_size.height())
+        extra = (20 + text_height if text_height else 0) + (
+            18 + loading_height if loading_height else 0
+        )
+        factor = min(
+            1.0,
+            area.width() / self._icon_size.width(),
+            max(0, area.height() - extra) / self._icon_size.height(),
+        )
         width, height = self._icon_size.width() * factor, self._icon_size.height() * factor
         top = area.center().y() - (height + extra) / 2
         icon = QtCore.QRectF(area.center().x() - width / 2, top, width, height)
@@ -324,10 +360,23 @@ class SplashScreen(QtWidgets.QWidget):
             self._icon.paint(painter, icon.toAlignedRect(), QtCore.Qt.AlignmentFlag.AlignCenter)
         if self._text and not text.isEmpty():
             painter.setPen(QtGui.QColor(theme.tokens.text_muted))
-            painter.drawText(text, QtCore.Qt.AlignmentFlag.AlignHCenter |
-                             QtCore.Qt.AlignmentFlag.AlignVCenter | QtCore.Qt.TextFlag.TextWordWrap, self._text)
+            painter.drawText(
+                text,
+                QtCore.Qt.AlignmentFlag.AlignHCenter
+                | QtCore.Qt.AlignmentFlag.AlignVCenter
+                | QtCore.Qt.TextFlag.TextWordWrap,
+                self._text,
+            )
         if self._loading and not loading.isEmpty():
-            painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.accent), 2.2,
-                                     QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
+            painter.setPen(
+                QtGui.QPen(
+                    QtGui.QColor(theme.tokens.accent),
+                    2.2,
+                    QtCore.Qt.PenStyle.SolidLine,
+                    QtCore.Qt.PenCapStyle.RoundCap,
+                )
+            )
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
-            painter.drawArc(loading.adjusted(2, 2, -2, -2), round((90 - self._rotation * 360) * 16), -110 * 16)
+            painter.drawArc(
+                loading.adjusted(2, 2, -2, -2), round((90 - self._rotation * 360) * 16), -110 * 16
+            )

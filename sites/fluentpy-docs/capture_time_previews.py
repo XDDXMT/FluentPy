@@ -1,21 +1,25 @@
 """Capture the library's real in-window time wheels without desktop windows."""
-import os
+
 import io
-from pathlib import Path
+import os
 import sys
+from pathlib import Path
 
 SITE = Path(__file__).resolve().parent
 from source_project import source_root
+
 ROOT = source_root()
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "examples")]
 os.environ["QT_QPA_PLATFORM"] = "windows" if sys.platform == "win32" else "offscreen"
 os.environ["QT_SCALE_FACTOR"] = "1"
 
-from fluentpy import TimePicker, QT_API, theme
+from PIL import Image, ImageChops, ImageStat
+from time_picker import TimePickerDemo
+
+from fluentpy import QT_API, TimePicker, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.theme.fonts import ui_font
-from time_picker import TimePickerDemo
-from PIL import Image, ImageChops, ImageStat
+
 if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
@@ -46,16 +50,19 @@ def capture_motion(app, output):
         picker.clearFocus()
 
     actions = [
-        (450, picker.show_popup), (1100, lambda: picker._popup.wheel.step(1, 1)),
-        (1500, lambda: picker._popup.wheel.step(0, 1)), (1850, lambda: picker._popup.wheel.step(2, -1)),
-        (2300, confirm), (3200, reset),
+        (450, picker.show_popup),
+        (1100, lambda: picker._popup.wheel.step(1, 1)),
+        (1500, lambda: picker._popup.wheel.step(0, 1)),
+        (1850, lambda: picker._popup.wheel.step(2, -1)),
+        (2300, confirm),
+        (3200, reset),
     ]
     elapsed = QtCore.QElapsedTimer()
     elapsed.start()
     frames = []
     for target in range(0, 3600, 30):
         if target > elapsed.elapsed():
-            QTest.qWait(target-elapsed.elapsed())
+            QTest.qWait(target - elapsed.elapsed())
         while actions and actions[0][0] <= target:
             actions.pop(0)[1]()
         app.processEvents()
@@ -66,11 +73,20 @@ def capture_motion(app, output):
             frame = image.convert("RGB")
             assert min(ImageStat.Stat(frame).mean) > 180, "Unexpected dark capture frame"
             frames.append(frame.copy())
-    assert ImageChops.difference(frames[0], frames[-1]).getbbox() is None, "Motion loop must return to its initial frame"
+    assert ImageChops.difference(frames[0], frames[-1]).getbbox() is None, (
+        "Motion loop must return to its initial frame"
+    )
     frames[0].save(output / "time-picker-motion-light.png", optimize=True)
     palette_frames = [frame.quantize(colors=128) for frame in frames]
-    palette_frames[0].save(output / "time-picker-motion-light.gif", save_all=True,
-        append_images=palette_frames[1:], duration=30, loop=0, disposal=1, optimize=True)
+    palette_frames[0].save(
+        output / "time-picker-motion-light.gif",
+        save_all=True,
+        append_images=palette_frames[1:],
+        duration=30,
+        loop=0,
+        disposal=1,
+        optimize=True,
+    )
     print("Captured time-picker-motion-light.gif:", len(frames), "opaque Qt frames, 3600ms")
     canvas.close()
     canvas.deleteLater()
@@ -81,7 +97,9 @@ def main():
     app = QtWidgets.QApplication([])
     app.setQuitOnLastWindowClosed(False)
     font = ui_font(14)
-    font.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferAntialias | QtGui.QFont.StyleStrategy.NoSubpixelAntialias)
+    font.setStyleStrategy(
+        QtGui.QFont.StyleStrategy.PreferAntialias | QtGui.QFont.StyleStrategy.NoSubpixelAntialias
+    )
     app.setFont(font)
     output = SITE / "dist/assets/previews"
     for mode in ("light", "dark"):

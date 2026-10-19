@@ -1,4 +1,5 @@
 """Native color editor and swatches, composed with the existing input controls."""
+
 from __future__ import annotations
 
 from ..backends import color as colors
@@ -46,6 +47,7 @@ def _paint_color(painter, rect, color, radius=4):
 
 class ColorSwatchButton(Button):
     """An actual checkable Button with an animated color selection ring."""
+
     colorClicked = Signal(QtGui.QColor)
     colorChanged = Signal(QtGui.QColor)
     _kind = "text"
@@ -104,17 +106,21 @@ class ColorSwatchButton(Button):
         swatch = rect.adjusted(inset, inset, -inset, -inset)
         radius = swatch.width() / 2 if self._circular else 4
         if not self.isEnabled():
-            painter.setOpacity(.45)
+            painter.setOpacity(0.45)
         _paint_color(painter, swatch, self._color, radius)
         painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
-        painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.border), .7))
+        painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.border), 0.7))
         painter.drawRoundedRect(swatch, radius, radius)
         if self._selection > 0:
             ring = QtGui.QColor(theme.tokens.accent)
             ring.setAlphaF(self._selection)
             painter.setPen(QtGui.QPen(ring, 1.8))
             outer = rect.adjusted(1.5, 1.5, -1.5, -1.5)
-            painter.drawRoundedRect(outer, outer.width() / 2 if self._circular else 5, outer.height() / 2 if self._circular else 5)
+            painter.drawRoundedRect(
+                outer,
+                outer.width() / 2 if self._circular else 5,
+                outer.height() / 2 if self._circular else 5,
+            )
 
     def hideEvent(self, event):
         if hasattr(self, "_selection_animation"):
@@ -125,6 +131,7 @@ class ColorSwatchButton(Button):
 
 class ColorSwatchGroup(QtWidgets.QWidget):
     """An exclusive color group that wraps with a standard QGridLayout."""
+
     colorChanged = Signal(QtGui.QColor)
 
     def __init__(self, colors=None, parent=None):
@@ -137,8 +144,14 @@ class ColorSwatchGroup(QtWidgets.QWidget):
         self._layout = QtWidgets.QGridLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(8)
-        self._layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
-        self.set_colors(colors if colors is not None else ("#4ba6ed", "#72d4f4", "#4ca9ef", "#388fd8", "#253e72", "#c7a2ec"))
+        self._layout.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop
+        )
+        self.set_colors(
+            colors
+            if colors is not None
+            else ("#4ba6ed", "#72d4f4", "#4ca9ef", "#388fd8", "#253e72", "#c7a2ec")
+        )
 
     def colors(self):
         return tuple(button.color() for button in self._buttons)
@@ -212,7 +225,9 @@ class _ColorSpectrum(QtWidgets.QWidget):
         self._motion.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
         self._motion.valueChanged.connect(self._move_marker)
         self.setMinimumSize(120, 120)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding
+        )
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.setCursor(QtCore.Qt.CursorShape.CrossCursor)
         self.setAccessibleName("色相与饱和度色谱")
@@ -230,7 +245,9 @@ class _ColorSpectrum(QtWidgets.QWidget):
             self._motion.start()
         else:
             self._move_marker(target)
-        self.setAccessibleDescription(f"色相 {hue:.1f}，饱和度 {saturation * 100:.0f}%，明度 {value * 100:.0f}%")
+        self.setAccessibleDescription(
+            f"色相 {hue:.1f}，饱和度 {saturation * 100:.0f}%，明度 {value * 100:.0f}%"
+        )
         self.update()
 
     def _move_marker(self, point):
@@ -261,9 +278,9 @@ class _ColorSpectrum(QtWidgets.QWidget):
         elif event.key() == QtCore.Qt.Key.Key_Right:
             h = (h + 1) % 360
         elif event.key() == QtCore.Qt.Key.Key_Up:
-            s = min(1, s + .01)
+            s = min(1, s + 0.01)
         elif event.key() == QtCore.Qt.Key.Key_Down:
-            s = max(0, s - .01)
+            s = max(0, s - 0.01)
         else:
             return super().keyPressEvent(event)
         self.selected.emit(h, s)
@@ -286,7 +303,10 @@ class _ColorSpectrum(QtWidgets.QWidget):
         painter.fillPath(path, saturation)
         painter.fillPath(path, QtGui.QColor(0, 0, 0, round(255 * (1 - self.value))))
         painter.setClipping(False)
-        point = QtCore.QPointF(rect.left() + self._marker.x() * rect.width(), rect.top() + self._marker.y() * rect.height())
+        point = QtCore.QPointF(
+            rect.left() + self._marker.x() * rect.width(),
+            rect.top() + self._marker.y() * rect.height(),
+        )
         painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
         painter.setPen(QtGui.QPen(QtGui.QColor("#ffffff"), 3.5))
         painter.drawEllipse(point, 6, 6)
@@ -313,6 +333,7 @@ class _ColorPreview(QtWidgets.QWidget):
 
 class ColorPickerPanel(QtWidgets.QWidget):
     """Live color draft: spectrum, brightness, RGB/HSV channels and optional alpha."""
+
     colorChanged = Signal(QtGui.QColor)
     validationChanged = Signal(bool)
 
@@ -387,7 +408,9 @@ class ColorPickerPanel(QtWidgets.QWidget):
         self._layout.addWidget(self.error_label)
         self.spectrum.selected.connect(self._spectrum_changed)
         self.brightness_slider.valueChanged.connect(self._brightness_changed)
-        self.format_combo.currentIndexChanged.connect(lambda index: self.set_format("hsv" if index else "rgb"))
+        self.format_combo.currentIndexChanged.connect(
+            lambda index: self.set_format("hsv" if index else "rgb")
+        )
         self.hex_input.textEdited.connect(self._hex_edited)
         self.hex_input.editingFinished.connect(self._finish_hex)
         self.set_previous_color(self._color)
@@ -434,7 +457,9 @@ class ColorPickerPanel(QtWidgets.QWidget):
     def _assign(self, color, *, preserve_hue=False, from_spectrum=False, preserve_hex=False):
         changed = color != self._color
         self._color = color
-        self._sync(preserve_hue=preserve_hue, from_spectrum=from_spectrum, preserve_hex=preserve_hex)
+        self._sync(
+            preserve_hue=preserve_hue, from_spectrum=from_spectrum, preserve_hex=preserve_hex
+        )
         if changed:
             self.colorChanged.emit(self.color())
 
@@ -444,7 +469,9 @@ class ColorPickerPanel(QtWidgets.QWidget):
             if hue >= 0:
                 self._hue = hue
             self._saturation, self._value = saturation, value
-        self.spectrum.set_state(self._hue, self._saturation, self._value, animated=not from_spectrum)
+        self.spectrum.set_state(
+            self._hue, self._saturation, self._value, animated=not from_spectrum
+        )
         self.preview.current = self.color()
         self.preview.update()
         with QtCore.QSignalBlocker(self.format_combo):
@@ -453,10 +480,21 @@ class ColorPickerPanel(QtWidgets.QWidget):
             self.brightness_slider.setValue(round(self._value * 1000))
         full = QtGui.QColor(*colors.hsv_to_rgba(self._hue, self._saturation, 1))
         self.brightness_slider.set_track_gradient([(0, "#000000"), (1, full)])
-        values = self._color.getRgb() if self._format == "rgb" else (round(self._hue) % 360, round(self._saturation * 100), round(self._value * 100), self._color.alpha())
+        values = (
+            self._color.getRgb()
+            if self._format == "rgb"
+            else (
+                round(self._hue) % 360,
+                round(self._saturation * 100),
+                round(self._value * 100),
+                self._color.alpha(),
+            )
+        )
         names = "RGBA" if self._format == "rgb" else "HSVA"
         maxima = (255, 255, 255, 255) if self._format == "rgb" else (359, 100, 100, 255)
-        for index, (label, entry, slider) in enumerate(zip(self.channel_labels, self.channel_inputs, self.channel_sliders)):
+        for index, (label, entry, slider) in enumerate(
+            zip(self.channel_labels, self.channel_inputs, self.channel_sliders)
+        ):
             label.setText(names[index])
             entry.setAccessibleName(names[index] + "颜色分量")
             slider.setAccessibleName(names[index] + "颜色分量")
@@ -495,7 +533,12 @@ class ColorPickerPanel(QtWidgets.QWidget):
 
     def _brightness_changed(self, value):
         self._value = value / 1000
-        self._assign(QtGui.QColor(*colors.hsv_to_rgba(self._hue, self._saturation, self._value, self._color.alpha())), preserve_hue=True)
+        self._assign(
+            QtGui.QColor(
+                *colors.hsv_to_rgba(self._hue, self._saturation, self._value, self._color.alpha())
+            ),
+            preserve_hue=True,
+        )
 
     def _channel_changed(self, index, value):
         channels = list(self._color.getRgb())
@@ -506,7 +549,10 @@ class ColorPickerPanel(QtWidgets.QWidget):
             components = [self._hue, self._saturation, self._value]
             components[index] = float(value) if index == 0 else value / 100
             self._hue, self._saturation, self._value = components
-            self._assign(QtGui.QColor(*colors.hsv_to_rgba(*components, self._color.alpha())), preserve_hue=True)
+            self._assign(
+                QtGui.QColor(*colors.hsv_to_rgba(*components, self._color.alpha())),
+                preserve_hue=True,
+            )
 
     def _hex_edited(self, text):
         try:
@@ -529,7 +575,9 @@ class ColorPickerPanel(QtWidgets.QWidget):
         self._valid = valid
         self.error_label.setText("请输入 #RGB、#RRGGBB 或 #AARRGGBB。" if not valid else "")
         self.error_label.setVisible(not valid)
-        self.hex_input.setAccessibleDescription("" if valid else "颜色格式不完整或无效，原颜色保持不变。")
+        self.hex_input.setAccessibleDescription(
+            "" if valid else "颜色格式不完整或无效，原颜色保持不变。"
+        )
         if changed:
             self.validationChanged.emit(valid)
 
@@ -537,22 +585,102 @@ class ColorPickerPanel(QtWidgets.QWidget):
         self.setFont(ui_font(theme.tokens.font_size))
         for label in self.channel_labels:
             label.setStyleSheet(f"color: {theme.tokens.text}; background: transparent;")
-        self.error_label.setStyleSheet(f"color: {'#c42b1c' if theme.mode.value == 'light' else '#ff99a4'}; background: transparent; font-size: 12px;")
+        self.error_label.setStyleSheet(
+            f"color: {'#c42b1c' if theme.mode.value == 'light' else '#ff99a4'}; background: transparent; font-size: 12px;"
+        )
 
 
 THEME_COLORS = (
-    ("#ffffff", "#151515", "#e5e7eb", "#475569", "#386bc0", "#7659a4", "#a3a3a3", "#f5bb00", "#4998cf", "#70a641"),
-    ("#f3f4f6", "#808080", "#d1d5db", "#dbe2eb", "#dce7fa", "#e8dff2", "#ececec", "#fff3cd", "#deedf8", "#e1efd5"),
-    ("#dddddd", "#626262", "#acb0b8", "#b7c4d6", "#b6cbec", "#cebee1", "#d9d9d9", "#ffe69c", "#bddbf1", "#c6dfb1"),
-    ("#bfbfbf", "#454545", "#8b919b", "#879bb8", "#8daadd", "#ae95cb", "#bdbdbd", "#ffda6a", "#97c8e8", "#a8ce88"),
-    ("#9a9a9a", "#292929", "#5f6670", "#344155", "#2b5397", "#604487", "#919191", "#c59800", "#317aaa", "#527d2b"),
-    ("#777777", "#050505", "#363b43", "#202b3c", "#1d3765", "#432e61", "#525252", "#826400", "#1e506e", "#36531d"),
+    (
+        "#ffffff",
+        "#151515",
+        "#e5e7eb",
+        "#475569",
+        "#386bc0",
+        "#7659a4",
+        "#a3a3a3",
+        "#f5bb00",
+        "#4998cf",
+        "#70a641",
+    ),
+    (
+        "#f3f4f6",
+        "#808080",
+        "#d1d5db",
+        "#dbe2eb",
+        "#dce7fa",
+        "#e8dff2",
+        "#ececec",
+        "#fff3cd",
+        "#deedf8",
+        "#e1efd5",
+    ),
+    (
+        "#dddddd",
+        "#626262",
+        "#acb0b8",
+        "#b7c4d6",
+        "#b6cbec",
+        "#cebee1",
+        "#d9d9d9",
+        "#ffe69c",
+        "#bddbf1",
+        "#c6dfb1",
+    ),
+    (
+        "#bfbfbf",
+        "#454545",
+        "#8b919b",
+        "#879bb8",
+        "#8daadd",
+        "#ae95cb",
+        "#bdbdbd",
+        "#ffda6a",
+        "#97c8e8",
+        "#a8ce88",
+    ),
+    (
+        "#9a9a9a",
+        "#292929",
+        "#5f6670",
+        "#344155",
+        "#2b5397",
+        "#604487",
+        "#919191",
+        "#c59800",
+        "#317aaa",
+        "#527d2b",
+    ),
+    (
+        "#777777",
+        "#050505",
+        "#363b43",
+        "#202b3c",
+        "#1d3765",
+        "#432e61",
+        "#525252",
+        "#826400",
+        "#1e506e",
+        "#36531d",
+    ),
 )
-STANDARD_COLORS = ("#c00000", "#ff0000", "#ffbd00", "#ffff00", "#92d050", "#00b050", "#00b8d4", "#0078d4", "#002060", "#7030a0")
+STANDARD_COLORS = (
+    "#c00000",
+    "#ff0000",
+    "#ffbd00",
+    "#ffff00",
+    "#92d050",
+    "#00b050",
+    "#00b8d4",
+    "#0078d4",
+    "#002060",
+    "#7030a0",
+)
 
 
 class ColorPalette(QtWidgets.QWidget):
     """Theme and standard swatches, an automatic choice and a more-colors action."""
+
     colorSelected = Signal(QtGui.QColor)
     automaticSelected = Signal()
     moreColorsRequested = Signal()
@@ -609,4 +737,6 @@ class ColorPalette(QtWidgets.QWidget):
     def _refresh_theme(self):
         self.setFont(ui_font(theme.tokens.font_size))
         for label in self._labels:
-            label.setStyleSheet(f"color: {theme.tokens.text}; background: transparent; padding: 3px 0;")
+            label.setStyleSheet(
+                f"color: {theme.tokens.text}; background: transparent; padding: 3px 0;"
+            )

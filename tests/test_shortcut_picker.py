@@ -1,15 +1,16 @@
 import os
-os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 import sys
 import unittest
 from unittest.mock import patch
 
-from fluentpy import ShortcutPicker, ShortcutDialog, theme
+from fluentpy import ShortcutDialog, ShortcutPicker, theme
 from fluentpy.backends import shortcut
 from fluentpy.qt import QT_API, QtCore, QtGui, QtWidgets
 
-if QT_API == 'PySide6':
+if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
     from PyQt6.QtTest import QTest
@@ -32,7 +33,7 @@ class ShortcutPickerTests(unittest.TestCase):
         self.parent = QtWidgets.QWidget()
         self.parent.resize(800, 570)
         layout = QtWidgets.QVBoxLayout(self.parent)
-        self.picker = ShortcutPicker('Ctrl+Shift+A')
+        self.picker = ShortcutPicker("Ctrl+Shift+A")
         layout.addWidget(self.picker)
         self.parent.show()
         self.parent.activateWindow()
@@ -63,12 +64,12 @@ class ShortcutPickerTests(unittest.TestCase):
         changes, sequences = [], []
         self.picker.sequenceChanged.connect(changes.append)
         self.picker.keySequenceChanged.connect(lambda seq: sequences.append(text(seq)))
-        for value in ('Alt+L', QtGui.QKeySequence('Alt+L'), ''):
+        for value in ("Alt+L", QtGui.QKeySequence("Alt+L"), ""):
             self.picker.setKeySequence(value)
-        self.assertEqual(changes, ['Alt+L', ''])
+        self.assertEqual(changes, ["Alt+L", ""])
         self.assertEqual(changes, sequences)
         self.assertTrue(self.picker.keySequence().isEmpty())
-        self.assertIn('未设置', self.picker.key_caps.accessibleName())
+        self.assertIn("未设置", self.picker.key_caps.accessibleName())
 
     def test_record_preview_only_commits_on_save_and_contains_no_native_window(self):
         changes = []
@@ -80,25 +81,25 @@ class ShortcutPickerTests(unittest.TestCase):
         self.assertIsNone(dialog.windowHandle())
         self.assertIs(dialog.window(), self.parent)
         QTest.keyClick(dialog.recorder, QtCore.Qt.Key.Key_L, QtCore.Qt.KeyboardModifier.AltModifier)
-        self.assertEqual(text(dialog.key_sequence()), 'Alt+L')
-        self.assertEqual(text(self.picker.key_sequence()), 'Ctrl+Shift+A')
+        self.assertEqual(text(dialog.key_sequence()), "Alt+L")
+        self.assertEqual(text(self.picker.key_sequence()), "Ctrl+Shift+A")
         self.assertEqual(changes, [])
         QTest.mouseClick(dialog.yes_button, QtCore.Qt.MouseButton.LeftButton)
         self.finish()
-        self.assertEqual(changes, ['Alt+L'])
-        self.assertEqual(text(self.picker.key_sequence()), 'Alt+L')
+        self.assertEqual(changes, ["Alt+L"])
+        self.assertEqual(text(self.picker.key_sequence()), "Alt+L")
         self.assertIsNone(self.picker._editor)
 
     def test_cancel_reset_and_clear_are_transactional(self):
         dialog = self.editor()
         QTest.keyClick(dialog.recorder, QtCore.Qt.Key.Key_L, QtCore.Qt.KeyboardModifier.AltModifier)
         QTest.mouseClick(dialog.reset_button, QtCore.Qt.MouseButton.LeftButton)
-        self.assertEqual(text(dialog.key_sequence()), 'Ctrl+Shift+A')
+        self.assertEqual(text(dialog.key_sequence()), "Ctrl+Shift+A")
         dialog.clear()
         self.assertTrue(dialog.key_sequence().isEmpty())
         dialog.reject()
         self.finish()
-        self.assertEqual(text(self.picker.key_sequence()), 'Ctrl+Shift+A')
+        self.assertEqual(text(self.picker.key_sequence()), "Ctrl+Shift+A")
         dialog = self.editor()
         dialog.clear()
         dialog.accept()
@@ -106,44 +107,54 @@ class ShortcutPickerTests(unittest.TestCase):
         self.assertTrue(self.picker.key_sequence().isEmpty())
 
     def test_reserved_conflict_blocks_save_then_valid_key_reenables_it(self):
-        self.picker.set_reserved_sequences(['Ctrl+S', 'Ctrl+O'])
+        self.picker.set_reserved_sequences(["Ctrl+S", "Ctrl+O"])
         dialog = self.editor()
-        QTest.keyClick(dialog.recorder, QtCore.Qt.Key.Key_S, QtCore.Qt.KeyboardModifier.ControlModifier)
+        QTest.keyClick(
+            dialog.recorder, QtCore.Qt.Key.Key_S, QtCore.Qt.KeyboardModifier.ControlModifier
+        )
         self.assertFalse(dialog.yes_button.isEnabled())
-        self.assertIn('占用', dialog.message_label.text())
+        self.assertIn("占用", dialog.message_label.text())
         dialog.accept()
         self.assertTrue(dialog.isVisible())
         QTest.keyClick(dialog.recorder, QtCore.Qt.Key.Key_F9)
         self.assertTrue(dialog.yes_button.isEnabled())
         dialog.accept()
         self.finish()
-        self.assertEqual(text(self.picker.key_sequence()), 'F9')
+        self.assertEqual(text(self.picker.key_sequence()), "F9")
         with self.assertRaises(ValueError):
-            self.picker.set_key_sequence('Ctrl+S')
+            self.picker.set_key_sequence("Ctrl+S")
         copies = self.picker.reserved_sequences()
         copies.clear()
         self.assertEqual(len(self.picker.reserved_sequences()), 2)
 
     def test_return_is_recorded_when_listening_but_activates_save_when_button_focused(self):
         dialog = self.editor()
-        modifiers = QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier
+        modifiers = (
+            QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier
+        )
         QTest.keyClick(dialog.recorder, QtCore.Qt.Key.Key_Return, modifiers)
-        self.assertEqual(text(dialog.key_sequence()), 'Ctrl+Shift+Return')
+        self.assertEqual(text(dialog.key_sequence()), "Ctrl+Shift+Return")
         self.assertFalse(dialog._finished)
         dialog.yes_button.setFocus()
         QTest.keyClick(dialog.yes_button, QtCore.Qt.Key.Key_Return)
         self.finish()
-        self.assertEqual(text(self.picker.key_sequence()), 'Ctrl+Shift+Return')
+        self.assertEqual(text(self.picker.key_sequence()), "Ctrl+Shift+Return")
 
     def test_modifier_only_preview_and_auto_repeat_do_not_replace_candidate(self):
         dialog = self.editor()
         QTest.keyPress(dialog.recorder, QtCore.Qt.Key.Key_Control)
-        self.assertEqual(text(dialog.key_sequence()), 'Ctrl+Shift+A')
+        self.assertEqual(text(dialog.key_sequence()), "Ctrl+Shift+A")
         QTest.keyRelease(dialog.recorder, QtCore.Qt.Key.Key_Control)
-        event = QtGui.QKeyEvent(QtCore.QEvent.Type.KeyPress, QtCore.Qt.Key.Key_L,
-                               QtCore.Qt.KeyboardModifier.AltModifier, 'l', True, 5)
+        event = QtGui.QKeyEvent(
+            QtCore.QEvent.Type.KeyPress,
+            QtCore.Qt.Key.Key_L,
+            QtCore.Qt.KeyboardModifier.AltModifier,
+            "l",
+            True,
+            5,
+        )
         self.app.sendEvent(dialog.recorder, event)
-        self.assertEqual(text(dialog.key_sequence()), 'Ctrl+Shift+A')
+        self.assertEqual(text(dialog.key_sequence()), "Ctrl+Shift+A")
 
     def test_tab_focus_stays_inside_dialog_and_escape_discards(self):
         dialog = self.editor()
@@ -151,21 +162,30 @@ class ShortcutPickerTests(unittest.TestCase):
             focus = self.app.focusWidget()
             QTest.keyClick(focus, QtCore.Qt.Key.Key_Tab)
             self.assertTrue(dialog.isAncestorOf(self.app.focusWidget()))
-        QTest.keyClick(self.app.focusWidget(), QtCore.Qt.Key.Key_Backtab, QtCore.Qt.KeyboardModifier.ShiftModifier)
+        QTest.keyClick(
+            self.app.focusWidget(),
+            QtCore.Qt.Key.Key_Backtab,
+            QtCore.Qt.KeyboardModifier.ShiftModifier,
+        )
         self.assertTrue(dialog.isAncestorOf(self.app.focusWidget()))
         QTest.keyClick(self.app.focusWidget(), QtCore.Qt.Key.Key_Escape)
         self.finish()
         self.assertIsNone(self.picker._editor)
-        self.assertEqual(text(self.picker.key_sequence()), 'Ctrl+Shift+A')
+        self.assertEqual(text(self.picker.key_sequence()), "Ctrl+Shift+A")
 
     def test_application_shortcut_override_is_scoped_and_removed_after_close(self):
         dialog = self.editor()
+
         def override(target):
-            event = QtGui.QKeyEvent(QtCore.QEvent.Type.ShortcutOverride, QtCore.Qt.Key.Key_S,
-                                   QtCore.Qt.KeyboardModifier.ControlModifier)
+            event = QtGui.QKeyEvent(
+                QtCore.QEvent.Type.ShortcutOverride,
+                QtCore.Qt.Key.Key_S,
+                QtCore.Qt.KeyboardModifier.ControlModifier,
+            )
             event.setAccepted(False)
             self.app.sendEvent(target, event)
             return event.isAccepted()
+
         self.assertTrue(override(self.parent))
         other = QtWidgets.QWidget()
         try:
@@ -178,11 +198,13 @@ class ShortcutPickerTests(unittest.TestCase):
 
     def test_real_window_shortcut_is_suspended_while_recording_and_restored(self):
         triggered = []
-        action = QtGui.QShortcut(QtGui.QKeySequence('Ctrl+Shift+A'), self.parent)
+        action = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Shift+A"), self.parent)
         action.activated.connect(lambda: triggered.append(True))
         self.picker.setFocus()
         QTest.qWait(20)
-        modifiers = QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier
+        modifiers = (
+            QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier
+        )
         QTest.keyClick(self.picker, QtCore.Qt.Key.Key_A, modifiers)
         self.assertEqual(triggered, [True])
         dialog = self.editor()
@@ -206,7 +228,7 @@ class ShortcutPickerTests(unittest.TestCase):
         self.app.processEvents()
 
     def test_disable_hide_and_parent_hide_dismiss_without_commit_or_resurrection(self):
-        for action in ('disable', 'hide-picker', 'hide-parent'):
+        for action in ("disable", "hide-picker", "hide-parent"):
             with self.subTest(action=action):
                 self.parent.show()
                 self.picker.show()
@@ -215,16 +237,16 @@ class ShortcutPickerTests(unittest.TestCase):
                 destroyed = []
                 dialog.destroyed.connect(lambda: destroyed.append(True))
                 QTest.keyClick(dialog.recorder, QtCore.Qt.Key.Key_Z)
-                if action == 'disable':
+                if action == "disable":
                     self.picker.setEnabled(False)
-                elif action == 'hide-picker':
+                elif action == "hide-picker":
                     self.picker.hide()
                 else:
                     self.parent.hide()
                 self.app.processEvents()
                 self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
                 self.assertEqual(destroyed, [True])
-                self.assertEqual(text(self.picker.key_sequence()), 'Ctrl+Shift+A')
+                self.assertEqual(text(self.picker.key_sequence()), "Ctrl+Shift+A")
                 self.parent.show()
                 self.app.processEvents()
                 self.assertIsNone(self.picker._editor)
@@ -234,7 +256,7 @@ class ShortcutPickerTests(unittest.TestCase):
         self.parent.deleteLater()
         self.parent = None
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
-        for mode in ('light', 'dark'):
+        for mode in ("light", "dark"):
             theme.set_mode(mode)
             self.app.processEvents()
         QTest.qWait(230)
@@ -252,35 +274,46 @@ class ShortcutPickerTests(unittest.TestCase):
             self.assertIsNone(dialog.windowHandle())
 
     def test_long_keycaps_and_conflict_follow_theme(self):
-        self.picker.set_key_sequence('Ctrl+Alt+Shift+Meta+Print')
-        self.picker.set_reserved_sequences(['Ctrl+S'])
+        self.picker.set_key_sequence("Ctrl+Alt+Shift+Meta+Print")
+        self.picker.set_reserved_sequences(["Ctrl+S"])
         dialog = self.editor()
-        QTest.keyClick(dialog.recorder, QtCore.Qt.Key.Key_S, QtCore.Qt.KeyboardModifier.ControlModifier)
-        for mode in ('light', 'dark'):
+        QTest.keyClick(
+            dialog.recorder, QtCore.Qt.Key.Key_S, QtCore.Qt.KeyboardModifier.ControlModifier
+        )
+        for mode in ("light", "dark"):
             theme.set_mode(mode)
             self.app.processEvents()
             self.assertFalse(dialog.yes_button.isEnabled())
-            self.assertIn('占用', dialog.message_label.text())
+            self.assertIn("占用", dialog.message_label.text())
             self.assertFalse(dialog.grab().isNull())
-            self.assertIn('Microsoft YaHei UI', dialog.recorder.font().families())
+            self.assertIn("Microsoft YaHei UI", dialog.recorder.font().families())
 
     def test_invalid_and_missing_c_inputs_do_not_allocate_partial_widgets(self):
         before = len(self.parent.findChildren(QtWidgets.QWidget))
-        for value in ('Ctrl+K, Ctrl+C', 'Ctrl+', 'NoSuchKey123', 123, object()):
+        for value in ("Ctrl+K, Ctrl+C", "Ctrl+", "NoSuchKey123", 123, object()):
             with self.subTest(value=str(value)), self.assertRaises((TypeError, ValueError)):
                 ShortcutPicker(value, self.parent)
-        with patch.object(shortcut, '_extension', None), patch.dict(os.environ, {'FLUENTPY_BACKEND': 'native'}):
+        with (
+            patch.object(shortcut, "_extension", None),
+            patch.dict(os.environ, {"FLUENTPY_BACKEND": "native"}),
+        ):
             with self.assertRaises(RuntimeError):
-                ShortcutPicker('Ctrl+A', self.parent)
+                ShortcutPicker("Ctrl+A", self.parent)
         self.assertEqual(len(self.parent.findChildren(QtWidgets.QWidget)), before)
 
     def test_constructing_and_showing_never_displays_an_orphan_label(self):
         shown = []
+
         class Monitor(QtCore.QObject):
             def eventFilter(self, obj, event):
-                if event.type() == QtCore.QEvent.Type.Show and isinstance(obj, QtWidgets.QLabel) and obj.isWindow():
+                if (
+                    event.type() == QtCore.QEvent.Type.Show
+                    and isinstance(obj, QtWidgets.QLabel)
+                    and obj.isWindow()
+                ):
                     shown.append(obj.text())
                 return False
+
         monitor = Monitor()
         self.app.installEventFilter(monitor)
         try:
@@ -290,5 +323,5 @@ class ShortcutPickerTests(unittest.TestCase):
             self.app.removeEventFilter(monitor)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

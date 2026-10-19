@@ -1,15 +1,19 @@
 """Startup ownership, input shielding, geometry, completion and cleanup."""
+
 import os
-os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
-from pathlib import Path
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import sys
 import unittest
+from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'examples'))
-from fluentpy import FluentWindow, SplashScreen, LineEdit, Button, theme
-from fluentpy.qt import QtCore, QtGui, QtWidgets, QT_API
-from splash_screen import SplashExamples, SplashDemo, brand_icon
-if QT_API == 'PySide6':
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
+from splash_screen import SplashDemo, SplashExamples, brand_icon
+
+from fluentpy import Button, FluentWindow, LineEdit, SplashScreen, theme
+from fluentpy.qt import QT_API, QtCore, QtGui, QtWidgets
+
+if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
     from PyQt6.QtTest import QTest
@@ -25,13 +29,13 @@ class SplashScreenTests(unittest.TestCase):
         self.errors = []
         self.old_hook = sys.excepthook
         sys.excepthook = lambda kind, error, tb: self.errors.append(str(error))
-        self.host = FluentWindow('Startup test')
+        self.host = FluentWindow("Startup test")
         self.host.set_title_bar_enabled(True)
         self.host.setWindowIcon(brand_icon())
         self.host.resize(720, 480)
         self.editor = LineEdit()
-        self.editor.setText('retain this value')
-        self.button = Button('Underlying action')
+        self.editor.setText("retain this value")
+        self.button = Button("Underlying action")
         self.clicks = []
         self.button.clicked.connect(lambda: self.clicks.append(True))
         self.host.content_layout.addWidget(self.editor)
@@ -63,7 +67,9 @@ class SplashScreenTests(unittest.TestCase):
         self.assertEqual(before, {int(widget.winId()) for widget in self.app.topLevelWidgets()})
         self.assertIs(self.splash.parentWidget(), self.host)
         self.assertFalse(self.splash.testAttribute(QtCore.Qt.WidgetAttribute.WA_NativeWindow))
-        self.assertFalse(self.splash.testAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground))
+        self.assertFalse(
+            self.splash.testAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+        )
 
     def test_content_coverage_excludes_caption_and_tracks_resize_and_caption_toggle(self):
         self.splash.show()
@@ -83,7 +89,7 @@ class SplashScreenTests(unittest.TestCase):
 
     def test_logo_only_center_and_size_defensive_copy_and_small_parent_bounds(self):
         self.splash.show()
-        self.assertEqual(self.splash.text(), '')
+        self.assertEqual(self.splash.text(), "")
         self.assertFalse(self.splash.is_loading())
         self.splash.set_icon_size(QtCore.QSize(102, 88))
         icon, text, spinner = self.splash._content_rects()
@@ -92,11 +98,11 @@ class SplashScreenTests(unittest.TestCase):
         size = self.splash.icon_size()
         size.setWidth(1)
         self.assertEqual(self.splash.icon_size().width(), 102)
-        for size in (0, -1, True, '96', QtCore.QSize(10, 0)):
+        for size in (0, -1, True, "96", QtCore.QSize(10, 0)):
             with self.assertRaises(ValueError):
                 self.splash.set_icon_size(size)
         self.splash.set_loading(True)
-        self.splash.set_text('正在准备界面…')
+        self.splash.set_text("正在准备界面…")
         for width, height in ((320, 220), (120, 140), (40, 40)):
             self.host.resize(width, height)
             self.app.processEvents()
@@ -107,10 +113,10 @@ class SplashScreenTests(unittest.TestCase):
     def test_input_blocked_under_overlay_and_caption_action_remains_usable(self):
         self.splash.show()
         self.app.processEvents()
-        QTest.keyClicks(self.editor, 'blocked')
+        QTest.keyClicks(self.editor, "blocked")
         QTest.keyClick(self.splash, QtCore.Qt.Key.Key_Tab)
         self.assertFalse(self.editor.hasFocus())
-        self.assertEqual(self.editor.text(), 'retain this value')
+        self.assertEqual(self.editor.text(), "retain this value")
         target = self.button.mapTo(self.host, self.button.rect().center())
         self.assertIs(self.host.childAt(target), self.splash)
         bar = self.host.title_bar()
@@ -122,30 +128,40 @@ class SplashScreenTests(unittest.TestCase):
         self.app.processEvents()
         self.assertTrue(bar.title_label.isHidden())
 
-    def test_startup_caption_has_only_window_controls_and_restores_latest_metadata_and_contents(self):
+    def test_startup_caption_has_only_window_controls_and_restores_latest_metadata_and_contents(
+        self,
+    ):
         bar = self.host.title_bar()
         search = LineEdit()
-        search.setText('retained search')
-        action = Button('Theme action')
+        search.setText("retained search")
+        action = Button("Theme action")
         bar.content_layout.addWidget(search)
         bar.button_layout.addWidget(action)
         bar.forward_button.hide()
         self.splash.show()
         self.app.processEvents()
-        for control in (bar.back_button, bar.forward_button, bar.icon_label, bar.title_label,
-                        bar._content, bar._actions):
+        for control in (
+            bar.back_button,
+            bar.forward_button,
+            bar.icon_label,
+            bar.title_label,
+            bar._content,
+            bar._actions,
+        ):
             self.assertTrue(control.isHidden())
         for control in (bar.minimize_button, bar.maximize_button, bar.close_button):
             self.assertTrue(control.isVisible())
-        self.host.setWindowTitle('Updated while loading')
+        self.host.setWindowTitle("Updated while loading")
         self.host.setWindowIcon(brand_icon())
-        for mode in ('dark', 'light'):
+        for mode in ("dark", "light"):
             theme.set_mode(mode)
             self.host.resize(self.host.width() + 2, self.host.height() + 2)
             self.app.processEvents()
             self.assertTrue(bar.title_label.isHidden())
             self.assertTrue(bar.icon_label.isHidden())
-            self.assertEqual(bar.grab().toImage().pixelColor(10, 10), self.splash._resolved_background_color())
+            self.assertEqual(
+                bar.grab().toImage().pixelColor(10, 10), self.splash._resolved_background_color()
+            )
         self.splash.finish(animated=False)
         self.assertTrue(bar.back_button.isVisible())
         self.assertTrue(bar.forward_button.isHidden())
@@ -153,8 +169,8 @@ class SplashScreenTests(unittest.TestCase):
         self.assertTrue(bar.icon_label.isVisible())
         self.assertTrue(search.isVisible())
         self.assertTrue(action.isVisible())
-        self.assertEqual(search.text(), 'retained search')
-        self.assertEqual(bar.title_label.accessibleName(), 'Updated while loading')
+        self.assertEqual(search.text(), "retained search")
+        self.assertEqual(bar.title_label.accessibleName(), "Updated while loading")
 
     def test_overlapping_splashes_and_direct_destruction_do_not_restore_caption_too_early(self):
         bar = self.host.title_bar()
@@ -183,10 +199,10 @@ class SplashScreenTests(unittest.TestCase):
         self.assertTrue(self.splash.isHidden())
         self.assertEqual(done, [True])
         self.assertFalse(self.splash._input_filter_installed)
-        self.assertEqual(self.editor.text(), 'retain this value')
+        self.assertEqual(self.editor.text(), "retain this value")
         self.assertIs(self.host.focusWidget(), self.editor)
-        QTest.keyClicks(self.editor, '!')
-        self.assertEqual(self.editor.text(), 'retain this value!')
+        QTest.keyClicks(self.editor, "!")
+        self.assertEqual(self.editor.text(), "retain this value!")
         self.splash.finish()
         self.assertEqual(done, [True])
         self.splash.show()
@@ -231,14 +247,14 @@ class SplashScreenTests(unittest.TestCase):
     def test_theme_and_paired_background_paint_without_host_style_mutation(self):
         original = self.host.styleSheet()
         self.splash.show()
-        for mode in ('dark', 'light', 'dark'):
+        for mode in ("dark", "light", "dark"):
             theme.set_mode(mode)
             image = self.splash.grab().toImage()
             self.assertEqual(image.pixelColor(5, 5), QtGui.QColor(theme.tokens.background))
-        self.splash.set_background_colors('#edf4fa', '#162231')
-        self.assertEqual(self.splash.grab().toImage().pixelColor(5, 5).name(), '#162231')
+        self.splash.set_background_colors("#edf4fa", "#162231")
+        self.assertEqual(self.splash.grab().toImage().pixelColor(5, 5).name(), "#162231")
         with self.assertRaises(ValueError):
-            self.splash.set_background_colors('#80ffffff', '#000000')
+            self.splash.set_background_colors("#80ffffff", "#000000")
         self.splash.clear_background_colors()
         self.assertEqual(self.host.styleSheet(), original)
 
@@ -246,16 +262,16 @@ class SplashScreenTests(unittest.TestCase):
         demo = SplashExamples()
         self.host.content_layout.addWidget(demo)
         self.app.processEvents()
-        demo.retained_input.setText('kept')
+        demo.retained_input.setText("kept")
         demo.size_spin.setValue(128)
         demo.loading_check.setChecked(True)
-        demo.text_edit.setText('自定义提示')
+        demo.text_edit.setText("自定义提示")
         demo.replay()
         self.assertEqual(demo.preview_splash.icon_size(), QtCore.QSize(128, 128))
-        self.assertEqual(demo.preview_splash.text(), '自定义提示')
+        self.assertEqual(demo.preview_splash.text(), "自定义提示")
         demo._finish_preview()
         demo.preview_splash._fade.setCurrentTime(220)
-        self.assertEqual(demo.retained_input.text(), 'kept')
+        self.assertEqual(demo.retained_input.text(), "kept")
         full = demo.preview_window()
         self.assertIs(full.parentWidget(), self.host)
         self.assertTrue(full.isVisible())
@@ -286,5 +302,5 @@ class SplashScreenTests(unittest.TestCase):
             self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

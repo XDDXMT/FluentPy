@@ -1,15 +1,17 @@
 """The general slider playground presents values in their original units."""
+
 import os
-from pathlib import Path
 import sys
 import unittest
+from pathlib import Path
 
-os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'examples'))
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
-from fluentpy import ToolTipSlider, RangeSlider
-from fluentpy.qt import QtCore, QtWidgets
 from sliders import SliderExamples
+
+from fluentpy import RangeSlider, ToolTipSlider
+from fluentpy.qt import QtCore, QtWidgets
 
 
 class SliderDemoTests(unittest.TestCase):
@@ -25,12 +27,12 @@ class SliderDemoTests(unittest.TestCase):
         demo.maximum_input.setValue(500)
         demo.value_input.setValue(137)
         self.assertIsInstance(demo.preview, ToolTipSlider)
-        self.assertEqual(demo.preview.valueFormat(), '{value}')
+        self.assertEqual(demo.preview.valueFormat(), "{value}")
         demo.preview.show_value_tip()
-        self.assertEqual(demo.preview._value_label.text(), '137')
-        self.assertEqual(demo.readout.text(), '137')
+        self.assertEqual(demo.preview._value_label.text(), "137")
+        self.assertEqual(demo.readout.text(), "137")
         demo.orientation.setCurrentIndex(1)
-        self.assertEqual(demo.preview.valueFormat(), '{value}')
+        self.assertEqual(demo.preview.valueFormat(), "{value}")
         self.assertEqual(demo.preview.value(), 137)
         demo.close()
         demo.deleteLater()
@@ -57,5 +59,5 @@ class SliderDemoTests(unittest.TestCase):
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

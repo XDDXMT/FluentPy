@@ -1,4 +1,5 @@
-"""Independent Qt model/view choices sharing FluentPy's animated popup."""
+"""Model-backed combo boxes and popup selection views."""
+
 from __future__ import annotations
 
 from ..qt import QtCore, QtGui, QtWidgets, Signal
@@ -6,7 +7,13 @@ from ..theme import theme
 from ..theme.fonts import ui_font
 from .action_menu import ActionMenu
 from .button import Button
-from .line_edit import LineEdit, SearchLineEdit, _input_surface_color, _input_border_color, _input_lower_color
+from .line_edit import (
+    LineEdit,
+    SearchLineEdit,
+    _input_border_color,
+    _input_lower_color,
+    _input_surface_color,
+)
 from .scroll_bar import FluentScrollBar
 
 USER_ROLE = QtCore.Qt.ItemDataRole.UserRole
@@ -15,6 +22,7 @@ DISPLAY_ROLE = QtCore.Qt.ItemDataRole.DisplayRole
 
 class ComboBox(QtWidgets.QWidget):
     """Single choice with a live Qt model, item data and an optional placeholder."""
+
     currentIndexChanged = Signal(int)
     currentTextChanged = Signal(str)
     activated = Signal(int)
@@ -39,7 +47,9 @@ class ComboBox(QtWidgets.QWidget):
         self._focus_motion.valueChanged.connect(self._focus_value)
         self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setMinimumSize(180, 34)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_MacShowFocusRect, False)
@@ -56,7 +66,7 @@ class ComboBox(QtWidgets.QWidget):
         """The live QAbstractItemModel; external models remain caller owned."""
         return self._model
 
-    def setModel(self, model):  # noqa: N802
+    def setModel(self, model):
         """Bind a Qt model without copying its rows or taking ownership."""
         if not isinstance(model, QtCore.QAbstractItemModel):
             raise TypeError("model must be a QAbstractItemModel")
@@ -75,14 +85,26 @@ class ComboBox(QtWidgets.QWidget):
         pass
 
     def _connect_model(self):
-        for signal in (self._model.rowsInserted, self._model.rowsRemoved, self._model.rowsMoved,
-                       self._model.modelReset, self._model.dataChanged, self._model.layoutChanged):
+        for signal in (
+            self._model.rowsInserted,
+            self._model.rowsRemoved,
+            self._model.rowsMoved,
+            self._model.modelReset,
+            self._model.dataChanged,
+            self._model.layoutChanged,
+        ):
             signal.connect(self._model_changed)
         self._model.destroyed.connect(self._model_destroyed)
 
     def _disconnect_model(self):
-        for signal in (self._model.rowsInserted, self._model.rowsRemoved, self._model.rowsMoved,
-                       self._model.modelReset, self._model.dataChanged, self._model.layoutChanged):
+        for signal in (
+            self._model.rowsInserted,
+            self._model.rowsRemoved,
+            self._model.rowsMoved,
+            self._model.modelReset,
+            self._model.dataChanged,
+            self._model.layoutChanged,
+        ):
             signal.disconnect(self._model_changed)
         self._model.destroyed.disconnect(self._model_destroyed)
 
@@ -109,18 +131,18 @@ class ComboBox(QtWidgets.QWidget):
     def count(self):
         return self._model.rowCount()
 
-    def addItem(self, text, userData=None, *, icon=None):  # noqa: N802
+    def addItem(self, text, userData=None, *, icon=None):
         """Append text, optional application data and a QIcon."""
         self.insertItem(self.count(), text, userData, icon=icon)
 
-    def addItems(self, texts):  # noqa: N802
+    def addItems(self, texts):
         for text in texts:
             self.addItem(text)
 
     def add_item(self, text, userData=None):
         self.addItem(text, userData)
 
-    def insertItem(self, index, text, userData=None, *, icon=None):  # noqa: N802
+    def insertItem(self, index, text, userData=None, *, icon=None):
         was_empty = not self.count()
         row = max(0, min(int(index), self.count()))
         # Mutation deliberately uses the public model API, including custom models.
@@ -142,7 +164,7 @@ class ComboBox(QtWidgets.QWidget):
         if was_empty and not self._multiple:
             self._select(item)
 
-    def removeItem(self, index):  # noqa: N802
+    def removeItem(self, index):
         if 0 <= index < self.count():
             self._model.removeRow(index)
 
@@ -153,19 +175,19 @@ class ComboBox(QtWidgets.QWidget):
         self._select(QtCore.QModelIndex())
         self._reset_extra_selection()
 
-    def itemText(self, index):  # noqa: N802
+    def itemText(self, index):
         return str(self._model.index(index, 0).data(DISPLAY_ROLE) or "")
 
-    def setItemText(self, index, text):  # noqa: N802
+    def setItemText(self, index, text):
         self._model.setData(self._model.index(index, 0), str(text), QtCore.Qt.ItemDataRole.EditRole)
 
-    def itemData(self, index, role=USER_ROLE):  # noqa: N802
+    def itemData(self, index, role=USER_ROLE):
         return self._model.index(index, 0).data(role)
 
-    def setItemData(self, index, value, role=USER_ROLE):  # noqa: N802
+    def setItemData(self, index, value, role=USER_ROLE):
         self._model.setData(self._model.index(index, 0), value, role)
 
-    def setItemEnabled(self, index, enabled):  # noqa: N802
+    def setItemEnabled(self, index, enabled):
         """Convenience for QStandardItemModel; custom models supply flags()."""
         if not isinstance(self._model, QtGui.QStandardItemModel):
             raise TypeError("set item flags in your custom model")
@@ -173,26 +195,26 @@ class ComboBox(QtWidgets.QWidget):
         if item is not None:
             item.setEnabled(bool(enabled))
 
-    def findText(self, text):  # noqa: N802
+    def findText(self, text):
         return next((row for row in range(self.count()) if self.itemText(row) == text), -1)
 
-    def findData(self, value, role=USER_ROLE):  # noqa: N802
+    def findData(self, value, role=USER_ROLE):
         return next((row for row in range(self.count()) if self.itemData(row, role) == value), -1)
 
-    def currentIndex(self):  # noqa: N802
+    def currentIndex(self):
         return self._current.row() if self._current.isValid() else -1
 
-    def currentModelIndex(self):  # noqa: N802
+    def currentModelIndex(self):
         """Selected QModelIndex, retaining the parent for tree choices."""
         return QtCore.QModelIndex(self._current)
 
-    def currentText(self):  # noqa: N802
+    def currentText(self):
         return str(self._current.data(DISPLAY_ROLE) or "") if self._current.isValid() else ""
 
-    def currentData(self, role=USER_ROLE):  # noqa: N802
+    def currentData(self, role=USER_ROLE):
         return self._current.data(role) if self._current.isValid() else None
 
-    def setCurrentIndex(self, index):  # noqa: N802
+    def setCurrentIndex(self, index):
         if index == -1:
             self._select(QtCore.QModelIndex())
         elif 0 <= index < self.count():
@@ -200,39 +222,49 @@ class ComboBox(QtWidgets.QWidget):
             if self._eligible(item):
                 self._select(item)
 
-    def setCurrentModelIndex(self, index):  # noqa: N802
+    def setCurrentModelIndex(self, index):
         if index.isValid() and index.model() is not self._model:
             raise ValueError("index belongs to another model")
         if not index.isValid() or self._eligible(index):
             self._select(index)
 
-    def setCurrentText(self, text):  # noqa: N802
+    def setCurrentText(self, text):
         row = self.findText(text)
         if row >= 0:
             self.setCurrentIndex(row)
 
-    def setPlaceholderText(self, text):  # noqa: N802
+    def setPlaceholderText(self, text):
         self._placeholder = str(text)
         self.update()
 
-    def placeholderText(self):  # noqa: N802
+    def placeholderText(self):
         return self._placeholder
 
-    def setMaxVisibleItems(self, count):  # noqa: N802
+    def setMaxVisibleItems(self, count):
         if not 1 <= int(count) <= 30:
             raise ValueError("visible item count must be between 1 and 30")
         self._max_visible = int(count)
 
-    def maxVisibleItems(self):  # noqa: N802
+    def maxVisibleItems(self):
         return self._max_visible
 
     def _eligible(self, index):
         flags = index.flags()
-        return index.isValid() and bool(flags & QtCore.Qt.ItemFlag.ItemIsEnabled) and bool(flags & QtCore.Qt.ItemFlag.ItemIsSelectable)
+        return (
+            index.isValid()
+            and bool(flags & QtCore.Qt.ItemFlag.ItemIsEnabled)
+            and bool(flags & QtCore.Qt.ItemFlag.ItemIsSelectable)
+        )
 
     def _first_enabled(self):
-        return next((self._model.index(row, 0) for row in range(self.count())
-                     if self._eligible(self._model.index(row, 0))), QtCore.QModelIndex())
+        return next(
+            (
+                self._model.index(row, 0)
+                for row in range(self.count())
+                if self._eligible(self._model.index(row, 0))
+            ),
+            QtCore.QModelIndex(),
+        )
 
     def _select(self, index):
         self._current = QtCore.QPersistentModelIndex(index)
@@ -314,19 +346,42 @@ class ComboBox(QtWidgets.QWidget):
 
     def keyPressEvent(self, event):
         key = event.key()
-        if key in (QtCore.Qt.Key.Key_Space, QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter, QtCore.Qt.Key.Key_F4) or (key == QtCore.Qt.Key.Key_Down and event.modifiers() & QtCore.Qt.KeyboardModifier.AltModifier):
+        if key in (
+            QtCore.Qt.Key.Key_Space,
+            QtCore.Qt.Key.Key_Return,
+            QtCore.Qt.Key.Key_Enter,
+            QtCore.Qt.Key.Key_F4,
+        ) or (
+            key == QtCore.Qt.Key.Key_Down
+            and event.modifiers() & QtCore.Qt.KeyboardModifier.AltModifier
+        ):
             self.show_popup()
         elif key == QtCore.Qt.Key.Key_Escape:
             self.hide_popup()
-        elif key in (QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Home, QtCore.Qt.Key.Key_End):
+        elif key in (
+            QtCore.Qt.Key.Key_Down,
+            QtCore.Qt.Key.Key_Up,
+            QtCore.Qt.Key.Key_Home,
+            QtCore.Qt.Key.Key_End,
+        ):
             if self._multiple or self._tree:
                 self.show_popup()
                 event.accept()
                 return
-            choices = [row for row in range(self.count()) if self._eligible(self._model.index(row, 0))]
+            choices = [
+                row for row in range(self.count()) if self._eligible(self._model.index(row, 0))
+            ]
             if choices:
                 old = choices.index(self.currentIndex()) if self.currentIndex() in choices else -1
-                new = 0 if key == QtCore.Qt.Key.Key_Home else len(choices)-1 if key == QtCore.Qt.Key.Key_End else max(0, min(len(choices)-1, old+(1 if key == QtCore.Qt.Key.Key_Down else -1)))
+                new = (
+                    0
+                    if key == QtCore.Qt.Key.Key_Home
+                    else len(choices) - 1
+                    if key == QtCore.Qt.Key.Key_End
+                    else max(
+                        0, min(len(choices) - 1, old + (1 if key == QtCore.Qt.Key.Key_Down else -1))
+                    )
+                )
                 self._activate(self._model.index(choices[new], 0))
         else:
             return super().keyPressEvent(event)
@@ -375,31 +430,64 @@ class ComboBox(QtWidgets.QWidget):
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
-        rect = QtCore.QRectF(self.rect()).adjusted(.5, .5, -.5, -.5)
+        painter.setRenderHints(
+            QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing
+        )
+        rect = QtCore.QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
         if not self._transparent or self._hover or self._pressed:
             bg = _input_surface_color()
             if self._transparent:
-                bg.setAlpha(10 if theme.mode.value == 'light' else 20)
+                bg.setAlpha(10 if theme.mode.value == "light" else 20)
             painter.setBrush(bg)
-            painter.setPen(QtGui.QPen(_input_border_color(), 1) if not self._transparent else QtCore.Qt.PenStyle.NoPen)
+            painter.setPen(
+                QtGui.QPen(_input_border_color(), 1)
+                if not self._transparent
+                else QtCore.Qt.PenStyle.NoPen
+            )
             painter.drawRoundedRect(rect, theme.tokens.radius, theme.tokens.radius)
             if not self._transparent:
                 painter.setPen(QtGui.QPen(_input_lower_color(), 1))
-                painter.drawLine(QtCore.QLineF(6, self.height()-1, self.width()-6, self.height()-1))
+                painter.drawLine(
+                    QtCore.QLineF(6, self.height() - 1, self.width() - 6, self.height() - 1)
+                )
         if self._focus_progress and self.isEnabled():
             painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.accent), 2))
-            half = (self.width()-14)*self._focus_progress/2
-            painter.drawLine(QtCore.QLineF(self.width()/2-half, self.height()-2, self.width()/2+half, self.height()-2))
-        color = QtGui.QColor(theme.tokens.disabled if not self.isEnabled() else theme.tokens.text if self.currentText() else theme.tokens.text_muted)
-        if self._transparent and self._text_color is not None and self.currentText() and self.isEnabled():
+            half = (self.width() - 14) * self._focus_progress / 2
+            painter.drawLine(
+                QtCore.QLineF(
+                    self.width() / 2 - half,
+                    self.height() - 2,
+                    self.width() / 2 + half,
+                    self.height() - 2,
+                )
+            )
+        color = QtGui.QColor(
+            theme.tokens.disabled
+            if not self.isEnabled()
+            else theme.tokens.text
+            if self.currentText()
+            else theme.tokens.text_muted
+        )
+        if (
+            self._transparent
+            and self._text_color is not None
+            and self.currentText()
+            and self.isEnabled()
+        ):
             color = self._text_color
         if not self._multiple or not self.selectedIndexes():
             text = self.currentText() or self._placeholder
             painter.setPen(color)
-            painter.drawText(QtCore.QRect(12, 0, self.width()-46, self.height()), QtCore.Qt.AlignmentFlag.AlignVCenter,
-                             self.fontMetrics().elidedText(text, QtCore.Qt.TextElideMode.ElideRight, self.width()-46))
-        _draw_chevron(painter, QtCore.QRectF(self.width()-27, self.height()/2-5, 12, 10), color)
+            painter.drawText(
+                QtCore.QRect(12, 0, self.width() - 46, self.height()),
+                QtCore.Qt.AlignmentFlag.AlignVCenter,
+                self.fontMetrics().elidedText(
+                    text, QtCore.Qt.TextElideMode.ElideRight, self.width() - 46
+                ),
+            )
+        _draw_chevron(
+            painter, QtCore.QRectF(self.width() - 27, self.height() / 2 - 5, 12, 10), color
+        )
 
 
 class ModelComboBox(ComboBox):
@@ -408,6 +496,7 @@ class ModelComboBox(ComboBox):
 
 class EditableComboBox(ComboBox):
     """Editable choice. Enter selects an existing item or appends a new value."""
+
     editTextChanged = Signal(str)
 
     def __init__(self, parent=None):
@@ -426,16 +515,16 @@ class EditableComboBox(ComboBox):
         self._auto_completer.setFilterMode(QtCore.Qt.MatchFlag.MatchContains)
         self.setCompleter(self._auto_completer)
 
-    def lineEdit(self):  # noqa: N802
+    def lineEdit(self):
         return self._line_edit
 
-    def currentText(self):  # noqa: N802
-        return self._line_edit.text() if hasattr(self, '_line_edit') else super().currentText()
+    def currentText(self):
+        return self._line_edit.text() if hasattr(self, "_line_edit") else super().currentText()
 
-    def setCurrentText(self, text):  # noqa: N802
+    def setCurrentText(self, text):
         self.setEditText(text)
 
-    def setEditText(self, text):  # noqa: N802
+    def setEditText(self, text):
         row = self.findText(str(text))
         self._current = QtCore.QPersistentModelIndex(self._model.index(row, 0))
         with QtCore.QSignalBlocker(self._line_edit):
@@ -443,11 +532,11 @@ class EditableComboBox(ComboBox):
         self._publish()
         self.editTextChanged.emit(str(text))
 
-    def setPlaceholderText(self, text):  # noqa: N802
+    def setPlaceholderText(self, text):
         super().setPlaceholderText(text)
         self._line_edit.setPlaceholderText(str(text))
 
-    def setCompleter(self, completer):  # noqa: N802
+    def setCompleter(self, completer):
         previous = self._line_edit.completer()
         if previous is not None:
             previous.activated[str].disconnect(self._completion_activated)
@@ -464,7 +553,9 @@ class EditableComboBox(ComboBox):
         popup = completer.popup()
         popup.setFont(self.font())
         popup.setVerticalScrollBar(FluentScrollBar(parent=popup))
-        popup.setStyleSheet(f'QAbstractItemView {{background:{theme.tokens.surface};color:{theme.tokens.text};border:1px solid {theme.tokens.border};padding:4px;outline:none;}} QAbstractItemView::item {{min-height:30px;padding:0 8px;}} QAbstractItemView::item:selected {{background:{theme.tokens.accent};color:white;}}')
+        popup.setStyleSheet(
+            f"QAbstractItemView {{background:{theme.tokens.surface};color:{theme.tokens.text};border:1px solid {theme.tokens.border};padding:4px;outline:none;}} QAbstractItemView::item {{min-height:30px;padding:0 8px;}} QAbstractItemView::item:selected {{background:{theme.tokens.accent};color:white;}}"
+        )
 
     def _model_replaced(self):
         self._auto_completer.setModel(self._model)
@@ -474,7 +565,7 @@ class EditableComboBox(ComboBox):
         self._commit_text()
 
     def _sync_editor(self, *, model_update=False):
-        if hasattr(self, '_line_edit'):
+        if hasattr(self, "_line_edit"):
             if model_update and not self._current.isValid() and self._last_state[0] == -1:
                 return  # Unrelated model changes must preserve an uncommitted draft.
             with QtCore.QSignalBlocker(self._line_edit):
@@ -493,16 +584,18 @@ class EditableComboBox(ComboBox):
         index = self.findText(text)
         if index < 0:
             self.addItem(text)
-            index = self.count()-1
+            index = self.count() - 1
         self._activate(self._model.index(index, 0))
 
     def clear(self):
         super().clear()
-        self.setEditText('')
+        self.setEditText("")
 
     def eventFilter(self, watched, event):
         if watched is self._line_edit and event.type() == QtCore.QEvent.Type.KeyPress:
-            if event.key() in (QtCore.Qt.Key.Key_F4, QtCore.Qt.Key.Key_Down) and (self.completer() is None or not self.completer().popup().isVisible()):
+            if event.key() in (QtCore.Qt.Key.Key_F4, QtCore.Qt.Key.Key_Down) and (
+                self.completer() is None or not self.completer().popup().isVisible()
+            ):
                 self.show_popup()
                 return True
         return super().eventFilter(watched, event)
@@ -518,14 +611,14 @@ class EditableComboBox(ComboBox):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._line_edit.setGeometry(self.rect())
-        self._drop_button.setGeometry(self.width()-36, 1, 35, max(1, self.height()-2))
+        self._drop_button.setGeometry(self.width() - 36, 1, 35, max(1, self.height() - 2))
 
     def paintEvent(self, event):
         pass
 
     def _apply_theme(self):
         super()._apply_theme()
-        if hasattr(self, '_line_edit') and self.completer() is not None:
+        if hasattr(self, "_line_edit") and self.completer() is not None:
             self._style_completer(self.completer())
 
 
@@ -538,6 +631,7 @@ class MultiSelectionComboBox(ComboBox):
 
     Selection does not change CheckStateRole in a shared source model.
     """
+
     selectionChanged = Signal(list)
 
     def __init__(self, parent=None):
@@ -546,35 +640,37 @@ class MultiSelectionComboBox(ComboBox):
         self._selected = []
         self._last_selection = []
         self._tag_buttons = []
-        self.setPlaceholderText('选择多个选项')
+        self.setPlaceholderText("选择多个选项")
 
-    def selectedIndexes(self):  # noqa: N802
+    def selectedIndexes(self):
         return [QtCore.QModelIndex(index) for index in self._selected if index.isValid()]
 
-    def selectedTexts(self):  # noqa: N802
-        return [str(index.data(DISPLAY_ROLE) or '') for index in self.selectedIndexes()]
+    def selectedTexts(self):
+        return [str(index.data(DISPLAY_ROLE) or "") for index in self.selectedIndexes()]
 
-    def selectedData(self, role=USER_ROLE):  # noqa: N802
+    def selectedData(self, role=USER_ROLE):
         return [index.data(role) for index in self.selectedIndexes()]
 
-    def setSelectedIndexes(self, indexes):  # noqa: N802
+    def setSelectedIndexes(self, indexes):
         """Accept row numbers for flat lists or QModelIndex values for trees."""
         converted = []
         for value in indexes:
-            index = self._model.index(value, 0) if isinstance(value, int) else QtCore.QModelIndex(value)
+            index = (
+                self._model.index(value, 0) if isinstance(value, int) else QtCore.QModelIndex(value)
+            )
             if not index.isValid() or index.model() is not self._model or not self._eligible(index):
-                raise ValueError('selection must contain enabled indexes from this model')
+                raise ValueError("selection must contain enabled indexes from this model")
             if index not in converted:
                 converted.append(index)
         self._selected = [QtCore.QPersistentModelIndex(index) for index in converted]
         self._selection_updated()
 
-    def clearSelection(self):  # noqa: N802
+    def clearSelection(self):
         self._selected = []
         self._selection_updated()
 
-    def currentText(self):  # noqa: N802
-        return '、'.join(self.selectedTexts()) if hasattr(self, '_selected') else ''
+    def currentText(self):
+        return "、".join(self.selectedTexts()) if hasattr(self, "_selected") else ""
 
     def _select(self, index):
         # Current index is a cursor only; it never adds an implicit selection.
@@ -596,17 +692,24 @@ class MultiSelectionComboBox(ComboBox):
         return index in self._selected
 
     def _prune_selection(self):
-        if hasattr(self, '_selected'):
+        if hasattr(self, "_selected"):
             self._selected = [index for index in self._selected if index.isValid()]
             self._selection_updated()
 
     def _reset_extra_selection(self):
-        if hasattr(self, '_selected'):
+        if hasattr(self, "_selected"):
             self.clearSelection()
 
     def _selection_updated(self):
         indexes = self.selectedIndexes()
-        identity = [(QtCore.QPersistentModelIndex(index), str(index.data(DISPLAY_ROLE) or ''), index.data(USER_ROLE)) for index in indexes]
+        identity = [
+            (
+                QtCore.QPersistentModelIndex(index),
+                str(index.data(DISPLAY_ROLE) or ""),
+                index.data(USER_ROLE),
+            )
+            for index in indexes
+        ]
         if identity != self._last_selection:
             self._last_selection = identity
             self.selectionChanged.emit(indexes)
@@ -621,42 +724,53 @@ class MultiSelectionComboBox(ComboBox):
             button.deleteLater()
         self._tag_buttons = []
         selected = self.selectedIndexes()
-        x, available = 7, max(0, self.width()-40)
+        x, available = 7, max(0, self.width() - 40)
         for number, index in enumerate(selected):
-            text = str(index.data(DISPLAY_ROLE) or '')
-            suffix = ' ×'
-            button = Button(text+suffix, self)
+            text = str(index.data(DISPLAY_ROLE) or "")
+            suffix = " ×"
+            button = Button(text + suffix, self)
             # Match Button._draw_content: use its font and horizontal padding,
             # including the close glyph. Leave room for the half-pixel border.
             metrics = button.fontMetrics()
-            padding = button._h_padding*2+2
-            width = min(150, metrics.horizontalAdvance(button.text())+padding)
-            if metrics.horizontalAdvance(button.text())+padding > width:
-                label = metrics.elidedText(text, QtCore.Qt.TextElideMode.ElideRight,
-                                          max(0, width-padding-metrics.horizontalAdvance(suffix)))
-                button.setText(label+suffix)
-            remaining = len(selected)-number
-            reserve = metrics.horizontalAdvance('+'+str(remaining-1))+padding+5 if remaining > 1 else 0
-            overflow = x+width+reserve > available
+            padding = button._h_padding * 2 + 2
+            width = min(150, metrics.horizontalAdvance(button.text()) + padding)
+            if metrics.horizontalAdvance(button.text()) + padding > width:
+                label = metrics.elidedText(
+                    text,
+                    QtCore.Qt.TextElideMode.ElideRight,
+                    max(0, width - padding - metrics.horizontalAdvance(suffix)),
+                )
+                button.setText(label + suffix)
+            remaining = len(selected) - number
+            reserve = (
+                metrics.horizontalAdvance("+" + str(remaining - 1)) + padding + 5
+                if remaining > 1
+                else 0
+            )
+            overflow = x + width + reserve > available
             if overflow:
-                button.setText('+'+str(remaining))
-                width = metrics.horizontalAdvance(button.text())+padding
-                button.setToolTip('、'.join(str(item.data() or '') for item in selected[number:]))
+                button.setText("+" + str(remaining))
+                width = metrics.horizontalAdvance(button.text()) + padding
+                button.setToolTip("、".join(str(item.data() or "") for item in selected[number:]))
                 button.clicked.connect(self.show_popup)
-                if width > available-x:
+                if width > available - x:
                     button.deleteLater()
                     break
             else:
-                button.setToolTip('移除 '+text)
-                button.clicked.connect(lambda checked=False, item=QtCore.QPersistentModelIndex(index): self._activate(QtCore.QModelIndex(item)))
+                button.setToolTip("移除 " + text)
+                button.clicked.connect(
+                    lambda checked=False, item=QtCore.QPersistentModelIndex(index): self._activate(
+                        QtCore.QModelIndex(item)
+                    )
+                )
             button.setFixedSize(width, 26)
             button.setMinimumHeight(26)
             button.setFocusPolicy(QtCore.Qt.FocusPolicy.TabFocus)
             button.setAccessibleName(button.toolTip())
-            button.move(x, (self.height()-26)//2)
+            button.move(x, (self.height() - 26) // 2)
             button.show()
             self._tag_buttons.append(button)
-            x += button.width()+5
+            x += button.width() + 5
             if overflow:
                 break
 
@@ -667,33 +781,35 @@ class MultiSelectionComboBox(ComboBox):
 
 class TreeComboBox(ComboBox):
     """Native QTreeView selection. Leaves are selectable; parents expand."""
+
     currentModelIndexChanged = Signal(QtCore.QModelIndex)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._tree = self._searchable = True
         self._last_tree_index = QtCore.QPersistentModelIndex()
-        self.setPlaceholderText('选择一个项目')
+        self.setPlaceholderText("选择一个项目")
 
     def _eligible(self, index):
         return super()._eligible(index) and self._model.rowCount(index) == 0
 
     def _publish(self):
         super()._publish()
-        if hasattr(self, '_last_tree_index') and self._last_tree_index != self._current:
+        if hasattr(self, "_last_tree_index") and self._last_tree_index != self._current:
             self._last_tree_index = QtCore.QPersistentModelIndex(self._current)
             self.currentModelIndexChanged.emit(self.currentModelIndex())
 
-    def currentPath(self):  # noqa: N802
+    def currentPath(self):
         parts, index = [], self.currentModelIndex()
         while index.isValid():
-            parts.insert(0, str(index.data(DISPLAY_ROLE) or ''))
+            parts.insert(0, str(index.data(DISPLAY_ROLE) or ""))
             index = index.parent()
         return parts
 
 
 class MultiSelectionTreeComboBox(MultiSelectionComboBox):
     """Native hierarchy with independent leaf selection and removable tags."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._tree = True
@@ -704,20 +820,22 @@ class MultiSelectionTreeComboBox(MultiSelectionComboBox):
 
 class TransparentComboBox(ComboBox):
     """Borderless choice for toolbars; hover and focus remain visible."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._transparent = True
 
-    def setTextColor(self, color):  # noqa: N802
+    def setTextColor(self, color):
         value = QtGui.QColor(color) if color is not None else None
         if value is not None and not value.isValid():
-            raise ValueError('invalid text color')
+            raise ValueError("invalid text color")
         self._text_color = value
         self.update()
 
 
 class FontComboBox(ComboBox):
     """System font families with search, live sample rows and a QFont signal."""
+
     currentFontChanged = Signal(QtGui.QFont)
 
     def __init__(self, parent=None):
@@ -727,10 +845,10 @@ class FontComboBox(ComboBox):
         self.currentTextChanged.connect(self._font_changed)
         self.setCurrentFont(QtGui.QFont())
 
-    def currentFont(self):  # noqa: N802
+    def currentFont(self):
         return QtGui.QFont(self.currentText())
 
-    def setCurrentFont(self, font):  # noqa: N802
+    def setCurrentFont(self, font):
         value = QtGui.QFont(font)
         index = self.findText(value.family())
         if index < 0:
@@ -748,12 +866,16 @@ class _ComboDropButton(QtWidgets.QAbstractButton):
         super().__init__(parent)
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
-        self.setAccessibleName('展开选项')
+        self.setAccessibleName("展开选项")
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-        _draw_chevron(painter, QtCore.QRectF(self.width()/2-6, self.height()/2-5, 12, 10), QtGui.QColor(theme.tokens.text_muted))
+        _draw_chevron(
+            painter,
+            QtCore.QRectF(self.width() / 2 - 6, self.height() / 2 - 5, 12, 10),
+            QtGui.QColor(theme.tokens.text_muted),
+        )
 
 
 class _ComboContent(QtWidgets.QWidget):
@@ -762,7 +884,7 @@ class _ComboContent(QtWidgets.QWidget):
         self.owner, self.popup = owner, popup
 
     def sizeHint(self):
-        return QtCore.QSize(max(180, self.owner.width()-14), self.popup.content_height())
+        return QtCore.QSize(max(180, self.owner.width() - 14), self.popup.content_height())
 
 
 class _ComboPopup(ActionMenu):
@@ -781,7 +903,7 @@ class _ComboPopup(ActionMenu):
         layout = QtWidgets.QVBoxLayout(self.content)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(7)
-        self.search = SearchLineEdit('搜索选项', self.content)
+        self.search = SearchLineEdit("搜索选项", self.content)
         self.search.setVisible(owner._searchable)
         self.search.textChanged.connect(self._filter)
         self.search.installEventFilter(self)
@@ -805,7 +927,7 @@ class _ComboPopup(ActionMenu):
             self.view.setUniformRowHeights(True)
             self.view.setExpandsOnDoubleClick(False)
         layout.addWidget(self.view)
-        self.empty = QtWidgets.QLabel('没有匹配的选项')
+        self.empty = QtWidgets.QLabel("没有匹配的选项")
         self.empty.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.empty.hide()
         layout.addWidget(self.empty)
@@ -816,7 +938,9 @@ class _ComboPopup(ActionMenu):
         theme.subscribe(self, self._style_view)
 
     def content_height(self):
-        return min(self.owner.maxVisibleItems(), max(1, self.proxy.rowCount()))*34 + (42 if self.owner._searchable else 0)
+        return min(self.owner.maxVisibleItems(), max(1, self.proxy.rowCount())) * 34 + (
+            42 if self.owner._searchable else 0
+        )
 
     def schedule_refresh(self):
         # The proxy/view must finish processing the source model's signal first.
@@ -829,8 +953,10 @@ class _ComboPopup(ActionMenu):
             self.proxy.setSourceModel(self.owner.model())
         if reset_search:
             self.search.clear()
-        self.view.setFixedHeight(min(self.owner.maxVisibleItems(), max(1, self._visible_rows()))*34)
-        self.content.setFixedHeight(self.view.height()+(42 if self.owner._searchable else 0))
+        self.view.setFixedHeight(
+            min(self.owner.maxVisibleItems(), max(1, self._visible_rows())) * 34
+        )
+        self.content.setFixedHeight(self.view.height() + (42 if self.owner._searchable else 0))
         selected = self.owner.currentModelIndex()
         if selected.isValid():
             index = self.proxy.mapFromSource(selected)
@@ -857,11 +983,11 @@ class _ComboPopup(ActionMenu):
         if self._anchor is not None and not self._placing:
             window = self.parentWidget()
             top = self._anchor.mapTo(window, QtCore.QPoint()).y()
-            space = max(top-6, window.height()-top-self._anchor.height()-6)
+            space = max(top - 6, window.height() - top - self._anchor.height() - 6)
             search_height = 42 if self.owner._searchable else 0
-            desired = min(self.owner.maxVisibleItems(), max(1, self._visible_rows()))*34
-            self.view.setFixedHeight(max(34, min(desired, space-search_height-32)))
-            self.content.setFixedHeight(self.view.height()+search_height)
+            desired = min(self.owner.maxVisibleItems(), max(1, self._visible_rows())) * 34
+            self.view.setFixedHeight(max(34, min(desired, space - search_height - 32)))
+            self.content.setFixedHeight(self.view.height() + search_height)
         super()._place()
 
     def _filter(self, text):
@@ -871,7 +997,9 @@ class _ComboPopup(ActionMenu):
         self.refresh()
 
     def focus_view(self):
-        (self.search if self.owner._searchable else self.view).setFocus(QtCore.Qt.FocusReason.PopupFocusReason)
+        (self.search if self.owner._searchable else self.view).setFocus(
+            QtCore.Qt.FocusReason.PopupFocusReason
+        )
 
     def _clicked(self, index):
         source = self.proxy.mapToSource(index)
@@ -888,7 +1016,11 @@ class _ComboPopup(ActionMenu):
                 if not self.view.currentIndex().isValid():
                     self.view.setCurrentIndex(self.proxy.index(0, 0))
                 return True
-            if watched in (self.search, self.view) and key in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter, QtCore.Qt.Key.Key_Space):
+            if watched in (self.search, self.view) and key in (
+                QtCore.Qt.Key.Key_Return,
+                QtCore.Qt.Key.Key_Enter,
+                QtCore.Qt.Key.Key_Space,
+            ):
                 if watched is self.search and key == QtCore.Qt.Key.Key_Space:
                     return False
                 index = self.view.currentIndex()
@@ -902,11 +1034,17 @@ class _ComboPopup(ActionMenu):
     def _style_view(self):
         self.view.setFont(ui_font(theme.tokens.font_size))
         palette = self.view.palette()
-        for role in (QtGui.QPalette.ColorRole.Text, QtGui.QPalette.ColorRole.WindowText, QtGui.QPalette.ColorRole.ButtonText):
+        for role in (
+            QtGui.QPalette.ColorRole.Text,
+            QtGui.QPalette.ColorRole.WindowText,
+            QtGui.QPalette.ColorRole.ButtonText,
+        ):
             palette.setColor(role, QtGui.QColor(theme.tokens.text))
         self.view.setPalette(palette)
-        self.view.setStyleSheet(f'QAbstractItemView {{background:transparent;color:{theme.tokens.text};border:none;outline:none;}}')
-        self.empty.setStyleSheet(f'color:{theme.tokens.text_muted};background:transparent;')
+        self.view.setStyleSheet(
+            f"QAbstractItemView {{background:transparent;color:{theme.tokens.text};border:none;outline:none;}}"
+        )
+        self.empty.setStyleSheet(f"color:{theme.tokens.text_muted};background:transparent;")
         self.view.viewport().setAutoFillBackground(False)
         self.view.viewport().update()
 
@@ -921,49 +1059,69 @@ class _ChoiceDelegate(QtWidgets.QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         painter.save()
-        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
+        painter.setRenderHints(
+            QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing
+        )
         source = index.model().mapToSource(index)
         selected = self.owner._is_selected(source)
         enabled = bool(index.flags() & QtCore.Qt.ItemFlag.ItemIsEnabled)
         rect = QtCore.QRectF(option.rect).adjusted(1, 1, -1, -1)
-        if selected or option.state & (QtWidgets.QStyle.StateFlag.State_MouseOver | QtWidgets.QStyle.StateFlag.State_Selected):
+        if selected or option.state & (
+            QtWidgets.QStyle.StateFlag.State_MouseOver | QtWidgets.QStyle.StateFlag.State_Selected
+        ):
             color = QtGui.QColor(theme.tokens.accent if selected else theme.tokens.text)
-            color.setAlpha(28 if selected else 10 if theme.mode.value == 'light' else 20)
+            color.setAlpha(28 if selected else 10 if theme.mode.value == "light" else 20)
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(color)
             painter.drawRoundedRect(rect, 4, 4)
-        left = rect.left()+11
+        left = rect.left() + 11
         if self.owner._multiple and self.owner._eligible(source):
-            box = QtCore.QRectF(left, rect.center().y()-7, 14, 14)
-            painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.accent if selected else theme.tokens.text_muted), 1))
-            painter.setBrush(QtGui.QColor(theme.tokens.accent) if selected else QtCore.Qt.BrushStyle.NoBrush)
+            box = QtCore.QRectF(left, rect.center().y() - 7, 14, 14)
+            painter.setPen(
+                QtGui.QPen(
+                    QtGui.QColor(theme.tokens.accent if selected else theme.tokens.text_muted), 1
+                )
+            )
+            painter.setBrush(
+                QtGui.QColor(theme.tokens.accent) if selected else QtCore.Qt.BrushStyle.NoBrush
+            )
             painter.drawRoundedRect(box, 3, 3)
             if selected:
-                painter.setPen(QtGui.QPen(QtGui.QColor('white'), 1.5))
-                path = QtGui.QPainterPath(QtCore.QPointF(left+3, box.top()+7))
-                path.lineTo(left+6, box.top()+10)
-                path.lineTo(left+11, box.top()+4)
+                painter.setPen(QtGui.QPen(QtGui.QColor("white"), 1.5))
+                path = QtGui.QPainterPath(QtCore.QPointF(left + 3, box.top() + 7))
+                path.lineTo(left + 6, box.top() + 10)
+                path.lineTo(left + 11, box.top() + 4)
                 painter.drawPath(path)
             left += 24
         elif selected:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(QtGui.QColor(theme.tokens.accent))
-            painter.drawRoundedRect(QtCore.QRectF(rect.left(), rect.top()+8, 3, 16), 1.5, 1.5)
+            painter.drawRoundedRect(QtCore.QRectF(rect.left(), rect.top() + 8, 3, 16), 1.5, 1.5)
         icon = index.data(QtCore.Qt.ItemDataRole.DecorationRole)
         if isinstance(icon, QtGui.QIcon) and not icon.isNull():
-            icon.paint(painter, QtCore.QRect(round(left), round(rect.center().y()-8), 16, 16))
+            icon.paint(painter, QtCore.QRect(round(left), round(rect.center().y() - 8), 16, 16))
             left += 24
-        font = QtGui.QFont(str(index.data())) if isinstance(self.owner, FontComboBox) else option.font
+        font = (
+            QtGui.QFont(str(index.data())) if isinstance(self.owner, FontComboBox) else option.font
+        )
         font.setPixelSize(theme.tokens.font_size)
         painter.setFont(font)
         painter.setPen(QtGui.QColor(theme.tokens.text if enabled else theme.tokens.disabled))
-        text_rect = QtCore.QRectF(left, rect.top(), max(0, rect.right()-left-8), rect.height())
-        text = QtGui.QFontMetrics(font).elidedText(str(index.data() or ''), QtCore.Qt.TextElideMode.ElideRight, round(text_rect.width()))
+        text_rect = QtCore.QRectF(left, rect.top(), max(0, rect.right() - left - 8), rect.height())
+        text = QtGui.QFontMetrics(font).elidedText(
+            str(index.data() or ""), QtCore.Qt.TextElideMode.ElideRight, round(text_rect.width())
+        )
         painter.drawText(text_rect, QtCore.Qt.AlignmentFlag.AlignVCenter, text)
         painter.restore()
 
 
 def _draw_chevron(painter, rect, color):
-    painter.setPen(QtGui.QPen(color, 1.45, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
-    painter.drawLine(QtCore.QLineF(rect.left()+2, rect.top()+3, rect.center().x(), rect.bottom()-2))
-    painter.drawLine(QtCore.QLineF(rect.center().x(), rect.bottom()-2, rect.right()-2, rect.top()+3))
+    painter.setPen(
+        QtGui.QPen(color, 1.45, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
+    )
+    painter.drawLine(
+        QtCore.QLineF(rect.left() + 2, rect.top() + 3, rect.center().x(), rect.bottom() - 2)
+    )
+    painter.drawLine(
+        QtCore.QLineF(rect.center().x(), rect.bottom() - 2, rect.right() - 2, rect.top() + 3)
+    )

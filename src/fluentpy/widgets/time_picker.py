@@ -33,13 +33,17 @@ class _TimeWheel(_DateWheel):
         self._wheel_mode = None
         self._drag_origin = None
         self._drag_pixels = 0.0
-        self.column = max(0, min(column, self._column_count()-1))
-        self.setAccessibleName("时间滚轮：小时、分钟、AM或PM" if use_12_hour else "时间滚轮：小时、分钟")
+        self.column = max(0, min(column, self._column_count() - 1))
+        self.setAccessibleName(
+            "时间滚轮：小时、分钟、AM或PM" if use_12_hour else "时间滚轮：小时、分钟"
+        )
         self._refresh_values()
 
     def _refresh_values(self):
-        self._values = tuple(clock.column_values(*self.value, column, self.RADIUS+1, self.use_12_hour)
-                             for column in range(self._column_count()))
+        self._values = tuple(
+            clock.column_values(*self.value, column, self.RADIUS + 1, self.use_12_hour)
+            for column in range(self._column_count())
+        )
         self.setAccessibleDescription(
             f"当前待选时间 {self.value[0]:02d}:{self.value[1]:02d}。左右切换列，上下选择；Enter确认，Escape取消。"
         )
@@ -54,15 +58,24 @@ class _TimeWheel(_DateWheel):
             animation = self._animations[column]
             animation.stop()
             offset = self._offsets[column] + (self.ROW_HEIGHT if steps > 0 else -self.ROW_HEIGHT)
-            animation.setStartValue(float(max(-2*self.ROW_HEIGHT, min(2*self.ROW_HEIGHT, offset))))
+            animation.setStartValue(
+                float(max(-2 * self.ROW_HEIGHT, min(2 * self.ROW_HEIGHT, offset)))
+            )
             animation.setEndValue(0.0)
             animation.start()
 
     def mouseReleaseEvent(self, event):
-        active = event.button() == QtCore.Qt.MouseButton.LeftButton and self._drag_origin is not None
+        active = (
+            event.button() == QtCore.Qt.MouseButton.LeftButton and self._drag_origin is not None
+        )
         dragged, remainder, previous = self._dragged, self._drag_pixels, self.value
-        if self.use_12_hour and self.column == 2 and self._drag_origin is not None and not self._dragged:
-            index = int(event.position().y()/self.ROW_HEIGHT)+1
+        if (
+            self.use_12_hour
+            and self.column == 2
+            and self._drag_origin is not None
+            and not self._dragged
+        ):
+            index = int(event.position().y() / self.ROW_HEIGHT) + 1
             if not 0 <= index < len(self._values[2]) or self._values[2][index] is None:
                 self._drag_origin = None
                 self._offsets[2] = 0.0
@@ -74,7 +87,11 @@ class _TimeWheel(_DateWheel):
             return
         animation = self._animations[self.column]
         if dragged:
-            offset = remainder - round(remainder/self.ROW_HEIGHT)*self.ROW_HEIGHT if self.value != previous else remainder
+            offset = (
+                remainder - round(remainder / self.ROW_HEIGHT) * self.ROW_HEIGHT
+                if self.value != previous
+                else remainder
+            )
             animation.stop()
             animation.setStartValue(float(offset))
             animation.setEndValue(0.0)
@@ -94,14 +111,19 @@ class _TimeSurface(QtWidgets.QWidget):
         painter.save()
         painter.translate(0, 2)
         for spread in range(10, 0, -1):
-            painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 1 if theme.mode.value == "light" else 2), spread))
+            painter.setPen(
+                QtGui.QPen(QtGui.QColor(0, 0, 0, 1 if theme.mode.value == "light" else 2), spread)
+            )
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.drawPath(path)
         painter.restore()
         painter.setBrush(QtGui.QColor(theme.tokens.surface))
         painter.setPen(QtGui.QPen(QtGui.QColor(theme.tokens.border), 1))
         painter.drawPath(path)
-        painter.drawLine(QtCore.QPointF(rect.left(), self.height()-60), QtCore.QPointF(rect.right(), self.height()-60))
+        painter.drawLine(
+            QtCore.QPointF(rect.left(), self.height() - 60),
+            QtCore.QPointF(rect.right(), self.height() - 60),
+        )
 
 
 class _TimeFlyout(QtWidgets.QWidget):
@@ -203,7 +225,7 @@ class _TimeFlyout(QtWidgets.QWidget):
         for animation in self.wheel._animations:
             animation.stop()
         self.wheel._drag_origin = None
-        if immediate or self._progress < .001:
+        if immediate or self._progress < 0.001:
             self._reveal.stop()
             self._finish_hide()
         else:
@@ -212,7 +234,9 @@ class _TimeFlyout(QtWidgets.QWidget):
     def _animate(self, target, duration):
         self._reveal.stop()
         self._reveal.setDuration(duration)
-        self._reveal.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic if target else QtCore.QEasingCurve.Type.InCubic)
+        self._reveal.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic if target else QtCore.QEasingCurve.Type.InCubic
+        )
         self._reveal.setStartValue(self._progress)
         self._reveal.setEndValue(target)
         self._reveal.start()
@@ -220,7 +244,7 @@ class _TimeFlyout(QtWidgets.QWidget):
     def _set_progress(self, value):
         self._progress = float(value)
         self._opacity.setOpacity(self._progress)
-        self.surface.move(self._rest + QtCore.QPoint(0, round(-6*(1-self._progress))))
+        self.surface.move(self._rest + QtCore.QPoint(0, round(-6 * (1 - self._progress))))
 
     def _motion_finished(self):
         if self._closing:
@@ -257,20 +281,20 @@ class _TimeFlyout(QtWidgets.QWidget):
             if not anchor.intersects(owner.rect()) or owner.height() < 126:
                 self.dismiss(immediate=True)
                 return
-            rows = max(1, min(9, (self.height()-82)//44))
-            rows -= (rows+1) % 2
-            radius = (rows-1)//2
+            rows = max(1, min(9, (self.height() - 82) // 44))
+            rows -= (rows + 1) % 2
+            radius = (rows - 1) // 2
             if self.wheel.RADIUS != radius:
                 self.wheel.RADIUS = radius
-                self.wheel.setFixedHeight(rows*44)
+                self.wheel.setFixedHeight(rows * 44)
                 self.wheel._refresh_values()
-            width = max(0, min(340, self.width()-8))
-            height = self.wheel.height()+74
+            width = max(0, min(340, self.width() - 8))
+            height = self.wheel.height() + 74
             self.surface.resize(width, height)
             self.surface.layout().activate()
-            x = max(4, min(anchor.left()-10, self.width()-width-4))
-            selected_y = 14+self.wheel.RADIUS*44+22
-            y = max(4, min(anchor.center().y()-selected_y, self.height()-height-4))
+            x = max(4, min(anchor.left() - 10, self.width() - width - 4))
+            selected_y = 14 + self.wheel.RADIUS * 44 + 22
+            y = max(4, min(anchor.center().y() - selected_y, self.height() - height - 4))
             self._rest = QtCore.QPoint(x, y)
             self._set_progress(self._progress)
         finally:
@@ -281,18 +305,38 @@ class _TimeFlyout(QtWidgets.QWidget):
             return False
         kind = event.type()
         if watched in self._watching:
-            if kind in (QtCore.QEvent.Type.Hide, QtCore.QEvent.Type.Close, QtCore.QEvent.Type.WindowDeactivate):
+            if kind in (
+                QtCore.QEvent.Type.Hide,
+                QtCore.QEvent.Type.Close,
+                QtCore.QEvent.Type.WindowDeactivate,
+            ):
                 self.dismiss(immediate=True)
             elif kind == QtCore.QEvent.Type.EnabledChange and not watched.isEnabled():
                 self.dismiss(immediate=True)
             elif kind in (QtCore.QEvent.Type.Resize, QtCore.QEvent.Type.Move) and not self._closing:
                 self._place()
-        if isinstance(watched, QtWidgets.QWidget) and watched.window() is self.window() and self._opened:
-            key = event.key() if kind in (QtCore.QEvent.Type.ShortcutOverride, QtCore.QEvent.Type.KeyPress) else None
+        if (
+            isinstance(watched, QtWidgets.QWidget)
+            and watched.window() is self.window()
+            and self._opened
+        ):
+            key = (
+                event.key()
+                if kind in (QtCore.QEvent.Type.ShortcutOverride, QtCore.QEvent.Type.KeyPress)
+                else None
+            )
             if kind == QtCore.QEvent.Type.ShortcutOverride and key in (
-                QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Right, QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down,
-                QtCore.Qt.Key.Key_PageUp, QtCore.Qt.Key.Key_PageDown, QtCore.Qt.Key.Key_Return,
-                QtCore.Qt.Key.Key_Enter, QtCore.Qt.Key.Key_Escape, QtCore.Qt.Key.Key_Tab, QtCore.Qt.Key.Key_Backtab,
+                QtCore.Qt.Key.Key_Left,
+                QtCore.Qt.Key.Key_Right,
+                QtCore.Qt.Key.Key_Up,
+                QtCore.Qt.Key.Key_Down,
+                QtCore.Qt.Key.Key_PageUp,
+                QtCore.Qt.Key.Key_PageDown,
+                QtCore.Qt.Key.Key_Return,
+                QtCore.Qt.Key.Key_Enter,
+                QtCore.Qt.Key.Key_Escape,
+                QtCore.Qt.Key.Key_Tab,
+                QtCore.Qt.Key.Key_Backtab,
             ):
                 event.accept()
                 return True
@@ -306,8 +350,12 @@ class _TimeFlyout(QtWidgets.QWidget):
                     widgets = [self.wheel, self.confirm_button, self.cancel_button]
                     focus = QtWidgets.QApplication.focusWidget()
                     index = widgets.index(focus) if focus in widgets else 0
-                    backwards = key == QtCore.Qt.Key.Key_Backtab or bool(event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier)
-                    widgets[(index+(-1 if backwards else 1)) % 3].setFocus(QtCore.Qt.FocusReason.TabFocusReason)
+                    backwards = key == QtCore.Qt.Key.Key_Backtab or bool(
+                        event.modifiers() & QtCore.Qt.KeyboardModifier.ShiftModifier
+                    )
+                    widgets[(index + (-1 if backwards else 1)) % 3].setFocus(
+                        QtCore.Qt.FocusReason.TabFocusReason
+                    )
                     return True
         return False
 
@@ -348,7 +396,9 @@ class TimePicker(QtWidgets.QWidget):
         self.setAccessibleName("时间")
         self.setAccessibleDescription("点击小时、分钟打开选择器；确认后保存，取消保持原值。")
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         theme.subscribe(self, self._refresh_theme)
         self._refresh_theme()
@@ -417,8 +467,16 @@ class TimePicker(QtWidgets.QWidget):
         return self.is_12_hour_clock()
 
     def _update_description(self):
-        self.setToolTip(self._time.toString("h:mm AP" if self._use_12_hour else "HH:mm") if self._time.isValid() else "")
-        self.setAccessibleDescription("当前时间：" + (self._time.toString("HH:mm") if self._time.isValid() else "未选择") + "。确认后保存，Escape取消。")
+        self.setToolTip(
+            self._time.toString("h:mm AP" if self._use_12_hour else "HH:mm")
+            if self._time.isValid()
+            else ""
+        )
+        self.setAccessibleDescription(
+            "当前时间："
+            + (self._time.toString("HH:mm") if self._time.isValid() else "未选择")
+            + "。确认后保存，Escape取消。"
+        )
 
     def show_popup(self) -> None:
         """Open an in-window draft; clicking outside cancels without committing."""
@@ -439,7 +497,9 @@ class TimePicker(QtWidgets.QWidget):
     def _sync_popup(self, *, force=False):
         if self._popup is not None and (force or self._popup._opened and not self._popup._closing):
             value = self._time if self._time.isValid() else QtCore.QTime.currentTime()
-            self._popup.wheel.set_value((value.hour(), value.minute()), self._use_12_hour, self._column)
+            self._popup.wheel.set_value(
+                (value.hour(), value.minute()), self._use_12_hour, self._column
+            )
 
     def _accept_pending(self):
         value = QtCore.QTime(*self._popup.wheel.value)
@@ -465,7 +525,9 @@ class TimePicker(QtWidgets.QWidget):
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
             self._pressed = True
             count = 3 if self._use_12_hour else 2
-            self._column = max(0, min(count-1, int(event.position().x()*count/max(1, self.width()))))
+            self._column = max(
+                0, min(count - 1, int(event.position().x() * count / max(1, self.width())))
+            )
             self.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
             self.update()
             event.accept()
@@ -473,7 +535,11 @@ class TimePicker(QtWidgets.QWidget):
             super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        activate = self._pressed and event.button() == QtCore.Qt.MouseButton.LeftButton and self.rect().contains(event.position().toPoint())
+        activate = (
+            self._pressed
+            and event.button() == QtCore.Qt.MouseButton.LeftButton
+            and self.rect().contains(event.position().toPoint())
+        )
         self._pressed = False
         if activate:
             self.show_popup()
@@ -483,7 +549,13 @@ class TimePicker(QtWidgets.QWidget):
         self.update()
 
     def keyPressEvent(self, event):
-        if event.key() in (QtCore.Qt.Key.Key_Space, QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter, QtCore.Qt.Key.Key_Down, QtCore.Qt.Key.Key_F4):
+        if event.key() in (
+            QtCore.Qt.Key.Key_Space,
+            QtCore.Qt.Key.Key_Return,
+            QtCore.Qt.Key.Key_Enter,
+            QtCore.Qt.Key.Key_Down,
+            QtCore.Qt.Key.Key_F4,
+        ):
             self.show_popup()
             event.accept()
         else:
@@ -496,7 +568,11 @@ class TimePicker(QtWidgets.QWidget):
         super().hideEvent(event)
 
     def changeEvent(self, event):
-        if event.type() == QtCore.QEvent.Type.EnabledChange and not self.isEnabled() and self._popup is not None:
+        if (
+            event.type() == QtCore.QEvent.Type.EnabledChange
+            and not self.isEnabled()
+            and self._popup is not None
+        ):
             self._popup.dismiss(immediate=True)
         super().changeEvent(event)
 
@@ -504,23 +580,50 @@ class TimePicker(QtWidgets.QWidget):
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         tokens = theme.tokens
-        rect = QtCore.QRectF(self.rect()).adjusted(.5, .5, -.5, -.5)
-        surface = tokens.surface_pressed if self._pressed else tokens.surface_hover if self._hover else tokens.surface
+        rect = QtCore.QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+        surface = (
+            tokens.surface_pressed
+            if self._pressed
+            else tokens.surface_hover
+            if self._hover
+            else tokens.surface
+        )
         painter.setBrush(QtGui.QColor(surface))
         painter.setPen(QtGui.QPen(QtGui.QColor(tokens.border), 1))
         painter.drawRoundedRect(rect, tokens.radius, tokens.radius)
         count = 3 if self._use_12_hour else 2
-        width = self.width()/count
+        width = self.width() / count
         for column in range(1, count):
-            painter.drawLine(QtCore.QPointF(column*width, 1), QtCore.QPointF(column*width, self.height()-1))
+            painter.drawLine(
+                QtCore.QPointF(column * width, 1), QtCore.QPointF(column * width, self.height() - 1)
+            )
         if self.hasFocus() and self.isEnabled():
             painter.setPen(QtGui.QPen(QtGui.QColor(tokens.accent), 2))
-            painter.drawLine(QtCore.QPointF(5, self.height()-1), QtCore.QPointF(self.width()-5, self.height()-1))
+            painter.drawLine(
+                QtCore.QPointF(5, self.height() - 1),
+                QtCore.QPointF(self.width() - 5, self.height() - 1),
+            )
         if self._time.isValid():
-            h, m, period = clock.display_time(self._time.hour(), self._time.minute(), self._use_12_hour)
-            values = (str(h) if self._use_12_hour else f"{h:02d}", f"{m:02d}", "PM" if period else "AM")[:count]
+            h, m, period = clock.display_time(
+                self._time.hour(), self._time.minute(), self._use_12_hour
+            )
+            values = (
+                str(h) if self._use_12_hour else f"{h:02d}",
+                f"{m:02d}",
+                "PM" if period else "AM",
+            )[:count]
         else:
             values = ("小时", "分钟", "AM/PM")[:count]
-        painter.setPen(QtGui.QColor((tokens.text if self._time.isValid() else tokens.text_muted) if self.isEnabled() else tokens.disabled))
+        painter.setPen(
+            QtGui.QColor(
+                (tokens.text if self._time.isValid() else tokens.text_muted)
+                if self.isEnabled()
+                else tokens.disabled
+            )
+        )
         for column, value in enumerate(values):
-            painter.drawText(QtCore.QRectF(column*width, 0, width, self.height()), QtCore.Qt.AlignmentFlag.AlignCenter, value)
+            painter.drawText(
+                QtCore.QRectF(column * width, 0, width, self.height()),
+                QtCore.Qt.AlignmentFlag.AlignCenter,
+                value,
+            )

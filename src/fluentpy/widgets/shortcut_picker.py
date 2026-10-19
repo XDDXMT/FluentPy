@@ -16,7 +16,9 @@ def _parse(value):
     if value is None:
         value = ""
     if isinstance(value, str):
-        sequence = QtGui.QKeySequence.fromString(value, QtGui.QKeySequence.SequenceFormat.PortableText)
+        sequence = QtGui.QKeySequence.fromString(
+            value, QtGui.QKeySequence.SequenceFormat.PortableText
+        )
     elif isinstance(value, QtGui.QKeySequence):
         sequence = QtGui.QKeySequence(value)
     else:
@@ -54,7 +56,9 @@ class _KeyCaps(QtWidgets.QWidget):
         self._animation.valueChanged.connect(self._animate)
         self.setMinimumSize(0, 100 if large else 32)
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred
+        )
         self._apply_theme()
         theme.subscribe(self, self._apply_theme)
 
@@ -62,14 +66,16 @@ class _KeyCaps(QtWidgets.QWidget):
         self._chord = chord
         parts = list(policy.modifier_labels(chord[1]))
         if chord[0] and not modifiers_only:
-            name = QtGui.QKeySequence(chord[0]).toString(QtGui.QKeySequence.SequenceFormat.NativeText)
+            name = QtGui.QKeySequence(chord[0]).toString(
+                QtGui.QKeySequence.SequenceFormat.NativeText
+            )
             parts.append(name or "?")
         if tuple(parts) == self._parts:
             return
         self._parts = tuple(parts)
         self.setAccessibleName(" + ".join(parts) if parts else "未设置快捷键")
         self._animation.stop()
-        self._animation.setStartValue(.45)
+        self._animation.setStartValue(0.45)
         self._animation.setEndValue(1.0)
         self._animation.start()
         self.updateGeometry()
@@ -80,13 +86,20 @@ class _KeyCaps(QtWidgets.QWidget):
 
     def _widths(self):
         metrics = self.fontMetrics()
-        return [max(44 if self._large else 28, metrics.horizontalAdvance(text) + (20 if self._large else 14))
-                for text in self._parts]
+        return [
+            max(
+                44 if self._large else 28,
+                metrics.horizontalAdvance(text) + (20 if self._large else 14),
+            )
+            for text in self._parts
+        ]
 
     def sizeHint(self):
         widths = self._widths()
-        return QtCore.QSize(sum(widths) + max(0, len(widths)-1) * 6 + 8 if widths else 122,
-                            120 if self._large else 36)
+        return QtCore.QSize(
+            sum(widths) + max(0, len(widths) - 1) * 6 + 8 if widths else 122,
+            120 if self._large else 36,
+        )
 
     def _apply_theme(self):
         self.setFont(ui_font(16 if self._large else 12, self.font()))
@@ -108,18 +121,22 @@ class _KeyCaps(QtWidgets.QWidget):
             painter.drawRoundedRect(self.rect().adjusted(0, 0, -1, -1), 6, 6)
         if not self._parts:
             painter.setPen(QtGui.QColor(theme.tokens.text_muted))
-            painter.drawText(self.rect(), QtCore.Qt.AlignmentFlag.AlignCenter, "按下组合键" if self._large else "未设置快捷键")
+            painter.drawText(
+                self.rect(),
+                QtCore.Qt.AlignmentFlag.AlignCenter,
+                "按下组合键" if self._large else "未设置快捷键",
+            )
             return
         widths = self._widths()
-        total = sum(widths) + (len(widths)-1) * 6
-        scale = min(1.0, max(0.0, (self.width()-8)/max(1, total)))
-        painter.translate(self.width()/2, self.height()/2)
+        total = sum(widths) + (len(widths) - 1) * 6
+        scale = min(1.0, max(0.0, (self.width() - 8) / max(1, total)))
+        painter.translate(self.width() / 2, self.height() / 2)
         painter.scale(scale, scale)
-        painter.setOpacity(self._reveal if self.isEnabled() else .45)
+        painter.setOpacity(self._reveal if self.isEnabled() else 0.45)
         height = 44 if self._large else 28
         x = -total / 2
         for width, text in zip(widths, self._parts):
-            rect = QtCore.QRectF(x, -height/2, width, height)
+            rect = QtCore.QRectF(x, -height / 2, width, height)
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(QtGui.QColor(theme.tokens.accent))
             painter.drawRoundedRect(rect, 5 if self._large else 4, 5 if self._large else 4)
@@ -162,7 +179,7 @@ class ShortcutDialog(MaskedDialog):
         self.setYesButtonText("保存")
         self.reset_button = Button("重置", self._panel)
         self.reset_button.clicked.connect(self.reset)
-        row = self._panel.layout().itemAt(self._panel.layout().count()-1).layout()
+        row = self._panel.layout().itemAt(self._panel.layout().count() - 1).layout()
         row.insertWidget(1, self.reset_button)
         self._set_candidate(initial)
 
@@ -184,8 +201,14 @@ class ShortcutDialog(MaskedDialog):
         self.recorder.set_chord(chord)
         conflict = policy.conflicts(*chord, self._reserved)
         self.yes_button.setEnabled(not conflict)
-        self.message_label.setText("此快捷键已被占用，请换一个组合。" if conflict else "Tab 切换按钮 · Esc 取消 · 点击键帽继续录制")
-        self.message_label.setStyleSheet(f"color: {'#c42b1c' if conflict and theme.mode.value == 'light' else '#ff99a4' if conflict else theme.tokens.text_muted}; background: transparent; font-size: 12px;")
+        self.message_label.setText(
+            "此快捷键已被占用，请换一个组合。"
+            if conflict
+            else "Tab 切换按钮 · Esc 取消 · 点击键帽继续录制"
+        )
+        self.message_label.setStyleSheet(
+            f"color: {'#c42b1c' if conflict and theme.mode.value == 'light' else '#ff99a4' if conflict else theme.tokens.text_muted}; background: transparent; font-size: 12px;"
+        )
 
     def open(self):
         if self.isVisible() and not self._resolved:
@@ -236,22 +259,37 @@ class ShortcutDialog(MaskedDialog):
     def _fit_to_parent(self):
         super()._fit_to_parent()
         self.layout().setContentsMargins(16, 16, 16, 16)
-        self._panel.setFixedWidth(max(0, min(460, self.width()-32)))
-        self._panel.setMaximumHeight(max(0, self.height()-32))
+        self._panel.setFixedWidth(max(0, min(460, self.width() - 32)))
+        self._panel.setMaximumHeight(max(0, self.height() - 32))
 
     def _cycle_focus(self, backward):
-        widgets = [self.recorder, self.clear_button, self.yes_button, self.reset_button, self.cancel_button]
+        widgets = [
+            self.recorder,
+            self.clear_button,
+            self.yes_button,
+            self.reset_button,
+            self.cancel_button,
+        ]
         widgets = [widget for widget in widgets if widget.isEnabled()]
         current = QtWidgets.QApplication.focusWidget()
         index = widgets.index(current) if current in widgets else 0
-        widgets[(index + (-1 if backward else 1)) % len(widgets)].setFocus(QtCore.Qt.FocusReason.TabFocusReason)
+        widgets[(index + (-1 if backward else 1)) % len(widgets)].setFocus(
+            QtCore.Qt.FocusReason.TabFocusReason
+        )
 
     def eventFilter(self, watched, event):
         kind = event.type()
-        if watched is self.parentWidget() and kind in (QtCore.QEvent.Type.Hide, QtCore.QEvent.Type.Close):
+        if watched is self.parentWidget() and kind in (
+            QtCore.QEvent.Type.Hide,
+            QtCore.QEvent.Type.Close,
+        ):
             self.cancel_immediately()
-        if (self.isVisible() and not self._finished and isinstance(watched, QtWidgets.QWidget)
-                and watched.window() is self.window()):
+        if (
+            self.isVisible()
+            and not self._finished
+            and isinstance(watched, QtWidgets.QWidget)
+            and watched.window() is self.window()
+        ):
             if kind == QtCore.QEvent.Type.ShortcutOverride:
                 event.accept()
                 return True
@@ -260,15 +298,26 @@ class ShortcutDialog(MaskedDialog):
                 if key == int(QtCore.Qt.Key.Key_Escape) and not modifiers:
                     self.reject()
                     return True
-                if key in (int(QtCore.Qt.Key.Key_Tab), int(QtCore.Qt.Key.Key_Backtab)) and modifiers in (0, int(QtCore.Qt.KeyboardModifier.ShiftModifier.value)):
+                if key in (
+                    int(QtCore.Qt.Key.Key_Tab),
+                    int(QtCore.Qt.Key.Key_Backtab),
+                ) and modifiers in (0, int(QtCore.Qt.KeyboardModifier.ShiftModifier.value)):
                     self._cycle_focus(bool(modifiers) or key == int(QtCore.Qt.Key.Key_Backtab))
                     return True
-                focus = self.recorder if watched is self.recorder else QtWidgets.QApplication.focusWidget()
+                focus = (
+                    self.recorder
+                    if watched is self.recorder
+                    else QtWidgets.QApplication.focusWidget()
+                )
                 if focus is self.recorder:
                     if event.isAutoRepeat():
                         return True
-                    if key in (int(QtCore.Qt.Key.Key_Control), int(QtCore.Qt.Key.Key_Shift),
-                               int(QtCore.Qt.Key.Key_Alt), int(QtCore.Qt.Key.Key_Meta)):
+                    if key in (
+                        int(QtCore.Qt.Key.Key_Control),
+                        int(QtCore.Qt.Key.Key_Shift),
+                        int(QtCore.Qt.Key.Key_Alt),
+                        int(QtCore.Qt.Key.Key_Meta),
+                    ):
                         self.recorder.set_chord((0, modifiers), modifiers_only=True)
                     else:
                         try:
@@ -277,10 +326,15 @@ class ShortcutDialog(MaskedDialog):
                             self.message_label.setText("这个按键暂不支持，请换一个组合。")
                     event.accept()
                     return True
-                if key in (int(QtCore.Qt.Key.Key_Return), int(QtCore.Qt.Key.Key_Enter)) and isinstance(focus, QtWidgets.QAbstractButton):
+                if key in (
+                    int(QtCore.Qt.Key.Key_Return),
+                    int(QtCore.Qt.Key.Key_Enter),
+                ) and isinstance(focus, QtWidgets.QAbstractButton):
                     focus.click()
                     return True
-            elif kind == QtCore.QEvent.Type.KeyRelease and (watched is self.recorder or QtWidgets.QApplication.focusWidget() is self.recorder):
+            elif kind == QtCore.QEvent.Type.KeyRelease and (
+                watched is self.recorder or QtWidgets.QApplication.focusWidget() is self.recorder
+            ):
                 self.recorder.set_chord(self._candidate)
                 event.accept()
                 return True
@@ -344,12 +398,14 @@ class ShortcutPicker(QtWidgets.QFrame):
             self._chord = chord
             self.key_caps.set_chord(chord)
             self.keySequenceChanged.emit(self.key_sequence())
-            self.sequenceChanged.emit(self.key_sequence().toString(QtGui.QKeySequence.SequenceFormat.PortableText))
+            self.sequenceChanged.emit(
+                self.key_sequence().toString(QtGui.QKeySequence.SequenceFormat.PortableText)
+            )
 
-    def keySequence(self):  # noqa: N802
+    def keySequence(self):
         return self.key_sequence()
 
-    def setKeySequence(self, sequence):  # noqa: N802
+    def setKeySequence(self, sequence):
         self.set_key_sequence(sequence)
 
     def set_reserved_sequences(self, sequences):
@@ -370,7 +426,12 @@ class ShortcutPicker(QtWidgets.QFrame):
         if self._editor is not None:
             self._editor.open()
             return
-        editor = ShortcutDialog(self.key_sequence(), self.window(), reserved_sequences=self.reserved_sequences(), title=self._title)
+        editor = ShortcutDialog(
+            self.key_sequence(),
+            self.window(),
+            reserved_sequences=self.reserved_sequences(),
+            title=self._title,
+        )
         self._editor = editor
         editor.accepted.connect(self._editor_accepted)
         editor.finished.connect(self._editor_finished)
@@ -385,7 +446,9 @@ class ShortcutPicker(QtWidgets.QFrame):
                 self._chord = chord
                 self.key_caps.set_chord(chord)
                 self.keySequenceChanged.emit(self.key_sequence())
-                self.sequenceChanged.emit(self.key_sequence().toString(QtGui.QKeySequence.SequenceFormat.PortableText))
+                self.sequenceChanged.emit(
+                    self.key_sequence().toString(QtGui.QKeySequence.SequenceFormat.PortableText)
+                )
 
     def _editor_finished(self, _result):
         self._editor = None
@@ -396,12 +459,20 @@ class ShortcutPicker(QtWidgets.QFrame):
         super().hideEvent(event)
 
     def changeEvent(self, event):
-        if event.type() == QtCore.QEvent.Type.EnabledChange and not self.isEnabled() and self._editor is not None:
+        if (
+            event.type() == QtCore.QEvent.Type.EnabledChange
+            and not self.isEnabled()
+            and self._editor is not None
+        ):
             self._editor.cancel_immediately()
         super().changeEvent(event)
 
     def keyPressEvent(self, event):
-        if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter, QtCore.Qt.Key.Key_Space):
+        if event.key() in (
+            QtCore.Qt.Key.Key_Return,
+            QtCore.Qt.Key.Key_Enter,
+            QtCore.Qt.Key.Key_Space,
+        ):
             self.open_editor()
             event.accept()
         else:
@@ -409,4 +480,6 @@ class ShortcutPicker(QtWidgets.QFrame):
 
     def _apply_theme(self):
         self.setFont(ui_font(theme.tokens.font_size, self.font()))
-        self.setStyleSheet(f"QFrame#shortcutPicker {{ background: {theme.tokens.surface}; border: 1px solid {theme.tokens.border}; border-radius: 6px; }}")
+        self.setStyleSheet(
+            f"QFrame#shortcutPicker {{ background: {theme.tokens.surface}; border: 1px solid {theme.tokens.border}; border-radius: 6px; }}"
+        )

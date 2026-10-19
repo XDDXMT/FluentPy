@@ -1,5 +1,7 @@
 """Screen sampling starts explicitly, captures once, and always releases its overlays."""
+
 from __future__ import annotations
+
 from functools import partial
 
 from ..icons import FluentIcon, fluent_icon
@@ -22,7 +24,13 @@ def _dispose_overlays(overlays, cursor_owned):
 
 class _ScreenOverlay(QtWidgets.QWidget):
     def __init__(self, picker, geometry, snapshot):
-        super().__init__(None, QtCore.Qt.WindowType.Tool | QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.WindowStaysOnTopHint | QtCore.Qt.WindowType.NoDropShadowWindowHint)
+        super().__init__(
+            None,
+            QtCore.Qt.WindowType.Tool
+            | QtCore.Qt.WindowType.FramelessWindowHint
+            | QtCore.Qt.WindowType.WindowStaysOnTopHint
+            | QtCore.Qt.WindowType.NoDropShadowWindowHint,
+        )
         self.picker = picker
         self.snapshot = snapshot
         self.setGeometry(geometry)
@@ -42,11 +50,24 @@ class _ScreenOverlay(QtWidgets.QWidget):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Escape:
             self.picker.cancel()
-        elif event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter, QtCore.Qt.Key.Key_Space):
+        elif event.key() in (
+            QtCore.Qt.Key.Key_Return,
+            QtCore.Qt.Key.Key_Enter,
+            QtCore.Qt.Key.Key_Space,
+        ):
             self.picker._choose(self.picker._point)
-        elif event.key() in (QtCore.Qt.Key.Key_Left, QtCore.Qt.Key.Key_Right, QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down):
-            dx = int(event.key() == QtCore.Qt.Key.Key_Right) - int(event.key() == QtCore.Qt.Key.Key_Left)
-            dy = int(event.key() == QtCore.Qt.Key.Key_Down) - int(event.key() == QtCore.Qt.Key.Key_Up)
+        elif event.key() in (
+            QtCore.Qt.Key.Key_Left,
+            QtCore.Qt.Key.Key_Right,
+            QtCore.Qt.Key.Key_Up,
+            QtCore.Qt.Key.Key_Down,
+        ):
+            dx = int(event.key() == QtCore.Qt.Key.Key_Right) - int(
+                event.key() == QtCore.Qt.Key.Key_Left
+            )
+            dy = int(event.key() == QtCore.Qt.Key.Key_Down) - int(
+                event.key() == QtCore.Qt.Key.Key_Up
+            )
             point = self.picker._point + QtCore.QPoint(dx, dy)
             if self.picker.sample_color(point).isValid():
                 QtGui.QCursor.setPos(point)
@@ -81,14 +102,21 @@ class _ScreenOverlay(QtWidgets.QWidget):
         painter.drawImage(QtCore.QRectF(x + 8, y + 8, 48, 48), self.snapshot, source)
         painter.setFont(ui_font(12, self.font()))
         painter.setPen(QtGui.QColor("#202020"))
-        painter.drawText(QtCore.QRectF(x + 65, y + 7, 86, 23), QtCore.Qt.AlignmentFlag.AlignVCenter, _hex(value))
+        painter.drawText(
+            QtCore.QRectF(x + 65, y + 7, 86, 23), QtCore.Qt.AlignmentFlag.AlignVCenter, _hex(value)
+        )
         painter.setFont(ui_font(10, self.font()))
         painter.setPen(QtGui.QColor("#666666"))
-        painter.drawText(QtCore.QRectF(x + 65, y + 31, 86, 24), QtCore.Qt.AlignmentFlag.AlignVCenter, "单击选取 · Esc取消")
+        painter.drawText(
+            QtCore.QRectF(x + 65, y + 31, 86, 24),
+            QtCore.Qt.AlignmentFlag.AlignVCenter,
+            "单击选取 · Esc取消",
+        )
 
 
 class ScreenColorPicker(QtCore.QObject):
     """Explicit desktop eyedropper, with logical-coordinate and mixed-DPI mapping."""
+
     colorSelected = Signal(QtGui.QColor)
     colorPreviewed = Signal(QtGui.QColor)
     canceled = Signal()
@@ -141,10 +169,15 @@ class ScreenColorPicker(QtCore.QObject):
             for overlay in self._overlays:
                 overlay.show()
                 overlay.raise_()
-            target = next((overlay for overlay in self._overlays if overlay.geometry().contains(self._point)), self._overlays[0])
+            target = next(
+                (overlay for overlay in self._overlays if overlay.geometry().contains(self._point)),
+                self._overlays[0],
+            )
             target.activateWindow()
             target.setFocus(QtCore.Qt.FocusReason.OtherFocusReason)
-            QtWidgets.QApplication.instance().applicationStateChanged.connect(self._application_state)
+            QtWidgets.QApplication.instance().applicationStateChanged.connect(
+                self._application_state
+            )
             self._move(self._point)
             return True
         except Exception as error:
@@ -156,8 +189,14 @@ class ScreenColorPicker(QtCore.QObject):
         """Sample a logical desktop point from the active, unmodified snapshot."""
         for rect, image in self._frames:
             if rect.contains(global_point):
-                x = min(image.width() - 1, int((global_point.x() - rect.left()) * image.width() / rect.width()))
-                y = min(image.height() - 1, int((global_point.y() - rect.top()) * image.height() / rect.height()))
+                x = min(
+                    image.width() - 1,
+                    int((global_point.x() - rect.left()) * image.width() / rect.width()),
+                )
+                y = min(
+                    image.height() - 1,
+                    int((global_point.y() - rect.top()) * image.height() / rect.height()),
+                )
                 color = image.pixelColor(x, y)
                 color.setAlpha(255)
                 return color
@@ -190,7 +229,9 @@ class ScreenColorPicker(QtCore.QObject):
         self._active = False
         if was_active:
             try:
-                QtWidgets.QApplication.instance().applicationStateChanged.disconnect(self._application_state)
+                QtWidgets.QApplication.instance().applicationStateChanged.disconnect(
+                    self._application_state
+                )
             except (RuntimeError, TypeError):
                 pass
         _dispose_overlays(self._overlays, self._cursor_owned)
@@ -201,13 +242,17 @@ class ScreenColorPicker(QtCore.QObject):
             self.cancel()
 
     def eventFilter(self, watched, event):
-        if watched is self._owner and event.type() in (QtCore.QEvent.Type.Hide, QtCore.QEvent.Type.Close):
+        if watched is self._owner and event.type() in (
+            QtCore.QEvent.Type.Hide,
+            QtCore.QEvent.Type.Close,
+        ):
             self.cancel()
         return super().eventFilter(watched, event)
 
 
 class EyeDropperButton(Button):
     """Native Button with an official Fluent eyedropper icon and a current color chip."""
+
     colorChanged = Signal(QtGui.QColor)
     colorPreviewed = Signal(QtGui.QColor)
     failed = Signal(str)
@@ -241,8 +286,15 @@ class EyeDropperButton(Button):
         self.setToolTip("从屏幕取色 · " + _hex(self._color))
 
     def _draw_content(self, painter, rect, color):
-        _paint_color(painter, QtCore.QRectF(rect.left() + 6, rect.center().y() - 11, 22, 22), self._color)
-        self._draw_tinted_icon(painter, QtCore.QRect(round(rect.right() - 22), round(rect.center().y() - 9), 18, 18), color, fluent_icon(FluentIcon.EYEDROPPER))
+        _paint_color(
+            painter, QtCore.QRectF(rect.left() + 6, rect.center().y() - 11, 22, 22), self._color
+        )
+        self._draw_tinted_icon(
+            painter,
+            QtCore.QRect(round(rect.right() - 22), round(rect.center().y() - 9), 18, 18),
+            color,
+            fluent_icon(FluentIcon.EYEDROPPER),
+        )
 
     def hideEvent(self, event):
         self.picker.cancel()

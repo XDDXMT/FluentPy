@@ -8,14 +8,13 @@ from __future__ import annotations
 
 import argparse
 import os
-from pathlib import Path
 import platform
 import shutil
 import subprocess
 import sys
 import sysconfig
 import uuid
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,11 +23,25 @@ def build_with_zig(zig: Path, output: Path) -> Path:
     if sys.implementation.name != "cpython":
         raise RuntimeError("The optional native module requires CPython.")
     if os.name != "nt" or platform.machine().lower() not in {"amd64", "x86_64"}:
-        raise RuntimeError("The Zig helper currently supports Windows x64; use the system compiler elsewhere.")
+        raise RuntimeError(
+            "The Zig helper currently supports Windows x64; use the system compiler elsewhere."
+        )
     zig = zig.expanduser().resolve()
     if not zig.is_file():
         raise FileNotFoundError(f"Zig executable not found: {zig}")
-    sources = [ROOT / "native" / name for name in ("text_accel.c", "date_accel.c", "drop_accel.c", "shortcut_accel.c", "time_accel.c", "calendar_accel.c", "color_accel.c", "input_accel.c")]
+    sources = [
+        ROOT / "native" / name
+        for name in (
+            "text_accel.c",
+            "date_accel.c",
+            "drop_accel.c",
+            "shortcut_accel.c",
+            "time_accel.c",
+            "calendar_accel.c",
+            "color_accel.c",
+            "input_accel.c",
+        )
+    ]
     for source in sources:
         if not source.is_file():
             raise FileNotFoundError(f"Native source not found: {source}")
@@ -56,10 +69,22 @@ def build_with_zig(zig: Path, output: Path) -> Path:
         path.mkdir(parents=True, exist_ok=True)
         env[key] = str(path)
     command = [
-        str(zig), "cc", "-target", "x86_64-windows-gnu", "-shared",
-        "-O3", "-DNDEBUG", "-std=c11", "-Wall", "-Wextra",
-        "-I", sysconfig.get_path("include"), *map(str, sources), str(import_lib),
-        "-o", str(compiled),
+        str(zig),
+        "cc",
+        "-target",
+        "x86_64-windows-gnu",
+        "-shared",
+        "-O3",
+        "-DNDEBUG",
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-I",
+        sysconfig.get_path("include"),
+        *map(str, sources),
+        str(import_lib),
+        "-o",
+        str(compiled),
     ]
     subprocess.run(command, cwd=ROOT, env=env, check=True)
     if not compiled.is_file():
@@ -103,7 +128,9 @@ def main() -> None:
         env["FLUENTPY_BUILD_NATIVE"] = "1"
         subprocess.run(
             [sys.executable, "setup.py", "build_ext", "--inplace"],
-            cwd=ROOT, env=env, check=True,
+            cwd=ROOT,
+            env=env,
+            check=True,
         )
 
 

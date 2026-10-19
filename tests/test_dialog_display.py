@@ -1,6 +1,7 @@
 """Dialogs must open once at their destination, without hidden warm-up shows."""
 
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import unittest
@@ -16,7 +17,9 @@ class _DialogEvents(QtCore.QObject):
 
     def eventFilter(self, watched, event):
         if isinstance(watched, FramelessDialog) and event.type() in (
-            QtCore.QEvent.Type.Show, QtCore.QEvent.Type.Hide, QtCore.QEvent.Type.Move,
+            QtCore.QEvent.Type.Show,
+            QtCore.QEvent.Type.Hide,
+            QtCore.QEvent.Type.Move,
         ):
             self.events.append((watched, event.type(), watched.pos(), watched.windowOpacity()))
         return False
@@ -47,7 +50,12 @@ class DialogDisplayTests(unittest.TestCase):
         dialog = FramelessDialog("保存", "现在还不应显示。", self.parent)
         self.assertFalse(dialog.isVisible())
         self.assertEqual(ticks, [])
-        self.assertFalse(any(event[1] in (QtCore.QEvent.Type.Show, QtCore.QEvent.Type.Hide) for event in self.observer.events))
+        self.assertFalse(
+            any(
+                event[1] in (QtCore.QEvent.Type.Show, QtCore.QEvent.Type.Hide)
+                for event in self.observer.events
+            )
+        )
         self.app.processEvents()
         self.assertEqual(ticks, [True])
 
@@ -55,12 +63,18 @@ class DialogDisplayTests(unittest.TestCase):
         dialog = FramelessDialog("保存", "直接在最终位置显示。", self.parent)
         dialog.open()
         self.app.processEvents()
-        shows = [event for event in self.observer.events if event[0] is dialog and event[1] == QtCore.QEvent.Type.Show]
+        shows = [
+            event
+            for event in self.observer.events
+            if event[0] is dialog and event[1] == QtCore.QEvent.Type.Show
+        ]
         self.assertEqual(len(shows), 1)
         self.assertEqual(shows[0][2], dialog.pos())
         self.assertEqual(shows[0][3], 1.0)
         self.assertTrue(dialog.windowFlags() & QtCore.Qt.WindowType.NoDropShadowWindowHint)
-        expected = self.parent.frameGeometry().center() - QtCore.QPoint(dialog.width() // 2, dialog.height() // 2)
+        expected = self.parent.frameGeometry().center() - QtCore.QPoint(
+            dialog.width() // 2, dialog.height() // 2
+        )
         screen = self.app.primaryScreen().availableGeometry()
         expected.setX(max(screen.left(), min(expected.x(), screen.right() - dialog.width() + 1)))
         expected.setY(max(screen.top(), min(expected.y(), screen.bottom() - dialog.height() + 1)))
@@ -71,7 +85,16 @@ class DialogDisplayTests(unittest.TestCase):
         wait.exec()
         self.assertEqual(dialog.pos(), before)
         self.assertEqual(dialog.windowOpacity(), 1.0)
-        self.assertEqual(len([event for event in self.observer.events if event[0] is dialog and event[1] == QtCore.QEvent.Type.Show]), 1)
+        self.assertEqual(
+            len(
+                [
+                    event
+                    for event in self.observer.events
+                    if event[0] is dialog and event[1] == QtCore.QEvent.Type.Show
+                ]
+            ),
+            1,
+        )
         dialog.reject()
 
     def test_repeated_open_and_cancel_only_show_the_requested_dialog(self):
@@ -95,9 +118,11 @@ class DialogDisplayTests(unittest.TestCase):
     def test_exec_returns_the_accepted_result_without_a_reveal_timer(self):
         dialog = FramelessDialog("保存", parent=self.parent)
         observed = []
+
         def confirm():
             observed.append((dialog.isVisible(), dialog.windowOpacity()))
             dialog.accept()
+
         QtCore.QTimer.singleShot(0, confirm)
         self.assertEqual(dialog.exec(), QtWidgets.QDialog.DialogCode.Accepted)
         self.assertEqual(observed, [(True, 1.0)])

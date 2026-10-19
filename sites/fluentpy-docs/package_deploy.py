@@ -3,23 +3,23 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter
-from datetime import datetime, timedelta, timezone
 import hashlib
-from html.parser import HTMLParser
+import io
 import json
-from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import xml.etree.ElementTree as ET
 import zipfile
+from collections import Counter
+from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
+from pathlib import Path, PurePosixPath
 
 from PIL import Image
-import io
-
 
 SITE = Path(__file__).resolve().parent
 from source_project import repository_root
+
 ROOT = repository_root()
 STATIC = SITE / "dist"
 PUBLIC_EXTENSIONS = {".html", ".css", ".js", ".svg", ".png", ".gif", ".txt"}
@@ -33,7 +33,11 @@ class LocalLinks(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         for key, value in attrs:
-            if key in {"src", "href"} and value and not value.startswith(("#", "http:", "https:", "data:")):
+            if (
+                key in {"src", "href"}
+                and value
+                and not value.startswith(("#", "http:", "https:", "data:"))
+            ):
                 self.paths.add(value.split("?", 1)[0])
 
 
@@ -50,9 +54,16 @@ def required_assets(data, index):
             required.add(f"assets/previews/{page['cover']['image']}-light.png")
         for section in page["sections"]:
             if section.get("migration"):
-                required.update("assets/previews/" + section["migration"][key] for key in ("beforeImage", "afterImage", "focusImage"))
+                required.update(
+                    "assets/previews/" + section["migration"][key]
+                    for key in ("beforeImage", "afterImage", "focusImage")
+                )
             preview = section.get("preview")
-            if preview and preview not in {"icons", "api-index"} and preview not in data["animatedPreviews"]:
+            if (
+                preview
+                and preview not in {"icons", "api-index"}
+                and preview not in data["animatedPreviews"]
+            ):
                 required.add(f"assets/previews/{preview}-light.png")
             for card in section.get("gallery", []):
                 required.add(f"assets/previews/{card['image']}-light.png")
@@ -65,7 +76,14 @@ def required_assets(data, index):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=ROOT / "dist" / "docs" / f"FluentPy-docs-complete-{datetime.now(CHINA_TIME):%Y%m%d}.zip")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=ROOT
+        / "dist"
+        / "docs"
+        / f"FluentPy-docs-complete-{datetime.now(CHINA_TIME):%Y%m%d}.zip",
+    )
     args = parser.parse_args()
     payload = {}
     for file in sorted(STATIC.rglob("*")):
@@ -76,14 +94,41 @@ def main():
             continue
         payload[relative.as_posix()] = file.read_bytes()
 
-    data = json.loads(payload["data.js"].decode("utf-8").removeprefix("window.DOCS_DATA = ").strip().removesuffix(";"))
+    data = json.loads(
+        payload["data.js"]
+        .decode("utf-8")
+        .removeprefix("window.DOCS_DATA = ")
+        .strip()
+        .removesuffix(";")
+    )
     # A new cache key also refreshes any previously cached missing-image response.
-    digest = hashlib.sha256(b"".join(name.encode() + b"\0" + value for name, value in sorted(payload.items()))).hexdigest()[:16]
+    digest = hashlib.sha256(
+        b"".join(name.encode() + b"\0" + value for name, value in sorted(payload.items()))
+    ).hexdigest()[:16]
     data["previewVersion"] = "deploy-" + digest
-    payload["data.js"] = ("window.DOCS_DATA = " + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + ";\n").encode("utf-8")
-    cache_version = hashlib.sha256(b"".join(payload[name] for name in ("data.js", "app.js", "styles.css", "native-flow.js", "native-flow.css", "migration.js", "migration.css"))).hexdigest()[:16]
+    payload["data.js"] = (
+        "window.DOCS_DATA = " + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + ";\n"
+    ).encode("utf-8")
+    cache_version = hashlib.sha256(
+        b"".join(
+            payload[name]
+            for name in (
+                "data.js",
+                "app.js",
+                "styles.css",
+                "native-flow.js",
+                "native-flow.css",
+                "migration.js",
+                "migration.css",
+            )
+        )
+    ).hexdigest()[:16]
     index = payload["index.html"].decode("utf-8")
-    index = re.sub(r'((?:styles\.css|native-flow\.css|migration\.css|data\.js|native-flow\.js|migration\.js|app\.js)\?v=)[^"\s]+', lambda match: match[1] + cache_version, index)
+    index = re.sub(
+        r'((?:styles\.css|native-flow\.css|migration\.css|data\.js|native-flow\.js|migration\.js|app\.js)\?v=)[^"\s]+',
+        lambda match: match[1] + cache_version,
+        index,
+    )
     payload["index.html"] = index.encode("utf-8")
 
     required = required_assets(data, index)
@@ -105,14 +150,22 @@ def main():
 
     counts = Counter(PurePosixPath(name).suffix for name in payload)
     marker = {
-        "project": "FluentPy docs", "public_url": "https://fluentpy.mcxmcl.cn/",
+        "project": "FluentPy docs",
+        "public_url": "https://fluentpy.mcxmcl.cn/",
         "packaged_at": datetime.now(CHINA_TIME).isoformat(),
-        "source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+        "source_commit": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+        ).strip(),
         "source_dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT)),
-        "preview_version": data["previewVersion"], "checked_local_references": len(required),
-        "pages": len(data["pages"]), "icons": len(data["icons"]), "asset_counts": dict(counts),
+        "preview_version": data["previewVersion"],
+        "checked_local_references": len(required),
+        "pages": len(data["pages"]),
+        "icons": len(data["icons"]),
+        "asset_counts": dict(counts),
     }
-    payload["deployment.json"] = (json.dumps(marker, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    payload["deployment.json"] = (json.dumps(marker, ensure_ascii=False, indent=2) + "\n").encode(
+        "utf-8"
+    )
     instructions = """FluentPy 完整静态文档部署包
 
 1. 在宝塔中，将本压缩包上传并解压覆盖到：
@@ -130,7 +183,10 @@ def main():
 包内文件使用dist/相对路径，解压时保持此目录结构。
 deployment.json记录部署版本，SHA256SUMS.txt记录全部静态文件校验值。
 """
-    checksums = "".join(f"{hashlib.sha256(value).hexdigest()}  dist/{name}\n" for name, value in sorted(payload.items()))
+    checksums = "".join(
+        f"{hashlib.sha256(value).hexdigest()}  dist/{name}\n"
+        for name, value in sorted(payload.items())
+    )
     archive = args.output.resolve()
     archive.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as bundle:
@@ -146,8 +202,13 @@ deployment.json记录部署版本，SHA256SUMS.txt记录全部静态文件校验
         assert bundle.testzip() is None
         for name, value in payload.items():
             assert bundle.read("dist/" + name) == value
-    report = {**marker, "archive": str(archive), "bytes": archive.stat().st_size,
-              "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(), "static_files": len(payload)}
+    report = {
+        **marker,
+        "archive": str(archive),
+        "bytes": archive.stat().st_size,
+        "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+        "static_files": len(payload),
+    }
     report_file = ROOT / "build" / "deployment" / "complete-package-report.json"
     report_file.parent.mkdir(parents=True, exist_ok=True)
     report_file.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

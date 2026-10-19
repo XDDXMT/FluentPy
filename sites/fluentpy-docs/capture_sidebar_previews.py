@@ -1,15 +1,19 @@
 """Record the real three-region sidebar without displaying desktop windows."""
-from pathlib import Path
+
 import sys
+from pathlib import Path
 
 SITE = Path(__file__).resolve().parent
 from source_project import source_root
+
 ROOT = source_root()
 sys.path[:0] = [str(ROOT / "src"), str(SITE)]
-from capture_animations import _image, _capture_font
+from capture_animations import _capture_font, _image
 from PIL import Image, ImageChops, ImageStat
-from fluentpy import NavigationSidebar, SearchLineEdit, FluentIcon, fluent_icon, theme, QT_API
+
+from fluentpy import QT_API, FluentIcon, NavigationSidebar, SearchLineEdit, fluent_icon, theme
 from fluentpy.qt import QtCore, QtWidgets
+
 if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
@@ -42,7 +46,20 @@ for mode in ("light", "dark"):
     sidebar.set_header_widget(search)
     search.textChanged.connect(sidebar.set_filter_text)
     home = sidebar.add_header_item(fluent_icon(FluentIcon.HOME), "组件概览")
-    names = ["按钮与菜单", "文本与选择", "日期与时间", "日历选择", "文件拖放", "快捷键", "卡片容器", "页面导航", "消息与对话框", "代码编辑器", "音符时间轴", "日期区间"]
+    names = [
+        "按钮与菜单",
+        "文本与选择",
+        "日期与时间",
+        "日历选择",
+        "文件拖放",
+        "快捷键",
+        "卡片容器",
+        "页面导航",
+        "消息与对话框",
+        "代码编辑器",
+        "音符时间轴",
+        "日期区间",
+    ]
     for title in names:
         sidebar.add_item(fluent_icon(FluentIcon.APPS), title)
     settings = sidebar.add_footer_item(fluent_icon(FluentIcon.SETTINGS), "设置")
@@ -55,12 +72,14 @@ for mode in ("light", "dark"):
     bar = sidebar.scroll_area.verticalScrollBar()
     scroll = QtCore.QPropertyAnimation(bar, b"value", sidebar)
     scroll.setEasingCurve(QtCore.QEasingCurve.Type.InOutCubic)
+
     def move_scroll(target):
         scroll.stop()
         scroll.setStartValue(bar.value())
         scroll.setEndValue(target)
         scroll.setDuration(450)
         scroll.start()
+
     actions = [
         (400, lambda: move_scroll(bar.maximum())),
         (1300, lambda: settings.clicked.emit(True)),
@@ -86,17 +105,29 @@ for mode in ("light", "dark"):
         QTest.qWait(25)
     palette = frames[0].quantize(colors=256)
     encoded = [frame.quantize(palette=palette, dither=Image.Dither.NONE) for frame in frames]
-    boundaries = [round(value / 10) * 10 for value in times] + [max(5200, round(times[-1] / 10) * 10 + 30)]
+    boundaries = [round(value / 10) * 10 for value in times] + [
+        max(5200, round(times[-1] / 10) * 10 + 30)
+    ]
     durations = [max(10, end - start) for start, end in zip(boundaries, boundaries[1:])]
     target = output / f"sidebar-regions-{mode}.gif"
-    encoded[0].save(target, save_all=True, append_images=encoded[1:], duration=durations, loop=0, disposal=2, optimize=True)
+    encoded[0].save(
+        target,
+        save_all=True,
+        append_images=encoded[1:],
+        duration=durations,
+        loop=0,
+        disposal=2,
+        optimize=True,
+    )
     with Image.open(target) as gif:
         first = gif.convert("RGB")
         for index in range(gif.n_frames):
             gif.seek(index)
             if mode == "light":
                 assert min(ImageStat.Stat(gif.convert("RGB")).mean) > 180, "Dark capture artifact"
-        assert ImageChops.difference(first, gif.convert("RGB")).getbbox() is None, "Animation must loop to its initial layout"
+        assert ImageChops.difference(first, gif.convert("RGB")).getbbox() is None, (
+            "Animation must loop to its initial layout"
+        )
         print(f"{target.name}: {gif.n_frames} frames, {target.stat().st_size} bytes, {gif.size}")
     host.close()
     host.deleteLater()

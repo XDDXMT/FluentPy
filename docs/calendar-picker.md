@@ -41,7 +41,8 @@ scheduled.setDateTime(QtCore.QDateTime(QtCore.QDate(2026, 2, 10), QtCore.QTime(2
 scheduled.dateTimeChanged.connect(lambda value: print(value.toString("yyyy-MM-dd HH:mm:ss")))
 scheduled.set_date_time_bounds(
     QtCore.QDateTime(QtCore.QDate(2026, 2, 10), QtCore.QTime(9, 30, 15)),
-    QtCore.QDateTime(QtCore.QDate(2026, 2, 10), QtCore.QTime(20, 0, 0)))
+    QtCore.QDateTime(QtCore.QDate(2026, 2, 10), QtCore.QTime(20, 0, 0)),
+)
 ```
 
 左侧日历和右侧时、分、秒均修改草稿；✓或时间滚轮上的Enter提交，×／Esc／外部点击取消。各列独立循环，秒59→00不进位。返回本地QDateTime，精确到秒，截去毫秒；其他时区的输入先转成本地时间。`date_time()`／`dateTime()`读取副本，`dateTimeAccepted`在每次确认时发出。
@@ -55,7 +56,7 @@ picker.set_date_bounds(QtCore.QDate(2024, 1, 1), QtCore.QDate(2026, 12, 31))
 picker.set_disabled_dates([QtCore.QDate(2024, 5, 1)])
 picker.set_disabled_weekdays((5, 6))  # 0星期一，6星期日
 picker.set_locale("en_US")
-picker.set_first_weekday(6)          # Sunday
+picker.set_first_weekday(6)  # Sunday
 picker.set_placeholder_text("Pick a date")
 ```
 

@@ -13,13 +13,13 @@ from fluentpy import TableWidget
 from fluentpy.qt import QtCore, QtWidgets
 
 table = TableWidget(2, 2, window)
-table.setHorizontalHeaderLabels(['名称', '数量'])
-table.setItem(0, 0, QtWidgets.QTableWidgetItem('图标资源'))
+table.setHorizontalHeaderLabels(["名称", "数量"])
+table.setItem(0, 0, QtWidgets.QTableWidgetItem("图标资源"))
 quantity = QtWidgets.QTableWidgetItem()
 quantity.setData(QtCore.Qt.ItemDataRole.DisplayRole, 12)
 table.setItem(0, 1, quantity)
-table.setItem(1, 0, QtWidgets.QTableWidgetItem('项目模板'))
-table.setItem(1, 1, QtWidgets.QTableWidgetItem('待填写'))
+table.setItem(1, 0, QtWidgets.QTableWidgetItem("项目模板"))
+table.setItem(1, 1, QtWidgets.QTableWidgetItem("待填写"))
 table.setSortingEnabled(True)
 window.content_layout.addWidget(table)
 ```
@@ -33,9 +33,9 @@ from fluentpy import TableView, SearchLineEdit
 from fluentpy.qt import QtCore, QtGui
 
 source = QtGui.QStandardItemModel(0, 2, window)
-source.setHorizontalHeaderLabels(['名称', '分类'])
-source.appendRow([QtGui.QStandardItem('主题色板'), QtGui.QStandardItem('界面')])
-source.appendRow([QtGui.QStandardItem('使用说明'), QtGui.QStandardItem('文档')])
+source.setHorizontalHeaderLabels(["名称", "分类"])
+source.appendRow([QtGui.QStandardItem("主题色板"), QtGui.QStandardItem("界面")])
+source.appendRow([QtGui.QStandardItem("使用说明"), QtGui.QStandardItem("文档")])
 
 proxy = QtCore.QSortFilterProxyModel(window)
 proxy.setSourceModel(source)
@@ -45,7 +45,7 @@ proxy.setFilterCaseSensitivity(QtCore.Qt.CaseSensitivity.CaseInsensitive)
 view = TableView(window)
 view.setModel(proxy)
 view.setSortingEnabled(True)
-search = SearchLineEdit('搜索全部列')
+search = SearchLineEdit("搜索全部列")
 search.textChanged.connect(proxy.setFilterFixedString)
 window.content_layout.addWidget(search)
 window.content_layout.addWidget(view)
@@ -58,8 +58,8 @@ window.content_layout.addWidget(view)
 ## 外观与选择
 
 ```python
-table.set_row_style('rounded')  # standard / rounded / line
-table.set_row_height(44)        # 至少 24；可用 36 / 44 / 52 调整密度
+table.set_row_style("rounded")  # standard / rounded / line
+table.set_row_height(44)  # 至少 24；可用 36 / 44 / 52 调整密度
 table.setAlternatingRowColors(True)
 table.set_border_visible(True)
 table.set_border_radius(8)
@@ -78,11 +78,13 @@ table.set_select_right_clicked_row(True)
 ```python
 from fluentpy import TableItemDelegate
 
+
 class ProjectDelegate(TableItemDelegate):
     def createEditor(self, parent, option, index):
         editor = super().createEditor(parent, option, index)
         # 在这里为具体列补充验证器、范围或领域专用编辑器。
         return editor
+
 
 table.setItemDelegate(ProjectDelegate(table))
 table.setEditTriggers(table.EditTrigger.NoEditTriggers)
@@ -93,7 +95,7 @@ table.setEditTriggers(table.EditTrigger.NoEditTriggers)
 ## 复制、空状态与右键
 
 ```python
-table.set_empty_text('暂无记录')
+table.set_empty_text("暂无记录")
 text = table.selection_text(include_headers=True)
 copied = table.copy_selection(include_headers=True)
 ```

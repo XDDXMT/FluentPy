@@ -95,9 +95,13 @@ notice.show_at("top-right")
 ```python
 from fluentpy import ProgressToast
 
-ProgressToast.start("Custom toast view", parent=window,
-                    placement="bottom-center", indeterminate=True,
-                    severity="warning")
+ProgressToast.start(
+    "Custom toast view",
+    parent=window,
+    placement="bottom-center",
+    indeterminate=True,
+    severity="warning",
+)
 ```
 
 这种小型进度提示继续使用原有 `ProgressToast`，循环轨道仍只显示一段移动实心线。顶部色条通知的布局、颜色和动画均属于Qt界面呈现，不新增计算后端；C扩展不可用时仍可使用。

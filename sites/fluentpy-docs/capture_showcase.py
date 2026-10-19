@@ -5,24 +5,27 @@ and an eight-second GIF of the native navigation, sidebar and tab animations.
 Use ``--copy-dir docs/assets`` to update the Markdown documentation as well.
 Every frame comes from QWidget.grab(); this never moves the desktop pointer.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import os
-from pathlib import Path
 import shutil
 import statistics
 import sys
 import traceback
+from pathlib import Path
 
 SITE = Path(__file__).resolve().parent
 from source_project import source_root
+
 ROOT = source_root()
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "examples")]
 
 from PIL import Image, ImageStat
 from showcase import BRAND_ICON, create_showcase_window
+
 from fluentpy import QT_API, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.theme.fonts import ui_font
@@ -58,13 +61,16 @@ def create_settled_showcase(app):
 
 def _grab(window):
     image = window.grab().toImage().convertToFormat(QtGui.QImage.Format.Format_RGBA8888)
-    frame = Image.frombytes("RGBA", (image.width(), image.height()), bytes(image.constBits())).convert("RGB")
+    frame = Image.frombytes(
+        "RGBA", (image.width(), image.height()), bytes(image.constBits())
+    ).convert("RGB")
     assert frame.size == SIZE, "Run capture at QT_SCALE_FACTOR=1 for 1120 x 780 assets"
     return frame
 
 
 def record_showcase(window, destination):
     """Record timed clicks on the real Qt controls, using Qt's event loop."""
+
     def click(widget):
         QTest.mouseClick(widget, QtCore.Qt.MouseButton.LeftButton)
 
@@ -87,9 +93,11 @@ def record_showcase(window, destination):
     sheet = Image.new("RGB", (SIZE[0], SIZE[1] * len(samples)), "white")
     for index, frame in enumerate(samples):
         sheet.paste(frame, (0, index * SIZE[1]))
-    adaptive = sheet.quantize(colors=192).getpalette()[:192 * 3]
+    adaptive = sheet.quantize(colors=192).getpalette()[: 192 * 3]
     palette = Image.new("P", (1, 1))
-    palette.putpalette([channel for gray in range(64) for channel in (round(gray * 255 / 63),) * 3] + adaptive)
+    palette.putpalette(
+        [channel for gray in range(64) for channel in (round(gray * 255 / 63),) * 3] + adaptive
+    )
     actions = [
         (500, lambda: click(window.sidebar._toggle)),
         (1000, lambda: click(window.sidebar._toggle)),
@@ -97,7 +105,13 @@ def record_showcase(window, destination):
         (2300, lambda: route("navigation")),
         (3000, lambda: click(window.feedback_pivot._items[1].widget)),
         (3700, lambda: click(window.feedback_pivot._items[2].widget)),
-        (4400, lambda: (window.stack.currentWidget().ensureWidgetVisible(window.document_stack, 10, 10), document("notes"))),
+        (
+            4400,
+            lambda: (
+                window.stack.currentWidget().ensureWidgetVisible(window.document_stack, 10, 10),
+                document("notes"),
+            ),
+        ),
         (5100, lambda: document("plan")),
         (5800, lambda: route("code")),
         (6600, lambda: route("cards")),
@@ -145,8 +159,15 @@ def record_showcase(window, destination):
     assert len(fired) == len(actions) and len(frames) > 60
     boundaries = [round(value / 10) * 10 for value in timestamps] + [DURATION_MS]
     durations = [max(10, end - start) for start, end in zip(boundaries, boundaries[1:])]
-    frames[0].save(destination, save_all=True, append_images=frames[1:], duration=durations,
-                   loop=0, disposal=2, optimize=True)
+    frames[0].save(
+        destination,
+        save_all=True,
+        append_images=frames[1:],
+        duration=durations,
+        loop=0,
+        disposal=2,
+        optimize=True,
+    )
     with Image.open(destination) as encoded:
         assert encoded.size == SIZE and encoded.info["loop"] == 0
         total = 0
@@ -156,11 +177,19 @@ def record_showcase(window, destination):
             total += encoded.info["duration"]
         assert count > 20 and total == DURATION_MS
     intervals = [end - start for start, end in zip(timestamps, timestamps[1:])]
-    return {"path": str(destination), "dimensions": list(SIZE), "bytes": destination.stat().st_size,
-            "sampled_frames": len(frames), "encoded_frames": count, "duration_ms": total,
-            "mean_interval_ms": statistics.mean(intervals), "native_control_actions": len(fired),
-            "unavailable_compositor_frames_skipped": len(unavailable_compositor_frames),
-            "real_Qt_widget_grabs_only": True, "desktop_pointer_moved": False}
+    return {
+        "path": str(destination),
+        "dimensions": list(SIZE),
+        "bytes": destination.stat().st_size,
+        "sampled_frames": len(frames),
+        "encoded_frames": count,
+        "duration_ms": total,
+        "mean_interval_ms": statistics.mean(intervals),
+        "native_control_actions": len(fired),
+        "unavailable_compositor_frames_skipped": len(unavailable_compositor_frames),
+        "real_Qt_widget_grabs_only": True,
+        "desktop_pointer_moved": False,
+    }
 
 
 class _HiddenWindowMonitor(QtCore.QObject):
@@ -170,7 +199,9 @@ class _HiddenWindowMonitor(QtCore.QObject):
 
     def eventFilter(self, watched, event):
         if event.type() == QtCore.QEvent.Type.Show and isinstance(watched, QtWidgets.QWidget):
-            if watched.isWindow() and not watched.testAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen):
+            if watched.isWindow() and not watched.testAttribute(
+                QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen
+            ):
                 self.visible_roots.append(type(watched).__name__)
         return False
 
@@ -189,10 +220,14 @@ def main():
     app.setQuitOnLastWindowClosed(False)
     app.setFont(ui_font(14))
     app.setWindowIcon(QtGui.QIcon(str(BRAND_ICON)))
-    QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.Language.Chinese, QtCore.QLocale.Country.China))
+    QtCore.QLocale.setDefault(
+        QtCore.QLocale(QtCore.QLocale.Language.Chinese, QtCore.QLocale.Country.China)
+    )
     theme.set_mode("light")
     errors, warnings = [], []
-    sys.excepthook = lambda kind, error, tb: errors.append("".join(traceback.format_exception(kind, error, tb)))
+    sys.excepthook = lambda kind, error, tb: errors.append(
+        "".join(traceback.format_exception(kind, error, tb))
+    )
     QtCore.qInstallMessageHandler(lambda kind, context, message: warnings.append(message))
     monitor = _HiddenWindowMonitor()
     app.installEventFilter(monitor)
@@ -211,15 +246,27 @@ def main():
     window.close()
     window.deleteLater()
     app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
-    assert not errors and not warnings and not monitor.visible_roots, (errors, warnings, monitor.visible_roots)
+    assert not errors and not warnings and not monitor.visible_roots, (
+        errors,
+        warnings,
+        monitor.visible_roots,
+    )
     if args.copy_dir:
         args.copy_dir.mkdir(parents=True, exist_ok=True)
         for source in files:
             shutil.copy2(source, args.copy_dir / source.name)
-    report = {"poster": str(poster), "dimensions": list(SIZE), "animation": animation,
-              "theme": "light", "callback_errors": errors, "qt_messages": warnings,
-              "desktop_visible_roots": monitor.visible_roots}
-    (args.output_dir / "showcase-capture-validation.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    report = {
+        "poster": str(poster),
+        "dimensions": list(SIZE),
+        "animation": animation,
+        "theme": "light",
+        "callback_errors": errors,
+        "qt_messages": warnings,
+        "desktop_visible_roots": monitor.visible_roots,
+    }
+    (args.output_dir / "showcase-capture-validation.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0
 

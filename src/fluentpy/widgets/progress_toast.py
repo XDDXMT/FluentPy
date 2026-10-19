@@ -48,29 +48,46 @@ class _TaskIcon(QtWidgets.QWidget):
     def _draw(self, painter, state, opacity):
         painter.save()
         painter.setOpacity(opacity)
-        color = _state_color(state,self.severity)
+        color = _state_color(state, self.severity)
         if state == "running" and self.severity == "warning":
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(color)
-            painter.drawEllipse(QtCore.QRectF(2,2,16,16))
-            painter.setPen(QtGui.QPen(QtGui.QColor("#201900" if theme.mode.value=="dark" else "white"),1.4,QtCore.Qt.PenStyle.SolidLine,QtCore.Qt.PenCapStyle.RoundCap))
-            painter.drawLine(QtCore.QPointF(10,6),QtCore.QPointF(10,10.5))
-            painter.drawPoint(QtCore.QPointF(10,14))
+            painter.drawEllipse(QtCore.QRectF(2, 2, 16, 16))
+            painter.setPen(
+                QtGui.QPen(
+                    QtGui.QColor("#201900" if theme.mode.value == "dark" else "white"),
+                    1.4,
+                    QtCore.Qt.PenStyle.SolidLine,
+                    QtCore.Qt.PenCapStyle.RoundCap,
+                )
+            )
+            painter.drawLine(QtCore.QPointF(10, 6), QtCore.QPointF(10, 10.5))
+            painter.drawPoint(QtCore.QPointF(10, 14))
         elif state == "running":
             faint = QtGui.QColor(color)
             faint.setAlpha(40)
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.setPen(QtGui.QPen(faint, 2))
             painter.drawEllipse(QtCore.QRectF(3, 3, 14, 14))
-            painter.setPen(QtGui.QPen(color, 2, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
-            painter.drawArc(QtCore.QRectF(3, 3, 14, 14), round((90 - self.phase * 360) * 16), -105 * 16)
+            painter.setPen(
+                QtGui.QPen(color, 2, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
+            )
+            painter.drawArc(
+                QtCore.QRectF(3, 3, 14, 14), round((90 - self.phase * 360) * 16), -105 * 16
+            )
         else:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(color)
             painter.drawEllipse(QtCore.QRectF(1, 1, 18, 18))
-            painter.setPen(QtGui.QPen(QtGui.QColor("#142014" if theme.mode.value == "dark" else "white"),
-                                     1.6, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap,
-                                     QtCore.Qt.PenJoinStyle.RoundJoin))
+            painter.setPen(
+                QtGui.QPen(
+                    QtGui.QColor("#142014" if theme.mode.value == "dark" else "white"),
+                    1.6,
+                    QtCore.Qt.PenStyle.SolidLine,
+                    QtCore.Qt.PenCapStyle.RoundCap,
+                    QtCore.Qt.PenJoinStyle.RoundJoin,
+                )
+            )
             if state == "success":
                 path = QtGui.QPainterPath(QtCore.QPointF(5.5, 10))
                 path.lineTo(8.5, 13)
@@ -97,10 +114,19 @@ class ProgressToast(Toast):
     SHOW_DURATION = 340
     HIDE_DURATION = 220
 
-    def __init__(self, title: str, detail: str = "", parent=None, *, target=None, indeterminate=False, severity="info"):
-        if severity not in ("info","warning"):
+    def __init__(
+        self,
+        title: str,
+        detail: str = "",
+        parent=None,
+        *,
+        target=None,
+        indeterminate=False,
+        severity="info",
+    ):
+        if severity not in ("info", "warning"):
             raise ValueError("severity must be info or warning")
-        self._severity=severity
+        self._severity = severity
         self._width_override = None
         super().__init__(title, detail, parent, target=target)
         self._slide_distance = 20
@@ -112,7 +138,7 @@ class ProgressToast(Toast):
         self._hovering = False
         self._icon_mix = 1.0
         previous_icon = self._icon
-        self._icon = _TaskIcon(self,severity)
+        self._icon = _TaskIcon(self, severity)
         self.layout().replaceWidget(previous_icon, self._icon)
         previous_icon.hide()
         previous_icon.deleteLater()
@@ -140,17 +166,41 @@ class ProgressToast(Toast):
         self._state_motion.finished.connect(self._stop_completed_activity)
 
     @classmethod
-    def start(cls, title: str, *, detail: str = "", parent=None, placement="bottom-right", indeterminate=False, severity="info"):
+    def start(
+        cls,
+        title: str,
+        *,
+        detail: str = "",
+        parent=None,
+        placement="bottom-right",
+        indeterminate=False,
+        severity="info",
+    ):
         """Create and show an owned toast. Close it or report completion."""
         if placement not in cls.PLACEMENTS:
             raise ValueError(f"placement must be one of {cls.PLACEMENTS}")
-        toast = cls(title, detail, parent or QtWidgets.QApplication.activeWindow(), indeterminate=indeterminate, severity=severity)
+        toast = cls(
+            title,
+            detail,
+            parent or QtWidgets.QApplication.activeWindow(),
+            indeterminate=indeterminate,
+            severity=severity,
+        )
         toast.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
         toast.show_at(placement)
         return toast
 
     @classmethod
-    def success(cls, title: str, *, detail: str = "", placement="top-right", timeout_ms=2000, parent=None, target=None):
+    def success(
+        cls,
+        title: str,
+        *,
+        detail: str = "",
+        placement="top-right",
+        timeout_ms=2000,
+        parent=None,
+        target=None,
+    ):
         timeout_ms = _timeout_milliseconds(timeout_ms)
         if placement not in cls.PLACEMENTS:
             raise ValueError(f"placement must be one of {cls.PLACEMENTS}")
@@ -185,7 +235,7 @@ class ProgressToast(Toast):
             self.progressChanged.emit(value)
         self._animate_progress(value / 100)
 
-    def setProgress(self, value: float) -> None:  # noqa: N802
+    def setProgress(self, value: float) -> None:
         self.set_progress(value)
 
     def set_indeterminate(self, enabled: bool) -> None:
@@ -193,7 +243,7 @@ class ProgressToast(Toast):
             self._indeterminate = bool(enabled)
             self.update()
 
-    def setIndeterminate(self, enabled: bool) -> None:  # noqa: N802
+    def setIndeterminate(self, enabled: bool) -> None:
         self.set_indeterminate(enabled)
 
     def set_title(self, title: str) -> None:
@@ -285,8 +335,13 @@ class ProgressToast(Toast):
             self._activity.stop()
 
     def _start_timeout(self):
-        if (self._pending_timeout is not None and self.isVisible() and not self._closing
-                and not self._hovering and self._reveal.state() == QtCore.QAbstractAnimation.State.Stopped):
+        if (
+            self._pending_timeout is not None
+            and self.isVisible()
+            and not self._closing
+            and not self._hovering
+            and self._reveal.state() == QtCore.QAbstractAnimation.State.Stopped
+        ):
             self._timeout.start(self._pending_timeout)
             self._pending_timeout = None
 
@@ -305,7 +360,12 @@ class ProgressToast(Toast):
         self._pending_timeout = None
         self._hovering = False
         self._width_override = None
-        for animation in (self._activity, self._progress_motion, self._width_motion, self._state_motion):
+        for animation in (
+            self._activity,
+            self._progress_motion,
+            self._width_motion,
+            self._state_motion,
+        ):
             animation.stop()
         super().hideEvent(event)
 
@@ -342,8 +402,13 @@ class ProgressToast(Toast):
         painter.setClipPath(self._card_path())
         rect = self._card_rect()
         # Blend the accent into green/red while the status icon crossfades.
-        source, target = _state_color("running",self._severity), _state_color(self._state,self._severity)
-        color = QtGui.QColor.fromRgbF(*(a + (b-a) * self._icon_mix for a, b in zip(source.getRgbF(), target.getRgbF())))
+        source, target = (
+            _state_color("running", self._severity),
+            _state_color(self._state, self._severity),
+        )
+        color = QtGui.QColor.fromRgbF(
+            *(a + (b - a) * self._icon_mix for a, b in zip(source.getRgbF(), target.getRgbF()))
+        )
         track = QtGui.QColor(color)
         track.setAlpha(30 if theme.mode.value == "light" else 45)
         bar = QtCore.QRectF(rect.left(), rect.bottom() - 3, rect.width(), 3)
@@ -356,4 +421,9 @@ class ProgressToast(Toast):
             x = bar.left() + (bar.width() - width) * position
             painter.fillRect(QtCore.QRectF(x, bar.top(), width, bar.height()), color)
         else:
-            painter.fillRect(QtCore.QRectF(bar.left(), bar.top(), bar.width() * self._display_value, bar.height()), color)
+            painter.fillRect(
+                QtCore.QRectF(
+                    bar.left(), bar.top(), bar.width() * self._display_value, bar.height()
+                ),
+                color,
+            )

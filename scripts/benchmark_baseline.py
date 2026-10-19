@@ -13,7 +13,6 @@ import hashlib
 import io
 import json
 import os
-from pathlib import Path
 import platform
 import pstats
 import statistics
@@ -21,7 +20,7 @@ import subprocess
 import sys
 import time
 import types
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "benchmarks" / "baseline-original-source.json"
@@ -78,8 +77,10 @@ def original_modules():
     sys.path.insert(0, str(ROOT / "src"))
     # Bypass the evolving top-level exports; only frozen widget sources and
     # their unchanged Qt/theme/scrollbar dependencies participate in baseline.
-    for name, path in (("fluentpy", ROOT / "src" / "fluentpy"),
-                       ("fluentpy.widgets", ROOT / "src" / "fluentpy" / "widgets")):
+    for name, path in (
+        ("fluentpy", ROOT / "src" / "fluentpy"),
+        ("fluentpy.widgets", ROOT / "src" / "fluentpy" / "widgets"),
+    ):
         if name not in sys.modules:
             package = types.ModuleType(name)
             package.__path__ = [str(path)]
@@ -109,12 +110,14 @@ def original_spans(text: str, pattern):
         for match in pattern.finditer(line):
             token = match.group()
             if token.startswith('"'):
-                kind = "key" if line[match.end():].lstrip().startswith(":") else "string"
+                kind = "key" if line[match.end() :].lstrip().startswith(":") else "string"
             elif token in ("true", "false", "null"):
                 kind = "literal"
             else:
                 kind = "number"
-            spans.append((offsets[match.start()], offsets[match.end()] - offsets[match.start()], kind))
+            spans.append(
+                (offsets[match.start()], offsets[match.end()] - offsets[match.start()], kind)
+            )
         result.append(spans)
     return result
 
@@ -129,7 +132,7 @@ def worker(case: str, lines: int, do_profile: bool) -> dict:
     os.environ["FLUENTPY_BACKEND"] = "python"
     modules = original_modules()
     from fluentpy.qt import QT_API, QtCore, QtGui, QtWidgets
-    from fluentpy.theme import theme, ThemeMode
+    from fluentpy.theme import ThemeMode, theme
 
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     theme.set_mode(ThemeMode.LIGHT)
@@ -193,13 +196,15 @@ def worker(case: str, lines: int, do_profile: bool) -> dict:
     if profile:
         profile.disable()
         result["profile"] = profile_summary(profile)
-    result.update({
-        "set_text_ms": (after_set - start) * 1000,
-        "deferred_events_ms": (after_events - after_set) * 1000,
-        "first_render_ms": (after_render - after_events) * 1000,
-        "load_events_render_ms": (after_render - start) * 1000,
-        "window": "960x640; WA_DontShowOnScreen; native Qt platform",
-    })
+    result.update(
+        {
+            "set_text_ms": (after_set - start) * 1000,
+            "deferred_events_ms": (after_events - after_set) * 1000,
+            "first_render_ms": (after_render - after_events) * 1000,
+            "load_events_render_ms": (after_render - start) * 1000,
+            "window": "960x640; WA_DontShowOnScreen; native Qt platform",
+        }
+    )
     actual = widget.text() if case.startswith("line-") else area.toPlainText()
     result["preserved_exact_text"] = actual == text
     result["actual_utf16_units"] = len(actual.encode("utf-16-le")) // 2
@@ -215,7 +220,9 @@ def worker(case: str, lines: int, do_profile: bool) -> dict:
             block = block.next()
         result["format_ranges"] = formatted
         result["formatted_blocks_checked"] = blocks
-        result["complete_highlighting"] = formatted == sum(map(len, original_spans(text, modules["code_edit"]._JsonHighlighter._tokens)))
+        result["complete_highlighting"] = formatted == sum(
+            map(len, original_spans(text, modules["code_edit"]._JsonHighlighter._tokens))
+        )
     if not case.startswith("line-"):
         scroll = area.verticalScrollBar()
         maximum = scroll.maximum()
@@ -236,13 +243,33 @@ def run(args):
     for lines in args.lines:
         for case in cases:
             for repetition in range(args.repeat):
-                command = [sys.executable, "-B", __file__, "--worker", case, "--worker-lines", str(lines)]
+                command = [
+                    sys.executable,
+                    "-B",
+                    __file__,
+                    "--worker",
+                    case,
+                    "--worker-lines",
+                    str(lines),
+                ]
                 env = dict(os.environ, FLUENTPY_BACKEND="python")
                 env.pop("QT_QPA_PLATFORM", None)
                 try:
-                    proc = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", env=env, timeout=args.timeout)
+                    proc = subprocess.run(
+                        command,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        env=env,
+                        timeout=args.timeout,
+                    )
                     if proc.returncode:
-                        result = {"case": case, "lines": lines, "error": proc.stderr, "returncode": proc.returncode}
+                        result = {
+                            "case": case,
+                            "lines": lines,
+                            "error": proc.stderr,
+                            "returncode": proc.returncode,
+                        }
                     else:
                         result = json.loads(proc.stdout)
                         result["repetition"] = repetition
@@ -251,25 +278,65 @@ def run(args):
                 except subprocess.TimeoutExpired:
                     result = {"case": case, "lines": lines, "timeout_seconds": args.timeout}
                 results.append(result)
-                print(f"{lines} {case} {repetition + 1}/{args.repeat}: " + (f"{result.get('load_events_render_ms', result.get('tokenizer_ms', 0)):.2f} ms" if "dataset" in result else "FAILED/TIMEOUT"), flush=True)
+                print(
+                    f"{lines} {case} {repetition + 1}/{args.repeat}: "
+                    + (
+                        f"{result.get('load_events_render_ms', result.get('tokenizer_ms', 0)):.2f} ms"
+                        if "dataset" in result
+                        else "FAILED/TIMEOUT"
+                    ),
+                    flush=True,
+                )
     summaries = []
     for lines in args.lines:
         for case in cases:
-            group = [r for r in results if r.get("case") == case and r.get("dataset", {}).get("lines") == lines]
+            group = [
+                r
+                for r in results
+                if r.get("case") == case and r.get("dataset", {}).get("lines") == lines
+            ]
             summary = {"lines": lines, "case": case, "successful_samples": len(group)}
-            for key in ("tokenizer_ms", "set_text_ms", "deferred_events_ms", "first_render_ms", "load_events_render_ms", "scroll_30_steps_ms", "scroll_30_step_mean_ms"):
+            for key in (
+                "tokenizer_ms",
+                "set_text_ms",
+                "deferred_events_ms",
+                "first_render_ms",
+                "load_events_render_ms",
+                "scroll_30_steps_ms",
+                "scroll_30_step_mean_ms",
+            ):
                 values = [r[key] for r in group if key in r]
                 if values:
                     summary[key] = statistics.median(values)
             summaries.append(summary)
     profiles = []
     for case in ("tokenizer", "code-json"):
-        command = [sys.executable, "-B", __file__, "--worker", case, "--worker-lines", "10000", "--profile"]
+        command = [
+            sys.executable,
+            "-B",
+            __file__,
+            "--worker",
+            case,
+            "--worker-lines",
+            "10000",
+            "--profile",
+        ]
         env = dict(os.environ, FLUENTPY_BACKEND="python")
         env.pop("QT_QPA_PLATFORM", None)
         try:
-            proc = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", env=env, timeout=args.timeout)
-            profiles.append(json.loads(proc.stdout) if proc.returncode == 0 else {"case": case, "error": proc.stderr})
+            proc = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                env=env,
+                timeout=args.timeout,
+            )
+            profiles.append(
+                json.loads(proc.stdout)
+                if proc.returncode == 0
+                else {"case": case, "error": proc.stderr}
+            )
         except subprocess.TimeoutExpired:
             profiles.append({"case": case, "timeout_seconds": args.timeout})
     report = {
@@ -306,9 +373,16 @@ if __name__ == "__main__":
     parser.add_argument("--lines", type=int, nargs="+", default=[1000, 10000])
     parser.add_argument("--repeat", type=int, default=3)
     parser.add_argument("--timeout", type=float, default=5)
-    parser.add_argument("--cases", default="tokenizer,plain-qt,text-edit,code-plain,code-json,line-default,line-full")
+    parser.add_argument(
+        "--cases",
+        default="tokenizer,plain-qt,text-edit,code-plain,code-json,line-default,line-full",
+    )
     options = parser.parse_args()
     if options.worker:
-        print(json.dumps(worker(options.worker, options.worker_lines, options.profile), ensure_ascii=False))
+        print(
+            json.dumps(
+                worker(options.worker, options.worker_lines, options.profile), ensure_ascii=False
+            )
+        )
     else:
         run(options)

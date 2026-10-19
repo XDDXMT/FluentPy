@@ -1,5 +1,5 @@
 include LICENSE THIRD_PARTY_NOTICES.md README.md README-PyPI.md pyproject.toml setup.py
-include .editorconfig .gitattributes
+include .editorconfig .gitattributes .clang-format CONTRIBUTING.md
 recursive-include src *.py *.svg
 recursive-include native *.c *.h
 recursive-include scripts *.py *.ps1 *.bat

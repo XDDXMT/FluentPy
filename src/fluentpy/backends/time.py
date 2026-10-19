@@ -5,7 +5,13 @@ from importlib import import_module
 from . import _time_python
 from ._compat import select_backend
 
-_METHODS = ("time_validate_time", "time_display_time", "time_from_display", "time_step_time", "time_column_values")
+_METHODS = (
+    "time_validate_time",
+    "time_display_time",
+    "time_from_display",
+    "time_step_time",
+    "time_column_values",
+)
 try:
     _extension = import_module(f"{__package__.rpartition('.')[0]}._native")
 except (ImportError, OSError) as error:
@@ -48,13 +54,17 @@ def from_display(hour: int, minute: int, period: int) -> tuple[int, int]:
     return _time_python.from_display(hour, minute, period)
 
 
-def step_time(hour: int, minute: int, column: int, steps: int, use_12_hour: bool = False) -> tuple[int, int]:
+def step_time(
+    hour: int, minute: int, column: int, steps: int, use_12_hour: bool = False
+) -> tuple[int, int]:
     if backend_name() == "native":
         return _extension.time_step_time(hour, minute, column, steps, use_12_hour)
     return _time_python.step_time(hour, minute, column, steps, use_12_hour)
 
 
-def column_values(hour: int, minute: int, column: int, radius: int = 4, use_12_hour: bool = False) -> tuple[int | None, ...]:
+def column_values(
+    hour: int, minute: int, column: int, radius: int = 4, use_12_hour: bool = False
+) -> tuple[int | None, ...]:
     if backend_name() == "native":
         return _extension.time_column_values(hour, minute, column, radius, use_12_hour)
     return _time_python.column_values(hour, minute, column, radius, use_12_hour)

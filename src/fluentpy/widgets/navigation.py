@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import weakref
+from dataclasses import dataclass
 
 from ..qt import QtCore, QtGui, QtWidgets, Signal, Slot
 from ..theme import theme
@@ -205,7 +205,9 @@ class NavigationReturnButton(NavigationItem):
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         color = QtGui.QColor(theme.tokens.text)
-        painter.setPen(QtGui.QPen(color, 1.45, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
+        painter.setPen(
+            QtGui.QPen(color, 1.45, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
+        )
         center_y = self.height() / 2
         painter.drawLine(QtCore.QLineF(24, center_y - 6, 17, center_y))
         painter.drawLine(QtCore.QLineF(17, center_y, 24, center_y + 6))
@@ -298,8 +300,12 @@ class NavigationSidebar(QtWidgets.QFrame):
         self.scroll_area.setMinimumHeight(0)
         self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll_area.setVerticalScrollBar(FluentScrollBar(parent=self.scroll_area))
-        self.scroll_area.setHorizontalScrollBar(FluentScrollBar(QtCore.Qt.Orientation.Horizontal, self.scroll_area))
-        self.scroll_area.setStyleSheet("QScrollArea#navigationScroll, QScrollArea#navigationScroll > QWidget { background: transparent; border: none; }")
+        self.scroll_area.setHorizontalScrollBar(
+            FluentScrollBar(QtCore.Qt.Orientation.Horizontal, self.scroll_area)
+        )
+        self.scroll_area.setStyleSheet(
+            "QScrollArea#navigationScroll, QScrollArea#navigationScroll > QWidget { background: transparent; border: none; }"
+        )
         self.scroll_area.viewport().setAutoFillBackground(False)
         self.scroll_widget = _SidebarSurface(self)
         self.scroll_widget.setAutoFillBackground(False)
@@ -343,7 +349,9 @@ class NavigationSidebar(QtWidgets.QFrame):
         self._empty_label = QtWidgets.QLabel("没有匹配的项目", self.scroll_widget)
         self._empty_label.setWordWrap(True)
         self._empty_label.setContentsMargins(8, 8, 8, 8)
-        self._empty_label.setSizePolicy(QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred)
+        self._empty_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred
+        )
         self._empty_label.hide()
         self._top_layout.addWidget(self._empty_label)
         self._refresh_sidebar_theme()
@@ -377,8 +385,16 @@ class NavigationSidebar(QtWidgets.QFrame):
     def _set_custom_widget(self, zone, widget):
         if widget is not None and not isinstance(widget, QtWidgets.QWidget):
             raise TypeError("widget must be a QWidget or None")
-        internal = (self, self.header_widget, self.footer_widget, self.scroll_widget,
-                    self.scroll_area, self._header_slot, self._footer_slot, *self._widgets)
+        internal = (
+            self,
+            self.header_widget,
+            self.footer_widget,
+            self.scroll_widget,
+            self.scroll_area,
+            self._header_slot,
+            self._footer_slot,
+            *self._widgets,
+        )
         if widget is not None and (widget in internal or widget.isAncestorOf(self)):
             raise ValueError("custom content cannot be a structural sidebar widget or an ancestor")
         other = self._footer_content if zone == "header" else self._header_content
@@ -390,7 +406,9 @@ class NavigationSidebar(QtWidgets.QFrame):
             return
         slot = getattr(self, f"_{zone}_slot")
         layout = getattr(self, f"_{zone}_slot_layout")
-        destroyed = self._header_content_destroyed if zone == "header" else self._footer_content_destroyed
+        destroyed = (
+            self._header_content_destroyed if zone == "header" else self._footer_content_destroyed
+        )
         if old is not None:
             old.destroyed.disconnect(destroyed)
             layout.removeWidget(old)
@@ -430,7 +448,9 @@ class NavigationSidebar(QtWidgets.QFrame):
         shown = 0
         for index, item in enumerate(self._items):
             middle = item.parentWidget() is self.scroll_widget
-            display = self._item_visibility[index] and (not middle or query in item.text().casefold())
+            display = self._item_visibility[index] and (
+                not middle or query in item.text().casefold()
+            )
             item.setVisible(display)
             shown += int(middle and display)
         for widget in self._widgets:
@@ -442,13 +462,21 @@ class NavigationSidebar(QtWidgets.QFrame):
 
     def _refresh_sidebar_theme(self):
         self._empty_label.setFont(ui_font(theme.tokens.font_size - 1))
-        self._empty_label.setStyleSheet(f"color: {theme.tokens.text_muted}; background: transparent;")
+        self._empty_label.setStyleSheet(
+            f"color: {theme.tokens.text_muted}; background: transparent;"
+        )
         self._update_surface_regions()
 
     def _update_surface_regions(self, *_arguments):
         self.update()
-        for surface in (self.header_widget, self._header_slot, self.scroll_area.viewport(),
-                        self.scroll_widget, self.footer_widget, self._footer_slot):
+        for surface in (
+            self.header_widget,
+            self._header_slot,
+            self.scroll_area.viewport(),
+            self.scroll_widget,
+            self.footer_widget,
+            self._footer_slot,
+        ):
             surface.update()
 
     setHeaderWidget = set_header_widget
@@ -492,7 +520,9 @@ class NavigationSidebar(QtWidgets.QFrame):
         self._layout.invalidate()
         self._layout.activate()
         if not self.is_item_visible(self._current_index):
-            replacement = next((i for i, enabled in enumerate(self._item_visibility) if enabled), -1)
+            replacement = next(
+                (i for i, enabled in enumerate(self._item_visibility) if enabled), -1
+            )
             if replacement >= 0:
                 self.set_current_index(replacement, animated=False)
             else:
@@ -538,12 +568,16 @@ class NavigationSidebar(QtWidgets.QFrame):
     def _paint_sidebar_surface(self, painter, surface):
         tokens = theme.tokens
         window = self.window()
-        paint_shell = getattr(window, '_paint_shell_surface', None)
+        paint_shell = getattr(window, "_paint_shell_surface", None)
         if callable(paint_shell):
             paint_shell(painter, surface)
             return
         resolver = getattr(window, "_resolved_background_color", None)
-        base = resolver() if callable(resolver) else window.palette().color(QtGui.QPalette.ColorRole.Window)
+        base = (
+            resolver()
+            if callable(resolver)
+            else window.palette().color(QtGui.QPalette.ColorRole.Window)
+        )
         # Windows' scroll viewport may paint its explicit Window palette even
         # with auto-fill disabled and a transparent stylesheet. Paint each
         # structural region opaquely, using the same absolute sidebar gradient.
@@ -572,15 +606,26 @@ class NavigationSidebar(QtWidgets.QFrame):
             painter.setBrush(tint)
             painter.drawRect(rect)
 
-        divider = QtGui.QColor(0, 0, 0, 15) if tokens.mode.value == "light" else QtGui.QColor(255, 255, 255, 18)
+        divider = (
+            QtGui.QColor(0, 0, 0, 15)
+            if tokens.mode.value == "light"
+            else QtGui.QColor(255, 255, 255, 18)
+        )
         painter.setPen(QtGui.QPen(divider, 1))
         painter.drawLine(QtCore.QLineF(rect.right() - 0.5, 0, rect.right() - 0.5, rect.bottom()))
 
     def _sync_shell_material(self):
-        resolver = getattr(self.window(), 'backdrop_applied', None)
+        resolver = getattr(self.window(), "backdrop_applied", None)
         transparent = bool(resolver()) if callable(resolver) else False
-        for surface in (self, self.header_widget, self._header_slot, self.scroll_area.viewport(),
-                        self.scroll_widget, self.footer_widget, self._footer_slot):
+        for surface in (
+            self,
+            self.header_widget,
+            self._header_slot,
+            self.scroll_area.viewport(),
+            self.scroll_widget,
+            self.footer_widget,
+            self._footer_slot,
+        ):
             surface.setAttribute(QtCore.Qt.WidgetAttribute.WA_OpaquePaintEvent, not transparent)
             surface.setAutoFillBackground(False)
             surface.update()
@@ -600,7 +645,10 @@ class NavigationSidebar(QtWidgets.QFrame):
 
     def eventFilter(self, obj, event):
         if event.type() in (QtCore.QEvent.Type.Resize, QtCore.QEvent.Type.LayoutRequest):
-            if hasattr(self, "scroll_widget") and obj in (self.scroll_widget, self.scroll_area.viewport()):
+            if hasattr(self, "scroll_widget") and obj in (
+                self.scroll_widget,
+                self.scroll_area.viewport(),
+            ):
                 self._sync_item_widths()
                 self._refresh_indicator()
         return super().eventFilter(obj, event)
@@ -631,7 +679,9 @@ class NavigationSidebar(QtWidgets.QFrame):
     def _remove_item(self, index: int) -> NavigationItem:
         """Remove a row while preserving the remaining rows' identities."""
         self._indicator_animation.stop()
-        previous = self._items[self._current_index] if self.is_item_visible(self._current_index) else None
+        previous = (
+            self._items[self._current_index] if self.is_item_visible(self._current_index) else None
+        )
         item = self._items.pop(index)
         self._item_visibility.pop(index)
         self._widgets.remove(item)
@@ -689,12 +739,19 @@ class NavigationSidebar(QtWidgets.QFrame):
         width = max(40, self.width() - 8)
         # In a compact rail a 16px scrollbar would consume the icon's hit area.
         # QScrollArea continues to process wheel scrolling with its bar hidden.
-        policy = (QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded if self._expanded and self.width() >= 64
-                  else QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        policy = (
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            if self._expanded and self.width() >= 64
+            else QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
         if self.scroll_area.verticalScrollBarPolicy() != policy:
             self.scroll_area.setVerticalScrollBarPolicy(policy)
         for widget in self._widgets:
-            row_width = max(1, self.scroll_area.viewport().width() - 8) if widget.parentWidget() is self.scroll_widget else width
+            row_width = (
+                max(1, self.scroll_area.viewport().width() - 8)
+                if widget.parentWidget() is self.scroll_widget
+                else width
+            )
             if widget.width() != row_width:
                 widget.setFixedWidth(row_width)
 
@@ -704,9 +761,18 @@ class NavigationSidebar(QtWidgets.QFrame):
             if hasattr(widget, "setCompacted"):
                 widget.setCompacted(compacted)  # type: ignore[attr-defined]
         for zone in ("header", "footer"):
-            getattr(self, f"_{zone}_slot").setVisible(self._expanded and getattr(self, f"_{zone}_content") is not None)
-        self._empty_label.setVisible(self._expanded and bool(self._filter_text.strip()) and not any(
-            not item.isHidden() for item in self._items if item.parentWidget() is self.scroll_widget))
+            getattr(self, f"_{zone}_slot").setVisible(
+                self._expanded and getattr(self, f"_{zone}_content") is not None
+            )
+        self._empty_label.setVisible(
+            self._expanded
+            and bool(self._filter_text.strip())
+            and not any(
+                not item.isHidden()
+                for item in self._items
+                if item.parentWidget() is self.scroll_widget
+            )
+        )
         self._sync_item_widths()
         self._refresh_indicator()
 
@@ -772,10 +838,10 @@ class AnimatedStackedWidget(QtWidgets.QStackedWidget):
         if self._duration == 0:
             self._clear_transition()
 
-    def setCurrentIndex(self, index: int) -> None:  # noqa: N802 - Qt API
+    def setCurrentIndex(self, index: int) -> None:
         self.setCurrentIndexAnimated(index)
 
-    def setCurrentWidget(self, widget: QtWidgets.QWidget) -> None:  # noqa: N802 - Qt API
+    def setCurrentWidget(self, widget: QtWidgets.QWidget) -> None:
         self.setCurrentIndexAnimated(self.indexOf(widget))
 
     def setCurrentIndexAnimated(self, index: int) -> None:
@@ -810,7 +876,9 @@ class AnimatedStackedWidget(QtWidgets.QStackedWidget):
         self._transition_widget = new_widget
         self._transition_effect = effect
         self._transition_origin = self.contentsRect().topLeft()
-        self._transition_destroy_connection = new_widget.destroyed.connect(self._transition_page_destroyed)
+        self._transition_destroy_connection = new_widget.destroyed.connect(
+            self._transition_page_destroyed
+        )
         if effect is not None:
             effect.setOpacity(0.0)
         QtWidgets.QStackedWidget.setCurrentIndex(self, index)
@@ -842,7 +910,7 @@ class AnimatedStackedWidget(QtWidgets.QStackedWidget):
         self._animation = group
         group.start()
 
-    def removeWidget(self, widget: QtWidgets.QWidget) -> None:  # noqa: N802
+    def removeWidget(self, widget: QtWidgets.QWidget) -> None:
         if widget is self._transition_widget:
             self._clear_transition()
         super().removeWidget(widget)
@@ -860,7 +928,10 @@ class AnimatedStackedWidget(QtWidgets.QStackedWidget):
 
     def _stack_index_changed(self, _index: int) -> None:
         # NavigationView also supports direct, nonanimated Qt base calls.
-        if self._transition_widget is not None and self.currentWidget() is not self._transition_widget:
+        if (
+            self._transition_widget is not None
+            and self.currentWidget() is not self._transition_widget
+        ):
             self._clear_transition()
 
     def _stack_widget_removed(self, _index: int) -> None:
@@ -988,7 +1059,10 @@ class NavigationView(QtWidgets.QWidget):
 
         previous_route = self.current_route()
         widget.setObjectName(key)
-        add_item = {"header": self.sidebar.add_header_item, "bottom": self.sidebar.add_footer_item}.get(position, self.sidebar.add_item)
+        add_item = {
+            "header": self.sidebar.add_header_item,
+            "bottom": self.sidebar.add_footer_item,
+        }.get(position, self.sidebar.add_item)
         blocker = QtCore.QSignalBlocker(self.sidebar)
         item = add_item(icon, text)
         page = NavigationPage(key, widget, item)
@@ -1031,14 +1105,23 @@ class NavigationView(QtWidgets.QWidget):
     remove_sub_interface = remove_page
     removeSubInterface = remove_page
 
-    def _remove_page(self, route_key: str, *, delete: bool = False,
-                     stack_removed: bool = False, destroyed: bool = False) -> QtWidgets.QWidget | None:
+    def _remove_page(
+        self,
+        route_key: str,
+        *,
+        delete: bool = False,
+        stack_removed: bool = False,
+        destroyed: bool = False,
+    ) -> QtWidgets.QWidget | None:
         page = self._routes.get(route_key)
         if page is None:
             return None
         selected = self.sidebar._current_index
-        previous_route = (self._pages[selected].route_key
-                          if 0 <= selected < len(self._pages) and self.sidebar.is_item_visible(selected) else "")
+        previous_route = (
+            self._pages[selected].route_key
+            if 0 <= selected < len(self._pages) and self.sidebar.is_item_visible(selected)
+            else ""
+        )
         index = self._pages.index(page)
         self._pages.pop(index)
         self._routes.pop(route_key)
@@ -1077,8 +1160,11 @@ class NavigationView(QtWidgets.QWidget):
         present = tuple(self.stack.widget(i) for i in range(self.stack.count()))
         for page in tuple(self._pages):
             if not any(page.widget is widget for widget in present):
-                self._remove_page(page.route_key, stack_removed=True,
-                                  destroyed=page.route_key in self._destroyed_routes)
+                self._remove_page(
+                    page.route_key,
+                    stack_removed=True,
+                    destroyed=page.route_key in self._destroyed_routes,
+                )
 
     def addSubInterface(
         self,

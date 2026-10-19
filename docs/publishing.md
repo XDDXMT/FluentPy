@@ -8,7 +8,7 @@
 
 ```powershell
 python -m venv build/pypi-tools
-.\build\pypi-tools\Scripts\python.exe -m pip install build twine wheel "setuptools>=77"
+.\build\pypi-tools\Scripts\python.exe -m pip install build twine wheel "setuptools>=77" "ruff==0.17.1" "clang-format==23.1.3"
 ```
 
 构建通用 wheel 和源码包：
@@ -24,7 +24,7 @@ python scripts/fetch_zig.py
 .\build\pypi-tools\Scripts\python.exe -X utf8 -B scripts/prepare_release.py --native --zig .toolchains/zig-x86_64-windows-0.14.1/zig.exe
 ```
 
-文件写入 `dist/pypi/<版本>/`。两个 wheel 从同一个 sdist 的独立目录构建，避免本机 `.pyd` 混入通用包。脚本会检查包元数据并生成 SHA-256 清单，不会上传，也不会覆盖已有的发布目录。原生扩展的其他构建方式见[编译与打包](native-build.md)。
+构建前先执行 Python 与 C 格式和静态检查，失败时不会创建发布目录。文件写入 `dist/pypi/<版本>/`。两个 wheel 从同一个 sdist 的独立目录构建，避免本机 `.pyd` 混入通用包。脚本会检查包元数据并生成 SHA-256 清单，不会上传，也不会覆盖已有的发布目录。代码规范见[开发与贡献](../CONTRIBUTING.md)，原生扩展的其他构建方式见[编译与打包](native-build.md)。
 
 ## 发布与安装验证
 

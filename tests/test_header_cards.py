@@ -1,13 +1,22 @@
 """Composition, ownership and layout behavior of the titled cards."""
 
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import sys
 import unittest
 
-from fluentpy import Button, GroupHeaderCardWidget, HeaderCardWidget, LineEdit, SimpleCardWidget, theme
+from fluentpy import (
+    Button,
+    GroupHeaderCardWidget,
+    HeaderCardWidget,
+    LineEdit,
+    SimpleCardWidget,
+    theme,
+)
 from fluentpy.qt import QtCore, QtWidgets
+
 if "PySide6" in QtCore.__name__:
     from PySide6.QtTest import QTest
 else:
@@ -20,7 +29,11 @@ class _ConstructorWatch(QtCore.QObject):
         self.orphans = []
 
     def eventFilter(self, obj, event):
-        if isinstance(obj, QtWidgets.QLabel) and event.type() == QtCore.QEvent.Type.Show and obj.isWindow():
+        if (
+            isinstance(obj, QtWidgets.QLabel)
+            and event.type() == QtCore.QEvent.Type.Show
+            and obj.isWindow()
+        ):
             self.orphans.append(obj.text())
         return False
 

@@ -1,22 +1,27 @@
-"""Exercise the frozen app without a source checkout or installed Python."""
+"""Validate the frozen workbench and its bundled resources."""
+
 from __future__ import annotations
 
 import importlib
-from importlib import resources
 import json
-from pathlib import Path
 import sys
 import time
+from importlib import resources
+from pathlib import Path
 
 
 def main(destination: Path) -> int:
-    from fluentpy import __version__, FluentIcon, fluent_icon, theme
-    from fluentpy.qt import QtCore, QtWidgets
     from showcase import PAGES, Showcase
+
+    from fluentpy import FluentIcon, __version__, fluent_icon, theme
+    from fluentpy.qt import QtCore, QtWidgets
+
     destination.parent.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
-    modules = {name: importlib.import_module("fluentpy.backends." + name)
-               for name in ("text", "date", "time", "calendar", "drop", "shortcut", "color", "input")}
+    modules = {
+        name: importlib.import_module("fluentpy.backends." + name)
+        for name in ("text", "date", "time", "calendar", "drop", "shortcut", "color", "input")
+    }
     backends = {name: module.backend_name() for name, module in modules.items()}
     assert set(backends.values()) == {"native"}, backends
     assert modules["text"].json_spans('{"ok":true}')
@@ -30,14 +35,24 @@ def main(destination: Path) -> int:
     app = QtWidgets.QApplication([])
     app.setQuitOnLastWindowClosed(False)
     errors, frames, checked = [], [], []
+
     def exception(kind, value, tb):
         errors.append(str(value))
         app.exit(1)
+
     sys.excepthook = exception
     window = Showcase(restore_preferences=False)
     window.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
-    window.startup_splash.firstFramePainted.connect(lambda: frames.append({"initialized": window._initialized, "ms": round((time.perf_counter() - started) * 1000, 2)}))
+    window.startup_splash.firstFramePainted.connect(
+        lambda: frames.append(
+            {
+                "initialized": window._initialized,
+                "ms": round((time.perf_counter() - started) * 1000, 2),
+            }
+        )
+    )
     window.startupFailed.connect(lambda message: (errors.append(message), app.exit(1)))
+
     def verify():
         try:
             assert frames and frames[0]["initialized"] is False, frames
@@ -53,29 +68,58 @@ def main(destination: Path) -> int:
                     if route == "buttons":
                         examples = window.button_examples
                         examples.launch_split.menu().actions()[1].trigger()
-                        assert examples.launch_split.description() == '1.1 · 预览版'
+                        assert examples.launch_split.description() == "1.1 · 预览版"
                         examples.launch_split.main_button.click()
-                        assert '1.1 · 预览版' in examples.result.text()
-                        assert examples.launch_split.menu_button.height() == examples.launch_split.height()
+                        assert "1.1 · 预览版" in examples.result.text()
+                        assert (
+                            examples.launch_split.menu_button.height()
+                            == examples.launch_split.height()
+                        )
                     if route in ("overview", "tables", "settings"):
-                        assert window.grab().save(str(destination.parent / ("frozen-" + route + "-" + mode + ".png")))
+                        assert window.grab().save(
+                            str(destination.parent / ("frozen-" + route + "-" + mode + ".png"))
+                        )
             for icon in FluentIcon:
                 assert not fluent_icon(icon).pixmap(24, 24).isNull(), icon
             assert resources.files("fluentpy.assets").joinpath("brand/fluentpy.svg").is_file()
             from workbench_settings import _local_declarations
+
             assert "暂不可用" not in _local_declarations()
             assert not errors, errors
-            destination.write_text(json.dumps({"version": __version__, "frozen": bool(getattr(sys, "frozen", False)), "executable": sys.executable, "backends": backends,
-                "startup_frames": frames, "checked_routes": checked, "icons": len(list(FluentIcon)), "errors": errors}, ensure_ascii=False, indent=2), encoding="utf-8")
+            destination.write_text(
+                json.dumps(
+                    {
+                        "version": __version__,
+                        "frozen": bool(getattr(sys, "frozen", False)),
+                        "executable": sys.executable,
+                        "backends": backends,
+                        "startup_frames": frames,
+                        "checked_routes": checked,
+                        "icons": len(list(FluentIcon)),
+                        "errors": errors,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
             window.close()
             app.exit(0)
         except Exception as error:
             errors.append(str(error))
-            destination.write_text(json.dumps({"errors": errors, "checked_routes": checked}, ensure_ascii=False, indent=2), encoding="utf-8")
+            destination.write_text(
+                json.dumps(
+                    {"errors": errors, "checked_routes": checked}, ensure_ascii=False, indent=2
+                ),
+                encoding="utf-8",
+            )
             window.close()
             app.exit(1)
+
     window.ready.connect(verify)
-    QtCore.QTimer.singleShot(60000, lambda: (errors.append("Frozen startup timed out"), app.exit(2)))
+    QtCore.QTimer.singleShot(
+        60000, lambda: (errors.append("Frozen startup timed out"), app.exit(2))
+    )
     window.show()
     result = app.exec()
     if result and not destination.exists():

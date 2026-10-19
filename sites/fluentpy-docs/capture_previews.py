@@ -1,20 +1,54 @@
 """Capture the library's own Qt widgets for static documentation previews."""
-import os
+
 import sys
 from pathlib import Path
 
 SITE = Path(__file__).resolve().parent
 from source_project import source_root
+
 ROOT = source_root()
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "examples"))
+from capture_introduction import create_code_summary, create_overview
+from capture_showcase import create_settled_showcase
 from code_editor import SAMPLE
 from date_picker import DatePickerDemo
-from capture_showcase import create_settled_showcase
-from capture_introduction import create_overview, create_code_summary
-from fluentpy import *
-from fluentpy.qt import QtCore, QtGui, QtWidgets
+
+from fluentpy import (
+    QT_API,
+    AccentButton,
+    Button,
+    Card,
+    CheckBox,
+    CodeEdit,
+    ComboBox,
+    EditableComboBox,
+    FluentIcon,
+    FramelessDialog,
+    LineEdit,
+    MaskedDialog,
+    NavigationView,
+    NoteEvent,
+    NoteTimeline,
+    OutlinedButton,
+    PasswordLineEdit,
+    Pivot,
+    ProgressBar,
+    RadioButton,
+    RoundButton,
+    SearchLineEdit,
+    Slider,
+    SpinBox,
+    TextButton,
+    TextEdit,
+    Toast,
+    ToggleSwitch,
+    fluent_icon,
+    theme,
+)
+from fluentpy.qt import QtCore, QtWidgets
 from fluentpy.theme.fonts import ui_font
+
 if QT_API == "PySide6":
     from PySide6.QtTest import QTest
 else:
@@ -35,7 +69,9 @@ def host(*widgets, width=420, height=138, vertical=False):
     root.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
     root.setObjectName("previewRoot")
     background = "#fafbfc" if theme.mode.value == "light" else "#1b1b1b"
-    root.setStyleSheet(f'QWidget#previewRoot {{ background: {background}; }} QLabel {{color: {theme.tokens.text}; background: transparent; font-family: "Segoe UI", "Microsoft YaHei UI"; font-size: 14px;}}')
+    root.setStyleSheet(
+        f'QWidget#previewRoot {{ background: {background}; }} QLabel {{color: {theme.tokens.text}; background: transparent; font-family: "Segoe UI", "Microsoft YaHei UI"; font-size: 14px;}}'
+    )
     layout = (QtWidgets.QVBoxLayout if vertical else QtWidgets.QHBoxLayout)(root)
     layout.setContentsMargins(20, 18, 20, 18)
     layout.setSpacing(16)
@@ -82,7 +118,10 @@ for mode in ("light",):
     save("textarea", host(edit, height=140))
 
     save("buttons", host(Button("稍后再说"), AccentButton("保存草稿")))
-    save("button-variants", host(TextButton("了解更多"), OutlinedButton("查看详情"), RoundButton("继续"), width=460))
+    save(
+        "button-variants",
+        host(TextButton("了解更多"), OutlinedButton("查看详情"), RoundButton("继续"), width=460),
+    )
     save("theme", host(AccentButton("保存草稿"), TextButton("了解更多")))
     check = CheckBox("保留上次的选择")
     check.setChecked(True)
@@ -109,12 +148,18 @@ for mode in ("light",):
     save("numbers", host(count, slider))
 
     navigation = NavigationView()
-    for key, text, icon in [("home", "首页", FluentIcon.HOME), ("notes", "灵感", FluentIcon.DOCUMENT_SAVE), ("settings", "设置", FluentIcon.SETTINGS)]:
+    for key, text, icon in [
+        ("home", "首页", FluentIcon.HOME),
+        ("notes", "灵感", FluentIcon.DOCUMENT_SAVE),
+        ("settings", "设置", FluentIcon.SETTINGS),
+    ]:
         navigation.add_sub_interface(QtWidgets.QLabel(text + "内容"), fluent_icon(icon), text, key)
     navigation.set_current_route("home", animated=False)
     navigation.sidebar.set_expanded_width(156)
     navigation.sidebar.set_expanded(True)
-    navigation.sidebar._width_animation.setCurrentTime(navigation.sidebar._width_animation.duration())
+    navigation.sidebar._width_animation.setCurrentTime(
+        navigation.sidebar._width_animation.duration()
+    )
     navigation.setFixedSize(430, 166)
     save("navigation", host(navigation, width=470, height=202))
     pivot = Pivot()
@@ -169,7 +214,11 @@ for mode in ("light",):
     editor.clearFocus()
     save("code-editor", editor)
     timeline = NoteTimeline()
-    timeline.set_notes([NoteEvent(i * .33, .25, 60 + (i % 7)) for i in range(24)] + [NoteEvent(i, .75, 48 + i % 4, 1) for i in range(8)], duration=8)
+    timeline.set_notes(
+        [NoteEvent(i * 0.33, 0.25, 60 + (i % 7)) for i in range(24)]
+        + [NoteEvent(i, 0.75, 48 + i % 4, 1) for i in range(8)],
+        duration=8,
+    )
     timeline.set_position(2.75)
     timeline.setFixedSize(440, 100)
     save("timeline", host(timeline, width=480, height=136))

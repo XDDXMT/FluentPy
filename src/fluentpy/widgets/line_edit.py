@@ -168,7 +168,9 @@ QLineEdit:disabled {{
         animation = QtCore.QVariantAnimation(self)
         animation.setDuration(theme.tokens.animation_ms)
         animation.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
-        animation.valueChanged.connect(lambda value, name=attr: self._set_state_value(name, float(value)))
+        animation.valueChanged.connect(
+            lambda value, name=attr: self._set_state_value(name, float(value))
+        )
         return animation
 
     def _animate_state(
@@ -200,10 +202,22 @@ class TextEdit(QtWidgets.QTextEdit):
 
     def _apply_theme(self) -> None:
         tokens = theme.tokens
-        bg = "rgba(255, 255, 255, 0.7)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.0605)"
-        hover = "rgba(249, 249, 249, 0.5)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.0837)"
-        border = "rgba(0, 0, 0, 0.073)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.053)"
-        lower = "rgba(0, 0, 0, 0.183)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.08)"
+        bg = (
+            "rgba(255, 255, 255, 0.7)"
+            if tokens.mode.value == "light"
+            else "rgba(255, 255, 255, 0.0605)"
+        )
+        hover = (
+            "rgba(249, 249, 249, 0.5)"
+            if tokens.mode.value == "light"
+            else "rgba(255, 255, 255, 0.0837)"
+        )
+        border = (
+            "rgba(0, 0, 0, 0.073)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.053)"
+        )
+        lower = (
+            "rgba(0, 0, 0, 0.183)" if tokens.mode.value == "light" else "rgba(255, 255, 255, 0.08)"
+        )
         self.setStyleSheet(
             f"""
 QTextEdit {{
@@ -231,9 +245,7 @@ RichTextEdit = TextEdit
 
 
 class SearchLineEdit(LineEdit):
-    def __init__(
-        self, placeholder: str = "", parent: QtWidgets.QWidget | None = None
-    ) -> None:
+    def __init__(self, placeholder: str = "", parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(placeholder, parent)
         self.set_leading_inset(34)
 
@@ -243,16 +255,20 @@ class SearchLineEdit(LineEdit):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         color = QtGui.QColor(theme.tokens.text_muted)
         color.setAlpha(210)
-        painter.setPen(QtGui.QPen(color, 1.45, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
+        painter.setPen(
+            QtGui.QPen(color, 1.45, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
+        )
         circle = QtCore.QRectF(13, self.height() / 2 - 5, 10, 10)
         painter.drawEllipse(circle)
-        painter.drawLine(QtCore.QLineF(circle.right() - 1.5, circle.bottom() - 1.5, circle.right() + 3, circle.bottom() + 3))
+        painter.drawLine(
+            QtCore.QLineF(
+                circle.right() - 1.5, circle.bottom() - 1.5, circle.right() + 3, circle.bottom() + 3
+            )
+        )
 
 
 class PasswordLineEdit(LineEdit):
-    def __init__(
-        self, placeholder: str = "", parent: QtWidgets.QWidget | None = None
-    ) -> None:
+    def __init__(self, placeholder: str = "", parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(placeholder, parent, show_clear_button=False)
         self._password_visible = False
         self.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
@@ -318,7 +334,9 @@ class SpinBox(QtWidgets.QSpinBox):
         button_w = 28
         half_h = max(14, self.height() // 2)
         self._up_button.setGeometry(self.width() - button_w - 2, 2, button_w, half_h - 2)
-        self._down_button.setGeometry(self.width() - button_w - 2, half_h, button_w, self.height() - half_h - 2)
+        self._down_button.setGeometry(
+            self.width() - button_w - 2, half_h, button_w, self.height() - half_h - 2
+        )
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         _paint_spin_box_chrome(self)
@@ -375,7 +393,9 @@ class DoubleSpinBox(QtWidgets.QDoubleSpinBox):
         button_w = 28
         half_h = max(14, self.height() // 2)
         self._up_button.setGeometry(self.width() - button_w - 2, 2, button_w, half_h - 2)
-        self._down_button.setGeometry(self.width() - button_w - 2, half_h, button_w, self.height() - half_h - 2)
+        self._down_button.setGeometry(
+            self.width() - button_w - 2, half_h, button_w, self.height() - half_h - 2
+        )
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         _paint_spin_box_chrome(self)
@@ -402,7 +422,9 @@ def _make_spin_animation(widget: QtWidgets.QAbstractSpinBox, attr: str) -> QtCor
     animation = QtCore.QVariantAnimation(widget)
     animation.setDuration(theme.tokens.animation_ms)
     animation.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
-    animation.valueChanged.connect(lambda value, target=widget, name=attr: _set_spin_state(target, name, float(value)))
+    animation.valueChanged.connect(
+        lambda value, target=widget, name=attr: _set_spin_state(target, name, float(value))
+    )
     return animation
 
 
@@ -538,14 +560,24 @@ class _SpinArrowButton(QtWidgets.QAbstractButton):
         rect = QtCore.QRectF(self.rect()).adjusted(4, 1, -4, -1)
 
         fill = QtGui.QColor("#000000" if theme.tokens.mode.value == "light" else "#ffffff")
-        fill.setAlpha(round((14 if theme.tokens.mode.value == "light" else 22) * self._hover_progress))
+        fill.setAlpha(
+            round((14 if theme.tokens.mode.value == "light" else 22) * self._hover_progress)
+        )
         if fill.alpha() > 0:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(fill)
             painter.drawRoundedRect(rect, 4, 4)
 
         color = QtGui.QColor("#5f6368" if theme.tokens.mode.value == "light" else "#f2f5fa")
-        painter.setPen(QtGui.QPen(color, 1.35, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap, QtCore.Qt.PenJoinStyle.RoundJoin))
+        painter.setPen(
+            QtGui.QPen(
+                color,
+                1.35,
+                QtCore.Qt.PenStyle.SolidLine,
+                QtCore.Qt.PenCapStyle.RoundCap,
+                QtCore.Qt.PenJoinStyle.RoundJoin,
+            )
+        )
         cx = self.width() / 2
         cy = self.height() / 2
         if self.direction == "up":
@@ -607,7 +639,9 @@ class _ClearButton(QtWidgets.QAbstractButton):
         fill = QtGui.QColor("#000000" if theme.tokens.mode.value == "light" else "#ffffff")
         hover_alpha = 18 if theme.tokens.mode.value == "light" else 26
         press_alpha = 28 if theme.tokens.mode.value == "light" else 38
-        fill.setAlpha(round(hover_alpha * self._hover_progress + press_alpha * self._press_progress))
+        fill.setAlpha(
+            round(hover_alpha * self._hover_progress + press_alpha * self._press_progress)
+        )
         if fill.alpha() > 0:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(fill)
@@ -616,7 +650,9 @@ class _ClearButton(QtWidgets.QAbstractButton):
         color = QtGui.QColor("#5f6368" if theme.tokens.mode.value == "light" else "#f2f5fa")
         if self._press_progress:
             color = _mix_color(color, QtGui.QColor(theme.tokens.text), self._press_progress)
-        painter.setPen(QtGui.QPen(color, 1.25, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
+        painter.setPen(
+            QtGui.QPen(color, 1.25, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
+        )
         icon = QtCore.QRectF(self.rect()).adjusted(8, 8, -8, -8)
         painter.drawLine(QtCore.QLineF(icon.topLeft(), icon.bottomRight()))
         painter.drawLine(QtCore.QLineF(icon.topRight(), icon.bottomLeft()))
@@ -625,7 +661,9 @@ class _ClearButton(QtWidgets.QAbstractButton):
         animation = QtCore.QVariantAnimation(self)
         animation.setDuration(theme.tokens.animation_ms)
         animation.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
-        animation.valueChanged.connect(lambda value, name=attr: self._set_state_value(name, float(value)))
+        animation.valueChanged.connect(
+            lambda value, name=attr: self._set_state_value(name, float(value))
+        )
         return animation
 
     def _animate(
@@ -653,14 +691,18 @@ class _RevealButton(_ClearButton):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         rect = QtCore.QRectF(self.rect()).adjusted(3, 3, -3, -3)
         fill = QtGui.QColor("#000000" if theme.tokens.mode.value == "light" else "#ffffff")
-        fill.setAlpha(round((18 if theme.tokens.mode.value == "light" else 26) * self._hover_progress))
+        fill.setAlpha(
+            round((18 if theme.tokens.mode.value == "light" else 26) * self._hover_progress)
+        )
         if fill.alpha() > 0:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
             painter.setBrush(fill)
             painter.drawRoundedRect(rect, 4, 4)
 
         color = QtGui.QColor("#5f6368" if theme.tokens.mode.value == "light" else "#f2f5fa")
-        painter.setPen(QtGui.QPen(color, 1.2, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
+        painter.setPen(
+            QtGui.QPen(color, 1.2, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
+        )
         eye = QtGui.QPainterPath()
         eye.moveTo(6, 12)
         eye.cubicTo(8, 8, 16, 8, 18, 12)

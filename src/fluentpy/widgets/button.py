@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from ..qt import QtCore, QtGui, QtWidgets
 from ..icons import FluentIcon, fluent_icon
+from ..qt import QtCore, QtGui, QtWidgets
 from ..theme import theme
 from ..theme.fonts import ui_font
 
@@ -69,7 +69,10 @@ class Button(QtWidgets.QPushButton):
         super().keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
-        if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter) and self._keyboard_activation:
+        if (
+            event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter)
+            and self._keyboard_activation
+        ):
             self._keyboard_activation = False
             self.setDown(False)
             self._animate_state(self._press_animation, self._press_progress, 0.0, 140)
@@ -82,8 +85,11 @@ class Button(QtWidgets.QPushButton):
         super().keyReleaseEvent(event)
 
     def focusInEvent(self, event):
-        self._keyboard_focus = event.reason() not in (QtCore.Qt.FocusReason.MouseFocusReason,
-            QtCore.Qt.FocusReason.ActiveWindowFocusReason, QtCore.Qt.FocusReason.PopupFocusReason)
+        self._keyboard_focus = event.reason() not in (
+            QtCore.Qt.FocusReason.MouseFocusReason,
+            QtCore.Qt.FocusReason.ActiveWindowFocusReason,
+            QtCore.Qt.FocusReason.PopupFocusReason,
+        )
         self.update()
         super().focusInEvent(event)
 
@@ -107,7 +113,11 @@ class Button(QtWidgets.QPushButton):
         super().hideEvent(event)
 
     def changeEvent(self, event):
-        if event.type() == QtCore.QEvent.Type.EnabledChange and hasattr(self, "_press_animation") and not self.isEnabled():
+        if (
+            event.type() == QtCore.QEvent.Type.EnabledChange
+            and hasattr(self, "_press_animation")
+            and not self.isEnabled()
+        ):
             self._reset_interaction()
         super().changeEvent(event)
 
@@ -116,10 +126,18 @@ class Button(QtWidgets.QPushButton):
 
     def _draw_focus_ring(self, painter, rect, *, accent=False):
         if self.hasFocus() and self._keyboard_focus and self.isEnabled():
-            color = QtGui.QColor("#ffffff" if theme.mode.value == "light" else "#101010") if accent else QtGui.QColor(theme.tokens.accent)
+            color = (
+                QtGui.QColor("#ffffff" if theme.mode.value == "light" else "#101010")
+                if accent
+                else QtGui.QColor(theme.tokens.accent)
+            )
             painter.setPen(QtGui.QPen(color, 1))
             painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
-            painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), max(2, self._radius(rect)-2), max(2, self._radius(rect)-2))
+            painter.drawRoundedRect(
+                rect.adjusted(2, 2, -2, -2),
+                max(2, self._radius(rect) - 2),
+                max(2, self._radius(rect) - 2),
+            )
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         del event
@@ -190,7 +208,9 @@ class Button(QtWidgets.QPushButton):
         pixmap.fill(QtCore.Qt.GlobalColor.transparent)
 
         icon_painter = QtGui.QPainter(pixmap)
-        (self.icon() if icon is None else icon).paint(icon_painter, QtCore.QRect(QtCore.QPoint(0, 0), rect.size()))
+        (self.icon() if icon is None else icon).paint(
+            icon_painter, QtCore.QRect(QtCore.QPoint(0, 0), rect.size())
+        )
         icon_painter.setCompositionMode(QtGui.QPainter.CompositionMode.CompositionMode_SourceIn)
         icon_painter.fillRect(pixmap.rect(), color)
         icon_painter.end()
@@ -254,7 +274,9 @@ class Button(QtWidgets.QPushButton):
         painter.drawPath(path)
 
         if self._kind != "outlined":
-            bottom = QtCore.QLineF(rect.left() + radius, rect.bottom(), rect.right() - radius, rect.bottom())
+            bottom = QtCore.QLineF(
+                rect.left() + radius, rect.bottom(), rect.right() - radius, rect.bottom()
+            )
             painter.setPen(QtGui.QPen(lower, 1))
             painter.drawLine(bottom)
 
@@ -275,7 +297,9 @@ class Button(QtWidgets.QPushButton):
         animation = QtCore.QVariantAnimation(self)
         animation.setDuration(theme.tokens.animation_ms)
         animation.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
-        animation.valueChanged.connect(lambda value, name=attr: self._set_state_value(name, float(value)))
+        animation.valueChanged.connect(
+            lambda value, name=attr: self._set_state_value(name, float(value))
+        )
         return animation
 
     def _animate_state(
@@ -401,7 +425,9 @@ class HyperlinkButton(TextButton):
         )
         self._draw_tinted_icon(painter, icon_rect, accent)
 
-        text_rect = QtCore.QRectF(icon_rect.right() + 8, rect.top(), content_rect.width() - 22, rect.height())
+        text_rect = QtCore.QRectF(
+            icon_rect.right() + 8, rect.top(), content_rect.width() - 22, rect.height()
+        )
         painter.setPen(accent)
         painter.drawText(text_rect, QtCore.Qt.AlignmentFlag.AlignVCenter, self.text())
         self._draw_focus_ring(painter, rect)
@@ -435,6 +461,20 @@ class IconButton(Button):
             self.setToolTip(tooltip)
 
 
+class AccentIconButton(AccentButton):
+    def __init__(self, icon, parent=None):
+        super().__init__("", parent)
+        self.setIcon(fluent_icon(icon) if isinstance(icon, FluentIcon) else icon)
+        self.setFixedSize(32, 32)
+
+
+class TransparentIconButton(TextButton):
+    def __init__(self, icon, parent=None):
+        super().__init__("", parent)
+        self.setIcon(fluent_icon(icon) if isinstance(icon, FluentIcon) else icon)
+        self.setFixedSize(32, 32)
+
+
 def _mix_color(start: QtGui.QColor, end: QtGui.QColor, progress: float) -> QtGui.QColor:
     progress = max(0.0, min(1.0, progress))
     return QtGui.QColor(
@@ -446,9 +486,5 @@ def _mix_color(start: QtGui.QColor, end: QtGui.QColor, progress: float) -> QtGui
 
 
 def _readable_on(color: QtGui.QColor) -> QtGui.QColor:
-    luminance = (
-        0.2126 * color.redF()
-        + 0.7152 * color.greenF()
-        + 0.0722 * color.blueF()
-    )
+    luminance = 0.2126 * color.redF() + 0.7152 * color.greenF() + 0.0722 * color.blueF()
     return QtGui.QColor("#000000" if luminance > 0.58 else "#ffffff")

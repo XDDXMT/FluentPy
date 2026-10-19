@@ -25,19 +25,25 @@ class _ThemeSubscription(QtCore.QObject):
     def refresh(self, _tokens: object) -> None:
         owner = self._owner_ref()
         if owner is not None:
-            if (isinstance(owner, QtWidgets.QWidget) and not owner.isVisible()
-                    and owner.window().property('fluentLazyThemeRefresh') is True):
+            if (
+                isinstance(owner, QtWidgets.QWidget)
+                and not owner.isVisible()
+                and owner.window().property("fluentLazyThemeRefresh") is True
+            ):
                 self._dirty = True
                 return
             self._dirty = False
             getattr(owner, self._method_name)()
 
     def eventFilter(self, watched, event):
-        reference = self.__dict__.get('_owner_ref')
-        if reference is None or not self.__dict__.get('_dirty', False):
+        reference = self.__dict__.get("_owner_ref")
+        if reference is None or not self.__dict__.get("_dirty", False):
             return False
-        if (event.type() == QtCore.QEvent.Type.Show
-                and not self._show_refreshing and watched is reference()):
+        if (
+            event.type() == QtCore.QEvent.Type.Show
+            and not self._show_refreshing
+            and watched is reference()
+        ):
             # Show is delivered before the first paint. Clear the flag before
             # invoking user code so a nested hide/show cannot repeat the work.
             self._dirty = False
@@ -111,9 +117,7 @@ class ThemeManager(QtCore.QObject):
             self.modeChanged.emit(tokens)
 
     def toggle(self) -> None:
-        self.set_mode(
-            ThemeMode.DARK if self._tokens.mode is ThemeMode.LIGHT else ThemeMode.LIGHT
-        )
+        self.set_mode(ThemeMode.DARK if self._tokens.mode is ThemeMode.LIGHT else ThemeMode.LIGHT)
 
     def set_accent(self, color: str | None) -> None:
         self.set_theme(accent=color)

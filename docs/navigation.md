@@ -14,9 +14,15 @@ search = SearchLineEdit("搜索导航")
 navigation.sidebar.set_header_widget(search)
 search.textChanged.connect(navigation.sidebar.set_filter_text)
 
-navigation.add_sub_interface(QtWidgets.QLabel("概览"), fluent_icon(FluentIcon.HOME), "概览", "overview", "header")
-navigation.add_sub_interface(QtWidgets.QLabel("项目"), fluent_icon(FluentIcon.FOLDER), "项目", "projects", "scroll")
-navigation.add_sub_interface(QtWidgets.QLabel("设置"), fluent_icon(FluentIcon.SETTINGS), "设置", "settings", "bottom")
+navigation.add_sub_interface(
+    QtWidgets.QLabel("概览"), fluent_icon(FluentIcon.HOME), "概览", "overview", "header"
+)
+navigation.add_sub_interface(
+    QtWidgets.QLabel("项目"), fluent_icon(FluentIcon.FOLDER), "项目", "projects", "scroll"
+)
+navigation.add_sub_interface(
+    QtWidgets.QLabel("设置"), fluent_icon(FluentIcon.SETTINGS), "设置", "settings", "bottom"
+)
 ```
 
 | 接口 | 行为 |

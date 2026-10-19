@@ -259,6 +259,8 @@ python -m pytest
 
 后续后端运算以C作为首选加速实现，并维护可用的Python兼容路径；Python同时保持公开接口、绑定和Qt界面逻辑。扩展缺失不能导致组件不可用，详见[后端选择与兼容回退](docs/backends.md)。
 
+目录职责、代码风格、注释和提交前检查见[开发与贡献](CONTRIBUTING.md)。
+
 欢迎通过 [Issues](https://github.com/XDDXMT/FluentPy/issues) 提交问题与建议。使用场景可参考 [FluentMelody](https://github.com/XDDXMT/FluentMelody)。
 
 ## 许可证与资源来源

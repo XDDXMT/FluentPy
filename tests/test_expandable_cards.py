@@ -1,6 +1,7 @@
 """Interaction, layout and ownership of animated expandable setting cards."""
 
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import sys
@@ -8,6 +9,7 @@ import unittest
 
 from fluentpy import AccordionWidget, Button, ExpandableCardWidget, LineEdit, theme
 from fluentpy.qt import QtCore, QtWidgets
+
 if "PySide6" in QtCore.__name__:
     from PySide6.QtTest import QTest
 else:
@@ -84,9 +86,11 @@ class ExpandableCardTests(unittest.TestCase):
         changed = []
         card.expandedChanged.connect(changed.append)
         card.header_button.setFocus()
-        for key, expanded in ((QtCore.Qt.Key.Key_Space, True),
-                              (QtCore.Qt.Key.Key_Return, False),
-                              (QtCore.Qt.Key.Key_Enter, True)):
+        for key, expanded in (
+            (QtCore.Qt.Key.Key_Space, True),
+            (QtCore.Qt.Key.Key_Return, False),
+            (QtCore.Qt.Key.Key_Enter, True),
+        ):
             QTest.keyClick(card.header_button, key)
             self.settle()
             self.assertEqual(card.isExpanded(), expanded)
@@ -227,7 +231,9 @@ class ExpandableCardTests(unittest.TestCase):
             card.toggle()
             theme.set_mode(mode)
             QTest.qWait(30)
-        self.assertEqual({id(widget) for widget in self.app.topLevelWidgets() if widget.isVisible()}, before)
+        self.assertEqual(
+            {id(widget) for widget in self.app.topLevelWidgets() if widget.isVisible()}, before
+        )
         group.deleteLater()
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         theme.set_mode("light")

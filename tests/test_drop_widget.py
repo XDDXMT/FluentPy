@@ -1,17 +1,19 @@
 """Real Qt drag/drop, browsing, async delivery, theme and destruction checks."""
 
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-from pathlib import Path
 import sys
 import tempfile
 import threading
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
-from fluentpy import DropArea, FileDropWidget, FolderDropWidget, theme
+from fluentpy import FileDropWidget, FolderDropWidget, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets
 from fluentpy.widgets import drop as widgets
+
 if "PySide6" in QtCore.__name__:
     from PySide6.QtTest import QTest
 else:
@@ -106,7 +108,9 @@ class DropWidgetTests(unittest.TestCase):
         second.mkdir()
         rejections = []
         view.pathsRejected.connect(rejections.append)
-        self.assertEqual(view.accept_paths([self.png, self.folder, second]), [self.canonical(self.folder)])
+        self.assertEqual(
+            view.accept_paths([self.png, self.folder, second]), [self.canonical(self.folder)]
+        )
         self.assertEqual([r for _p, r in rejections[0]], ["type", "multiple"])
         self.assertTrue(view.browse_files_button.isHidden())
         self.assertTrue(view.separator_label.isHidden())
@@ -139,19 +143,25 @@ class DropWidgetTests(unittest.TestCase):
             self.view.accept_paths(str(self.png))
 
     def test_native_dialog_actions_and_cancel_preserve_selection(self):
-        with patch.object(QtWidgets.QFileDialog, "getOpenFileNames", return_value=([str(self.png)], "")) as dialog:
+        with patch.object(
+            QtWidgets.QFileDialog, "getOpenFileNames", return_value=([str(self.png)], "")
+        ) as dialog:
             QTest.mouseClick(self.view.browse_files_button, QtCore.Qt.MouseButton.LeftButton)
             self.wait_done()
             self.assertIn("*.png", dialog.call_args.args[3])
         with patch.object(QtWidgets.QFileDialog, "getExistingDirectory", return_value=""):
             self.view.browse_folder()
         self.assertEqual(self.view.selected_paths(), [self.canonical(self.png)])
-        with patch.object(QtWidgets.QFileDialog, "getExistingDirectory", return_value=str(self.folder)):
+        with patch.object(
+            QtWidgets.QFileDialog, "getExistingDirectory", return_value=str(self.folder)
+        ):
             self.view.browse_folder()
             self.wait_done()
         self.assertEqual(self.view.selected_paths(), [self.canonical(self.folder)])
         self.view.set_multiple(False)
-        with patch.object(QtWidgets.QFileDialog, "getOpenFileName", return_value=(str(self.gif), "")) as dialog:
+        with patch.object(
+            QtWidgets.QFileDialog, "getOpenFileName", return_value=(str(self.gif), "")
+        ) as dialog:
             self.view.setFocus()
             QTest.keyClick(self.view, QtCore.Qt.Key.Key_Space)
             self.wait_done()
@@ -159,14 +169,28 @@ class DropWidgetTests(unittest.TestCase):
 
     def test_real_drag_drop_decodes_local_urls_and_forces_copy(self):
         mime = QtCore.QMimeData()
-        mime.setUrls([QtCore.QUrl.fromLocalFile(str(self.png)), QtCore.QUrl.fromLocalFile(str(self.txt))])
+        mime.setUrls(
+            [QtCore.QUrl.fromLocalFile(str(self.png)), QtCore.QUrl.fromLocalFile(str(self.txt))]
+        )
         actions = QtCore.Qt.DropAction.CopyAction | QtCore.Qt.DropAction.MoveAction
-        enter = QtGui.QDragEnterEvent(QtCore.QPoint(10, 10), actions, mime, QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.KeyboardModifier.NoModifier)
+        enter = QtGui.QDragEnterEvent(
+            QtCore.QPoint(10, 10),
+            actions,
+            mime,
+            QtCore.Qt.MouseButton.LeftButton,
+            QtCore.Qt.KeyboardModifier.NoModifier,
+        )
         self.app.sendEvent(self.view, enter)
         self.assertTrue(enter.isAccepted())
         self.assertEqual(enter.dropAction(), QtCore.Qt.DropAction.CopyAction)
         self.assertTrue(self.view._drag_active)
-        drop = QtGui.QDropEvent(QtCore.QPointF(10, 10), actions, mime, QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.KeyboardModifier.NoModifier)
+        drop = QtGui.QDropEvent(
+            QtCore.QPointF(10, 10),
+            actions,
+            mime,
+            QtCore.Qt.MouseButton.LeftButton,
+            QtCore.Qt.KeyboardModifier.NoModifier,
+        )
         self.app.sendEvent(self.view, drop)
         self.assertTrue(drop.isAccepted())
         self.assertEqual(drop.dropAction(), QtCore.Qt.DropAction.CopyAction)
@@ -175,22 +199,38 @@ class DropWidgetTests(unittest.TestCase):
         self.assertTrue(self.png.exists())
 
     def test_remote_text_and_move_only_drags_are_ignored(self):
-        for url, action in (("https://example.com/pic.png", QtCore.Qt.DropAction.CopyAction),
-                            (QtCore.QUrl.fromLocalFile(str(self.png)).toString(), QtCore.Qt.DropAction.MoveAction)):
+        for url, action in (
+            ("https://example.com/pic.png", QtCore.Qt.DropAction.CopyAction),
+            (QtCore.QUrl.fromLocalFile(str(self.png)).toString(), QtCore.Qt.DropAction.MoveAction),
+        ):
             mime = QtCore.QMimeData()
             mime.setUrls([QtCore.QUrl(url)])
-            event = QtGui.QDragEnterEvent(QtCore.QPoint(5, 5), action, mime, QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.KeyboardModifier.NoModifier)
+            event = QtGui.QDragEnterEvent(
+                QtCore.QPoint(5, 5),
+                action,
+                mime,
+                QtCore.Qt.MouseButton.LeftButton,
+                QtCore.Qt.KeyboardModifier.NoModifier,
+            )
             self.app.sendEvent(self.view, event)
             self.assertFalse(event.isAccepted())
         mime = QtCore.QMimeData()
         mime.setText(str(self.png))
-        event = QtGui.QDragEnterEvent(QtCore.QPoint(5, 5), QtCore.Qt.DropAction.CopyAction, mime, QtCore.Qt.MouseButton.LeftButton, QtCore.Qt.KeyboardModifier.NoModifier)
+        event = QtGui.QDragEnterEvent(
+            QtCore.QPoint(5, 5),
+            QtCore.Qt.DropAction.CopyAction,
+            mime,
+            QtCore.Qt.MouseButton.LeftButton,
+            QtCore.Qt.KeyboardModifier.NoModifier,
+        )
         self.app.sendEvent(self.view, event)
         self.assertFalse(event.isAccepted())
 
     def test_async_result_on_gui_thread_and_resets_busy(self):
         threads, busy = [], []
-        self.view.pathsSelected.connect(lambda _paths: threads.append(QtCore.QThread.currentThread()))
+        self.view.pathsSelected.connect(
+            lambda _paths: threads.append(QtCore.QThread.currentThread())
+        )
         self.view.busyChanged.connect(busy.append)
         self.view.submit_paths([self.png, self.gif])
         self.assertTrue(self.view.is_busy())
@@ -203,9 +243,11 @@ class DropWidgetTests(unittest.TestCase):
     def test_stale_worker_result_cannot_restore_cleared_selection(self):
         gate = threading.Event()
         original = widgets._candidates
+
         def slow(paths):
             gate.wait(1)
             return original(paths)
+
         with patch.object(widgets, "_candidates", side_effect=slow):
             self.view.submit_paths([self.png])
             self.view.clear()
@@ -218,10 +260,12 @@ class DropWidgetTests(unittest.TestCase):
     def test_newer_request_wins_even_if_older_request_finishes_last(self):
         gate = threading.Event()
         original = widgets._candidates
+
         def ordered(paths):
             if str(self.png) in paths:
                 gate.wait(2)
             return original(paths)
+
         selected = []
         self.view.pathsSelected.connect(selected.append)
         try:
@@ -250,7 +294,10 @@ class DropWidgetTests(unittest.TestCase):
 
     def test_missing_native_backend_fails_before_allocating_child_widgets(self):
         before = self.host.findChildren(QtWidgets.QWidget)
-        with patch.object(widgets.selection, "_extension", None), patch.dict(os.environ, {"FLUENTPY_BACKEND": "native"}):
+        with (
+            patch.object(widgets.selection, "_extension", None),
+            patch.dict(os.environ, {"FLUENTPY_BACKEND": "native"}),
+        ):
             with self.assertRaisesRegex(RuntimeError, "compiled.*drop backend"):
                 FileDropWidget(self.host)
         self.assertEqual(self.host.findChildren(QtWidgets.QWidget), before)

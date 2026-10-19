@@ -5,12 +5,13 @@ with familiar Windows caption glyphs; the Windows resize border, shadow and
 window movement remain operating-system behavior. The normal OS title bar is
 still available when the application does not enable this optional widget.
 """
+
 from __future__ import annotations
 
 import weakref
 
-from ..qt import QtCore, QtGui, QtWidgets
 from ..icons import FluentIcon, fluent_icon
+from ..qt import QtCore, QtGui, QtWidgets
 from ..theme import theme
 from ..theme.fonts import ui_font
 from .button import IconButton
@@ -55,10 +56,17 @@ class _CaptionButton(IconButton):
         elif role == "maximize":
             painter.drawRect(QtCore.QRectF(cx - 4.5, cy - 4.5, 9, 9))
         elif role == "restore":
-            painter.drawPolyline(QtGui.QPolygonF([
-                QtCore.QPointF(cx - 2.5, cy - 3.5), QtCore.QPointF(cx - 2.5, cy - 5.5),
-                QtCore.QPointF(cx + 5.5, cy - 5.5), QtCore.QPointF(cx + 5.5, cy + 2.5),
-                QtCore.QPointF(cx + 3.5, cy + 2.5)]))
+            painter.drawPolyline(
+                QtGui.QPolygonF(
+                    [
+                        QtCore.QPointF(cx - 2.5, cy - 3.5),
+                        QtCore.QPointF(cx - 2.5, cy - 5.5),
+                        QtCore.QPointF(cx + 5.5, cy - 5.5),
+                        QtCore.QPointF(cx + 5.5, cy + 2.5),
+                        QtCore.QPointF(cx + 3.5, cy + 2.5),
+                    ]
+                )
+            )
             painter.drawRect(QtCore.QRectF(cx - 5.5, cy - 3.5, 9, 9))
         else:
             painter.drawLine(QtCore.QLineF(cx - 4.5, cy - 4.5, cx + 4.5, cy + 4.5))
@@ -72,8 +80,9 @@ class _WindowTitle(QtWidgets.QLabel):
         super().__init__(parent)
         self._full_title = ""
         self.setMinimumWidth(0)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Ignored,
-                           QtWidgets.QSizePolicy.Policy.Preferred)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred
+        )
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
     def set_title(self, text):
@@ -83,8 +92,10 @@ class _WindowTitle(QtWidgets.QLabel):
 
     def _elide(self):
         text = self.fontMetrics().elidedText(
-            self._full_title, QtCore.Qt.TextElideMode.ElideRight,
-            max(0, self.contentsRect().width()))
+            self._full_title,
+            QtCore.Qt.TextElideMode.ElideRight,
+            max(0, self.contentsRect().width()),
+        )
         super().setText(text)
         self.setToolTip(self._full_title if text != self._full_title else "")
 
@@ -122,15 +133,18 @@ class FluentTitleBar(QtWidgets.QWidget):
         self._startup_splashes = {}
         self._startup_visibility = None
         super().setFixedHeight(self._bar_height)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
-                           QtWidgets.QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         self.setAccessibleName("窗口标题栏")
         self._layout = QtWidgets.QHBoxLayout(self)
         self._layout.setContentsMargins(4, 0, 0, 0)
         self._layout.setSpacing(4)
 
         self.back_button = _CaptionButton(fluent_icon(FluentIcon.ARROW_LEFT), self, tooltip="后退")
-        self.forward_button = _CaptionButton(fluent_icon(FluentIcon.ARROW_RIGHT), self, tooltip="前进")
+        self.forward_button = _CaptionButton(
+            fluent_icon(FluentIcon.ARROW_RIGHT), self, tooltip="前进"
+        )
         self.back_button.setFixedWidth(36)
         self.forward_button.setFixedWidth(36)
         self.back_button.clicked.connect(self._go_back)
@@ -147,8 +161,9 @@ class FluentTitleBar(QtWidgets.QWidget):
         self._layout.addWidget(self.title_label, 1)
         self._native_spacer = QtWidgets.QWidget(self)
         self._native_spacer.setObjectName("fluentTitleSpacer")
-        self._native_spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
-                                          QtWidgets.QSizePolicy.Policy.Fixed)
+        self._native_spacer.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         self._native_spacer.setFixedHeight(1)
         self._native_spacer.hide()
         self._layout.addWidget(self._native_spacer, 1)
@@ -168,11 +183,16 @@ class FluentTitleBar(QtWidgets.QWidget):
 
         style = self.style()
         self.minimize_button = _CaptionButton(
-            style.standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarMinButton), self, tooltip="最小化")
+            style.standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarMinButton),
+            self,
+            tooltip="最小化",
+        )
         self.maximize_button = _CaptionButton(
-            style.standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarMaxButton), self, tooltip="最大化")
-        self.close_button = _CaptionButton(
-            fluent_icon(FluentIcon.DISMISS), self, tooltip="关闭")
+            style.standardIcon(QtWidgets.QStyle.StandardPixmap.SP_TitleBarMaxButton),
+            self,
+            tooltip="最大化",
+        )
+        self.close_button = _CaptionButton(fluent_icon(FluentIcon.DISMISS), self, tooltip="关闭")
         self.minimize_button.caption_role = "minimize"
         self.maximize_button.caption_role = "maximize"
         self.close_button.caption_role = "close"
@@ -209,7 +229,13 @@ class FluentTitleBar(QtWidgets.QWidget):
         self._sync_button_heights()
 
     def _sync_button_heights(self):
-        for name in ("back_button", "forward_button", "minimize_button", "maximize_button", "close_button"):
+        for name in (
+            "back_button",
+            "forward_button",
+            "minimize_button",
+            "maximize_button",
+            "close_button",
+        ):
             button = getattr(self, name, None)
             if button is not None:
                 button.setFixedHeight(self._bar_height)
@@ -220,12 +246,15 @@ class FluentTitleBar(QtWidgets.QWidget):
     def double_click_enabled(self) -> bool:
         return self._double_click_enabled
 
-    def set_caption_buttons_visible(self, minimize: bool = True,
-                                    maximize: bool = True, close: bool = True) -> None:
+    def set_caption_buttons_visible(
+        self, minimize: bool = True, maximize: bool = True, close: bool = True
+    ) -> None:
         self._caption_visibility = (bool(minimize), bool(maximize), bool(close))
-        for button, visible in ((self.minimize_button, minimize),
-                                (self.maximize_button, maximize),
-                                (self.close_button, close)):
+        for button, visible in (
+            (self.minimize_button, minimize),
+            (self.maximize_button, maximize),
+            (self.close_button, close),
+        ):
             button.setVisible(bool(visible) and not self._native_caption)
         if self._native_caption:
             callback = getattr(self._owner, "_set_native_caption_visibility", None)
@@ -247,8 +276,10 @@ class FluentTitleBar(QtWidgets.QWidget):
         self.title_label.setVisible(not enabled)
         self._native_spacer.setVisible(enabled)
         self.icon_label.setVisible(not enabled and not self._owner.windowIcon().isNull())
-        for button, visible in zip((self.minimize_button, self.maximize_button, self.close_button),
-                                   self._caption_visibility):
+        for button, visible in zip(
+            (self.minimize_button, self.maximize_button, self.close_button),
+            self._caption_visibility,
+        ):
             button.setVisible(visible and not enabled)
         self.setAutoFillBackground(False)
         self._sync_startup_chrome()
@@ -256,8 +287,9 @@ class FluentTitleBar(QtWidgets.QWidget):
     def sync_navigation(self) -> None:
         """Refresh history availability after the owner changes its route."""
         for button, action_name, state_name in (
-                (self.back_button, "go_back", "can_go_back"),
-                (self.forward_button, "go_forward", "can_go_forward")):
+            (self.back_button, "go_back", "can_go_back"),
+            (self.forward_button, "go_forward", "can_go_forward"),
+        ):
             action = getattr(self._owner, action_name, None)
             state = getattr(self._owner, state_name, callable(action))
             button.setEnabled(callable(action) and bool(state() if callable(state) else state))
@@ -281,11 +313,15 @@ class FluentTitleBar(QtWidgets.QWidget):
         self._owner.close()
 
     def _toggle_maximized(self):
-        allowed = (self._caption_visibility[1] if self._native_caption
-                   else not self.maximize_button.isHidden())
+        allowed = (
+            self._caption_visibility[1]
+            if self._native_caption
+            else not self.maximize_button.isHidden()
+        )
         if self._native_caption:
-            allowed = allowed and bool(self._owner.windowFlags()
-                                       & QtCore.Qt.WindowType.WindowMaximizeButtonHint)
+            allowed = allowed and bool(
+                self._owner.windowFlags() & QtCore.Qt.WindowType.WindowMaximizeButtonHint
+            )
         if not allowed or not self.maximize_button.isEnabled():
             return
         if self._owner.isMaximized():
@@ -299,15 +335,24 @@ class FluentTitleBar(QtWidgets.QWidget):
 
     def _sync_icon(self, icon):
         self.icon_label.setPixmap(icon.pixmap(16, 16))
-        self.icon_label.setVisible(not self._native_caption and not self._startup_splashes and not icon.isNull())
+        self.icon_label.setVisible(
+            not self._native_caption and not self._startup_splashes and not icon.isNull()
+        )
 
     def _register_startup_splash(self, splash):
         token = id(splash)
         if token in self._startup_splashes:
             return
         if not self._startup_splashes:
-            names = ('back_button', 'forward_button', 'icon_label', 'title_label',
-                     '_content', '_actions', '_native_spacer')
+            names = (
+                "back_button",
+                "forward_button",
+                "icon_label",
+                "title_label",
+                "_content",
+                "_actions",
+                "_native_spacer",
+            )
             self._startup_visibility = {name: not getattr(self, name).isHidden() for name in names}
         self._startup_splashes[token] = weakref.ref(splash)
         splash.destroyed.connect(self._prune_startup_splashes)
@@ -325,7 +370,7 @@ class FluentTitleBar(QtWidgets.QWidget):
 
     def _prune_startup_splashes(self, *_):
         # A splash can be destroyed without an explicit finish/hide call.
-        if '_startup_splashes' not in self.__dict__:
+        if "_startup_splashes" not in self.__dict__:
             return
         for token, reference in tuple(self._startup_splashes.items()):
             splash = reference()
@@ -350,20 +395,32 @@ class FluentTitleBar(QtWidgets.QWidget):
 
     def _sync_startup_chrome(self):
         if self._startup_splashes:
-            for name in ('back_button', 'forward_button', 'icon_label', 'title_label', '_content', '_actions'):
+            for name in (
+                "back_button",
+                "forward_button",
+                "icon_label",
+                "title_label",
+                "_content",
+                "_actions",
+            ):
                 getattr(self, name).hide()
             self._native_spacer.show()
         elif self._startup_visibility is not None:
             previous, self._startup_visibility = self._startup_visibility, None
             for name, visible in previous.items():
                 getattr(self, name).setVisible(visible)
-            self.icon_label.setVisible(not self._native_caption and not self._owner.windowIcon().isNull())
+            self.icon_label.setVisible(
+                not self._native_caption and not self._owner.windowIcon().isNull()
+            )
 
     def _sync_window_state(self):
         maximized = self._owner.isMaximized()
         label = "还原" if maximized else "最大化"
-        pixmap = (QtWidgets.QStyle.StandardPixmap.SP_TitleBarNormalButton if maximized
-                  else QtWidgets.QStyle.StandardPixmap.SP_TitleBarMaxButton)
+        pixmap = (
+            QtWidgets.QStyle.StandardPixmap.SP_TitleBarNormalButton
+            if maximized
+            else QtWidgets.QStyle.StandardPixmap.SP_TitleBarMaxButton
+        )
         self.maximize_button.setIcon(self.style().standardIcon(pixmap))
         self.maximize_button.caption_role = "restore" if maximized else "maximize"
         self.maximize_button.setToolTip(label)
@@ -403,7 +460,13 @@ class FluentTitleBar(QtWidgets.QWidget):
             "QWidget#fluentTitleContent,QWidget#fluentTitleActions,QWidget#fluentTitleSpacer"
             " {background:transparent;border:none;}"
         )
-        for name in ("back_button", "forward_button", "minimize_button", "maximize_button", "close_button"):
+        for name in (
+            "back_button",
+            "forward_button",
+            "minimize_button",
+            "maximize_button",
+            "close_button",
+        ):
             button = getattr(self, name, None)
             if button is not None:
                 button.setStyleSheet("background:transparent;border:none;")
@@ -419,7 +482,7 @@ class FluentTitleBar(QtWidgets.QWidget):
         if splash is not None:
             painter.fillRect(self.rect(), splash._resolved_background_color())
             return
-        paint_shell = getattr(self._owner, '_paint_shell_surface', None)
+        paint_shell = getattr(self._owner, "_paint_shell_surface", None)
         if callable(paint_shell):
             paint_shell(painter, self)
         else:
@@ -436,10 +499,17 @@ class FluentTitleBar(QtWidgets.QWidget):
         # move or maximize (for example, double-clicking an extra tool button).
         child = self.childAt(position.toPoint())
         return child is None or child in (
-            self.icon_label, self.title_label, self._content, self._actions, self._native_spacer)
+            self.icon_label,
+            self.title_label,
+            self._content,
+            self._actions,
+            self._native_spacer,
+        )
 
     def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.MouseButton.LeftButton and self._is_drag_area(event.position()):
+        if event.button() == QtCore.Qt.MouseButton.LeftButton and self._is_drag_area(
+            event.position()
+        ):
             handle = self._owner.windowHandle()
             if handle is not None and handle.startSystemMove():
                 event.accept()
@@ -447,8 +517,11 @@ class FluentTitleBar(QtWidgets.QWidget):
         super().mousePressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
-        if (event.button() == QtCore.Qt.MouseButton.LeftButton
-                and self._double_click_enabled and self._is_drag_area(event.position())):
+        if (
+            event.button() == QtCore.Qt.MouseButton.LeftButton
+            and self._double_click_enabled
+            and self._is_drag_area(event.position())
+        ):
             self._toggle_maximized()
             event.accept()
             return

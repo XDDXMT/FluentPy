@@ -1,13 +1,16 @@
 """Passive cards retain independent child controls and safe Qt lifetimes."""
 
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import sys
 import unittest
+
 from fluentpy import theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets
-from fluentpy.widgets.card import CardWidget, SimpleCardWidget, ElevatedCardWidget
-from fluentpy.widgets.header_card import HeaderCardWidget, GroupHeaderCardWidget
+from fluentpy.widgets.card import CardWidget, ElevatedCardWidget, SimpleCardWidget
+from fluentpy.widgets.header_card import GroupHeaderCardWidget, HeaderCardWidget
+
 if "PySide6" in QtCore.__name__:
     from PySide6.QtTest import QTest
 else:
@@ -23,7 +26,11 @@ class _ConstructorEvents(QtCore.QObject):
         self.top_level_shows = []
 
     def eventFilter(self, watched, event):
-        if isinstance(watched, QtWidgets.QWidget) and event.type() == QtCore.QEvent.Type.Show and watched.isWindow():
+        if (
+            isinstance(watched, QtWidgets.QWidget)
+            and event.type() == QtCore.QEvent.Type.Show
+            and watched.isWindow()
+        ):
             self.top_level_shows.append(type(watched).__name__)
         return False
 
@@ -64,7 +71,12 @@ class CardTests(unittest.TestCase):
 
     def enter(self, card):
         point = QtCore.QPointF(10, 10)
-        self.app.sendEvent(card, QtGui.QEnterEvent(point, point, QtCore.QPointF(card.mapToGlobal(QtCore.QPoint(10, 10)))))
+        self.app.sendEvent(
+            card,
+            QtGui.QEnterEvent(
+                point, point, QtCore.QPointF(card.mapToGlobal(QtCore.QPoint(10, 10)))
+            ),
+        )
         card._hover_animation.setCurrentTime(card._hover_animation.duration())
 
     def test_radius_aliases_fonts_and_ordinary_layout(self):
@@ -152,7 +164,9 @@ class CardTests(unittest.TestCase):
         QTest.mouseClick(entry, QtCore.Qt.MouseButton.LeftButton)
         QTest.keyClicks(entry, "abc")
         QTest.keyClick(entry, QtCore.Qt.Key.Key_Return)
-        QTest.mouseClick(link, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(6, link.height() // 2))
+        QTest.mouseClick(
+            link, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(6, link.height() // 2)
+        )
         self.assertEqual(clicks, [True, True])
         self.assertEqual(entry.text(), "abc")
         self.assertEqual(links, ["local:test"])
@@ -194,13 +208,23 @@ class CardTests(unittest.TestCase):
         geometry = QtCore.QRect(card.geometry())
         initial = (card._shadow.blurRadius(), card._shadow.offset().y())
         self.enter(card)
-        hovered = (card._shadow.blurRadius(), card._shadow.offset().y(), card._shadow.color().rgba())
+        hovered = (
+            card._shadow.blurRadius(),
+            card._shadow.offset().y(),
+            card._shadow.color().rgba(),
+        )
         self.assertNotEqual(initial, hovered[:2])
         self.assertLessEqual(card._shadow.color().alpha(), 40)
         QTest.mousePress(card, QtCore.Qt.MouseButton.LeftButton)
-        self.assertEqual((card._shadow.blurRadius(), card._shadow.offset().y(), card._shadow.color().rgba()), hovered)
+        self.assertEqual(
+            (card._shadow.blurRadius(), card._shadow.offset().y(), card._shadow.color().rgba()),
+            hovered,
+        )
         QTest.mouseRelease(card, QtCore.Qt.MouseButton.LeftButton)
-        self.assertEqual((card._shadow.blurRadius(), card._shadow.offset().y(), card._shadow.color().rgba()), hovered)
+        self.assertEqual(
+            (card._shadow.blurRadius(), card._shadow.offset().y(), card._shadow.color().rgba()),
+            hovered,
+        )
         self.assertEqual(card.geometry(), geometry)
 
     def test_construction_does_not_show_or_create_native_labels(self):

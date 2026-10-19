@@ -41,11 +41,18 @@ class _SelectionJob(QtCore.QRunnable):
     def __init__(self, request, paths, extensions, options):
         super().__init__()
         self.signals = _SelectionSignals()
-        self.request, self.paths, self.extensions, self.options = request, paths, extensions, options
+        self.request, self.paths, self.extensions, self.options = (
+            request,
+            paths,
+            extensions,
+            options,
+        )
 
     def run(self):
         try:
-            result = selection.filter_paths(_candidates(self.paths), self.extensions, **self.options)
+            result = selection.filter_paths(
+                _candidates(self.paths), self.extensions, **self.options
+            )
             self.signals.finished.emit(self.request, result, None)
         except Exception as error:
             self.signals.finished.emit(self.request, None, str(error))
@@ -96,13 +103,19 @@ class DropArea(QtWidgets.QFrame):
     def acceleration_backend(self) -> str:
         return selection.backend_name()
 
-    def __init__(self, parent=None, *, extensions=(), allow_files=True, allow_folders=True, multiple=True):
+    def __init__(
+        self, parent=None, *, extensions=(), allow_files=True, allow_folders=True, multiple=True
+    ):
         normalized = selection.normalize_extensions(extensions)
         if not allow_files and not allow_folders:
             raise ValueError("at least one path kind must be allowed")
         super().__init__(parent)
         self._extensions = normalized
-        self._allow_files, self._allow_folders, self._multiple = bool(allow_files), bool(allow_folders), bool(multiple)
+        self._allow_files, self._allow_folders, self._multiple = (
+            bool(allow_files),
+            bool(allow_folders),
+            bool(multiple),
+        )
         self._selected = []
         self._request = 0
         self._busy = False
@@ -116,7 +129,9 @@ class DropArea(QtWidgets.QFrame):
         self.setAcceptDrops(True)
         self.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred
+        )
         self.setMinimumSize(210, 144)
         self.setAccessibleName("拖放文件区域" if allow_files else "拖放文件夹区域")
         layout = QtWidgets.QVBoxLayout(self)
@@ -164,10 +179,10 @@ class DropArea(QtWidgets.QFrame):
         self._extensions = normalized
         self._refresh_hint()
 
-    def setFileExtensions(self, extensions) -> None:  # noqa: N802
+    def setFileExtensions(self, extensions) -> None:
         self.set_file_extensions(extensions)
 
-    def fileExtensions(self) -> tuple[str, ...]:  # noqa: N802
+    def fileExtensions(self) -> tuple[str, ...]:
         return self.file_extensions()
 
     def is_multiple(self) -> bool:
@@ -187,7 +202,7 @@ class DropArea(QtWidgets.QFrame):
         self._custom_text = None if text is None else str(text)
         self._refresh_hint()
 
-    def setText(self, text: str | None) -> None:  # noqa: N802
+    def setText(self, text: str | None) -> None:
         self.set_text(text)
 
     def is_busy(self) -> bool:
@@ -200,14 +215,20 @@ class DropArea(QtWidgets.QFrame):
             self.selectionChanged.emit([])
 
     def _options(self):
-        return dict(allow_files=self._allow_files, allow_folders=self._allow_folders,
-                    multiple=self._multiple, case_sensitive=os.name != "nt")
+        return dict(
+            allow_files=self._allow_files,
+            allow_folders=self._allow_folders,
+            multiple=self._multiple,
+            case_sensitive=os.name != "nt",
+        )
 
     def accept_paths(self, paths) -> list[str]:
         """Synchronously validate one selection; invalid items preserve prior selection."""
         values = _paths(paths)
         self._cancel_pending()
-        accepted, rejected = selection.filter_paths(_candidates(values), self._extensions, **self._options())
+        accepted, rejected = selection.filter_paths(
+            _candidates(values), self._extensions, **self._options()
+        )
         self._commit(accepted, rejected)
         return [path for path, _kind in accepted]
 
@@ -257,9 +278,13 @@ class DropArea(QtWidgets.QFrame):
         pattern = " ".join("*" + extension for extension in self._extensions) or "*"
         file_filter = f"支持的文件 ({pattern})"
         if self._multiple:
-            paths, _selected = QtWidgets.QFileDialog.getOpenFileNames(self, "选择文件", "", file_filter)
+            paths, _selected = QtWidgets.QFileDialog.getOpenFileNames(
+                self, "选择文件", "", file_filter
+            )
         else:
-            path, _selected = QtWidgets.QFileDialog.getOpenFileName(self, "选择文件", "", file_filter)
+            path, _selected = QtWidgets.QFileDialog.getOpenFileName(
+                self, "选择文件", "", file_filter
+            )
             paths = [path] if path else []
         if paths:
             self.submit_paths(paths)
@@ -310,9 +335,13 @@ class DropArea(QtWidgets.QFrame):
 
     def _can_drop(self, event):
         urls = event.mimeData().urls()
-        return (self.isEnabled() and not self._busy and bool(urls)
-                and all(url.isLocalFile() for url in urls)
-                and bool(event.possibleActions() & QtCore.Qt.DropAction.CopyAction))
+        return (
+            self.isEnabled()
+            and not self._busy
+            and bool(urls)
+            and all(url.isLocalFile() for url in urls)
+            and bool(event.possibleActions() & QtCore.Qt.DropAction.CopyAction)
+        )
 
     def dragEnterEvent(self, event):
         if self._can_drop(event):
@@ -344,7 +373,11 @@ class DropArea(QtWidgets.QFrame):
         self.submit_paths([url.toLocalFile() for url in event.mimeData().urls()])
 
     def keyPressEvent(self, event):
-        if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter, QtCore.Qt.Key.Key_Space):
+        if event.key() in (
+            QtCore.Qt.Key.Key_Return,
+            QtCore.Qt.Key.Key_Enter,
+            QtCore.Qt.Key.Key_Space,
+        ):
             self.browse_files() if self._allow_files else self.browse_folder()
             event.accept()
         else:
@@ -389,7 +422,9 @@ class DropArea(QtWidgets.QFrame):
         accent = QtGui.QColor(theme.tokens.accent)
         idle = QtGui.QColor("#96999f" if theme.mode.value == "light" else "#858b98")
         amount = self._drag_progress if self.isEnabled() else 0.0
-        border = QtGui.QColor.fromRgbF(*(a + (b-a)*amount for a, b in zip(idle.getRgbF(), accent.getRgbF())))
+        border = QtGui.QColor.fromRgbF(
+            *(a + (b - a) * amount for a, b in zip(idle.getRgbF(), accent.getRgbF()))
+        )
         if not self.isEnabled():
             border.setAlpha(105)
         pen = QtGui.QPen(border, 1.5)
@@ -408,9 +443,16 @@ class DropArea(QtWidgets.QFrame):
 class FileDropWidget(DropArea):
     """A multi-file area with file and folder browsing; image suffixes by default."""
 
-    def __init__(self, parent=None, *, extensions=(".jpg", ".png", ".gif"), multiple=True, allow_folders=True):
-        super().__init__(parent, extensions=extensions, allow_files=True,
-                         allow_folders=allow_folders, multiple=multiple)
+    def __init__(
+        self, parent=None, *, extensions=(".jpg", ".png", ".gif"), multiple=True, allow_folders=True
+    ):
+        super().__init__(
+            parent,
+            extensions=extensions,
+            allow_files=True,
+            allow_folders=allow_folders,
+            multiple=multiple,
+        )
 
 
 class FolderDropWidget(DropArea):

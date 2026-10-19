@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import math
 
 from ..qt import QtCore, QtGui, QtWidgets, Signal
@@ -44,17 +45,29 @@ class Slider(QtWidgets.QSlider):
         theme.subscribe(self, self._refresh_style)
 
     def sizeHint(self):
-        return QtCore.QSize(200, 34) if self.orientation() == QtCore.Qt.Orientation.Horizontal else QtCore.QSize(34, 200)
+        return (
+            QtCore.QSize(200, 34)
+            if self.orientation() == QtCore.Qt.Orientation.Horizontal
+            else QtCore.QSize(34, 200)
+        )
 
     def minimumSizeHint(self):
-        return QtCore.QSize(60, 34) if self.orientation() == QtCore.Qt.Orientation.Horizontal else QtCore.QSize(34, 60)
+        return (
+            QtCore.QSize(60, 34)
+            if self.orientation() == QtCore.Qt.Orientation.Horizontal
+            else QtCore.QSize(34, 60)
+        )
 
     def _refresh_style(self):
         self.update()
 
     def set_track_gradient(self, stops, *, checkerboard=False, thickness=10):
         """Use a full-length gradient track while retaining the native slider input."""
-        if not isinstance(thickness, int) or isinstance(thickness, bool) or not 2 <= thickness <= 18:
+        if (
+            not isinstance(thickness, int)
+            or isinstance(thickness, bool)
+            or not 2 <= thickness <= 18
+        ):
             raise ValueError("thickness must be an integer between 2 and 18")
         normalized = []
         for position, color in stops:
@@ -94,8 +107,12 @@ class Slider(QtWidgets.QSlider):
         self._keyboard_focus = False
         self.setFocus(QtCore.Qt.FocusReason.MouseFocusReason)
         on_handle = self._handle_rect().contains(event.position())
-        axis = event.position().x() if self.orientation() == QtCore.Qt.Orientation.Horizontal else event.position().y()
-        self._drag_offset = axis-self._geometry_values()[3] if on_handle else 0.0
+        axis = (
+            event.position().x()
+            if self.orientation() == QtCore.Qt.Orientation.Horizontal
+            else event.position().y()
+        )
+        self._drag_offset = axis - self._geometry_values()[3] if on_handle else 0.0
         self._pointer_dragging = on_handle
         self._pressed_handle = True
         self._animate_press(1.0)
@@ -135,12 +152,20 @@ class Slider(QtWidgets.QSlider):
 
     def _point_for_value(self, value):
         start, end, cross, _knob = self._geometry_values(value)
-        return QtCore.QPointF(_knob, cross) if self.orientation() == QtCore.Qt.Orientation.Horizontal else QtCore.QPointF(cross, _knob)
+        return (
+            QtCore.QPointF(_knob, cross)
+            if self.orientation() == QtCore.Qt.Orientation.Horizontal
+            else QtCore.QPointF(cross, _knob)
+        )
 
     def _track_rect(self, a, b, thickness):
         if self.orientation() == QtCore.Qt.Orientation.Horizontal:
-            return QtCore.QRectF(min(a.x(), b.x()), a.y()-thickness/2, abs(b.x()-a.x()), thickness)
-        return QtCore.QRectF(a.x()-thickness/2, min(a.y(), b.y()), thickness, abs(b.y()-a.y()))
+            return QtCore.QRectF(
+                min(a.x(), b.x()), a.y() - thickness / 2, abs(b.x() - a.x()), thickness
+            )
+        return QtCore.QRectF(
+            a.x() - thickness / 2, min(a.y(), b.y()), thickness, abs(b.y() - a.y())
+        )
 
     def _draw_track(self, painter, lower, upper):
         tokens = theme.tokens
@@ -163,7 +188,9 @@ class Slider(QtWidgets.QSlider):
         if self._track_gradient is None:
             painter.setBrush(track_color)
             painter.drawRoundedRect(track_rect, 2, 2)
-            filled_rect = self._track_rect(self._point_for_value(lower), self._point_for_value(upper), 4)
+            filled_rect = self._track_rect(
+                self._point_for_value(lower), self._point_for_value(upper), 4
+            )
             painter.setBrush(accent)
             painter.drawRoundedRect(filled_rect, 2, 2)
         else:
@@ -175,7 +202,9 @@ class Slider(QtWidgets.QSlider):
                 painter.fillRect(track_rect, QtGui.QColor("#ffffff"))
                 for x in range(int(track_rect.left()), int(track_rect.right()) + 6, 6):
                     for y in range(int(track_rect.top()), int(track_rect.bottom()) + 6, 6):
-                        if ((x - int(track_rect.left())) // 6 + (y - int(track_rect.top())) // 6) % 2:
+                        if (
+                            (x - int(track_rect.left())) // 6 + (y - int(track_rect.top())) // 6
+                        ) % 2:
                             painter.fillRect(QtCore.QRectF(x, y, 6, 6), QtGui.QColor("#c2c5ca"))
             gradient = QtGui.QLinearGradient(start, end)
             for position, color in self._track_gradient:
@@ -201,7 +230,9 @@ class Slider(QtWidgets.QSlider):
         painter.drawEllipse(center, radius, radius)
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(accent)
-        center_radius = max(1.9, 4 + (1.4*self._center_progress-2.7*self._press_progress if active else 0))
+        center_radius = max(
+            1.9, 4 + (1.4 * self._center_progress - 2.7 * self._press_progress if active else 0)
+        )
         painter.drawEllipse(center, center_radius, center_radius)
         if active and self.hasFocus() and self._keyboard_focus and self.isEnabled():
             painter.setPen(QtGui.QPen(accent, 1))
@@ -211,16 +242,20 @@ class Slider(QtWidgets.QSlider):
     def _geometry_values(self, value=None) -> tuple[float, float, float, float]:
         left = 12.0
         horizontal = self.orientation() == QtCore.Qt.Orientation.Horizontal
-        right = float(max(12, (self.width() if horizontal else self.height())-12))
-        center_y = (self.height() if horizontal else self.width())/2
+        right = float(max(12, (self.width() if horizontal else self.height()) - 12))
+        center_y = (self.height() if horizontal else self.width()) / 2
         option = QtWidgets.QStyleOptionSlider()
         self.initStyleOption(option)
         value = self._visual_value() if value is None else value
-        fraction = 0.0 if self.maximum() == self.minimum() else (float(value)-self.minimum())/(self.maximum()-self.minimum())
+        fraction = (
+            0.0
+            if self.maximum() == self.minimum()
+            else (float(value) - self.minimum()) / (self.maximum() - self.minimum())
+        )
         fraction = max(0.0, min(1.0, fraction))
         if option.upsideDown:
-            fraction = 1-fraction
-        knob_x = left+(right-left)*fraction
+            fraction = 1 - fraction
+        knob_x = left + (right - left) * fraction
         return left, right, center_y, knob_x
 
     def _value_at(self, point):
@@ -228,27 +263,38 @@ class Slider(QtWidgets.QSlider):
         option = QtWidgets.QStyleOptionSlider()
         self.initStyleOption(option)
         axis = point.x() if self.orientation() == QtCore.Qt.Orientation.Horizontal else point.y()
-        return QtWidgets.QStyle.sliderValueFromPosition(self.minimum(), self.maximum(),
-            round(axis-start-self._drag_offset), max(1, round(end-start)), option.upsideDown)
+        return QtWidgets.QStyle.sliderValueFromPosition(
+            self.minimum(),
+            self.maximum(),
+            round(axis - start - self._drag_offset),
+            max(1, round(end - start)),
+            option.upsideDown,
+        )
 
     def _handle_rect(self) -> QtCore.QRectF:
         center = self._point_for_value(self._visual_value())
-        return QtCore.QRectF(center.x()-11, center.y()-11, 22, 22)
+        return QtCore.QRectF(center.x() - 11, center.y() - 11, 22, 22)
 
     def _visual_value(self):
         return self._display_position
 
     def _sync_visual_position(self, *_args):
         target = float(self.sliderPosition())
-        if (not self.isVisible() or not self.isEnabled()
-                or (self.isSliderDown() and self._pointer_dragging)):
+        if (
+            not self.isVisible()
+            or not self.isEnabled()
+            or (self.isSliderDown() and self._pointer_dragging)
+        ):
             self._position_animation.stop()
             self._set_display_position(target)
             return
-        if self._position_animation.state() == QtCore.QAbstractAnimation.State.Running and self._position_animation.endValue() == target:
+        if (
+            self._position_animation.state() == QtCore.QAbstractAnimation.State.Running
+            and self._position_animation.endValue() == target
+        ):
             return
         self._position_animation.stop()
-        if abs(self._display_position-target) < 0.001:
+        if abs(self._display_position - target) < 0.001:
             self._set_display_position(target)
             return
         self._position_animation.setStartValue(self._display_position)
@@ -267,12 +313,15 @@ class Slider(QtWidgets.QSlider):
         self._position_animation.stop()
         self._set_display_position(float(self.sliderPosition()))
 
-    def setSliderPosition(self, value):  # noqa: N802
+    def setSliderPosition(self, value):
         super().setSliderPosition(value)
         self._sync_visual_position()
 
     def focusInEvent(self, event):
-        self._keyboard_focus = event.reason() not in (QtCore.Qt.FocusReason.MouseFocusReason, QtCore.Qt.FocusReason.ActiveWindowFocusReason)
+        self._keyboard_focus = event.reason() not in (
+            QtCore.Qt.FocusReason.MouseFocusReason,
+            QtCore.Qt.FocusReason.ActiveWindowFocusReason,
+        )
         if self._keyboard_focus:
             self._animate_center(1.0)
         self.update()
@@ -313,7 +362,7 @@ class Slider(QtWidgets.QSlider):
 
     def _animate_center(self, end: float) -> None:
         self._center_animation.stop()
-        if not self.isVisible() or not self.isEnabled() or abs(self._center_progress-end) < 0.001:
+        if not self.isVisible() or not self.isEnabled() or abs(self._center_progress - end) < 0.001:
             self._set_center_progress(end if self.isVisible() and self.isEnabled() else 0.0)
             return
         self._center_animation.setStartValue(self._center_progress)
@@ -322,7 +371,7 @@ class Slider(QtWidgets.QSlider):
 
     def _animate_press(self, end: float) -> None:
         self._press_animation.stop()
-        if not self.isVisible() or not self.isEnabled() or abs(self._press_progress-end) < 0.001:
+        if not self.isVisible() or not self.isEnabled() or abs(self._press_progress - end) < 0.001:
             self._set_press_progress(end if self.isVisible() and self.isEnabled() else 0.0)
             return
         self._press_animation.setStartValue(self._press_progress)
@@ -340,9 +389,10 @@ class Slider(QtWidgets.QSlider):
 
 class ToolTipSlider(Slider):
     """Slider with an in-window value label following the actual handle."""
+
     def __init__(self, orientation=QtCore.Qt.Orientation.Horizontal, parent=None):
         super().__init__(orientation, parent)
-        self._value_format = '{value}'
+        self._value_format = "{value}"
         self._value_label = None
         self._tip_requested = False
         self._tip_opacity = 0.0
@@ -359,25 +409,25 @@ class ToolTipSlider(Slider):
         self.sliderMoved.connect(self._update_value_label)
         self.valueChanged.connect(self._update_value_label)
 
-    def setValueFormat(self, value_format):  # noqa: N802
+    def setValueFormat(self, value_format):
         """Use a format such as '{value}%' or '{value} px'."""
         value_format = str(value_format)
         try:
             value_format.format(value=self.sliderPosition())
         except (KeyError, ValueError, IndexError, AttributeError) as exc:
-            raise ValueError('format must accept the value field') from exc
+            raise ValueError("format must accept the value field") from exc
         self._value_format = value_format
         self._update_value_label()
 
-    def valueFormat(self):  # noqa: N802
+    def valueFormat(self):
         return self._value_format
 
     def _update_value_label(self, *args):
-        if getattr(self, '_tip_requested', False):
+        if getattr(self, "_tip_requested", False):
             self.show_value_tip()
 
     def _visual_position_changed(self):
-        if getattr(self, '_tip_requested', False) and self._value_label is not None:
+        if getattr(self, "_tip_requested", False) and self._value_label is not None:
             self._tip_motion.stop()
             self._value_label.move(self._tip_target())
 
@@ -385,15 +435,17 @@ class ToolTipSlider(Slider):
         label, owner = self._value_label, self.window()
         point = self.mapTo(owner, self._point_for_value(self._visual_value()).toPoint())
         if self.orientation() == QtCore.Qt.Orientation.Horizontal:
-            x, y = point.x()-label.width()//2, point.y()-label.height()-18
+            x, y = point.x() - label.width() // 2, point.y() - label.height() - 18
             if y < 4:
-                y = point.y()+18
+                y = point.y() + 18
         else:
-            x, y = point.x()+18, point.y()-label.height()//2
-            if x+label.width() > owner.width()-4:
-                x = point.x()-label.width()-18
-        return QtCore.QPoint(max(4, min(x, owner.width()-label.width()-4)),
-                            max(4, min(y, owner.height()-label.height()-4)))
+            x, y = point.x() + 18, point.y() - label.height() // 2
+            if x + label.width() > owner.width() - 4:
+                x = point.x() - label.width() - 18
+        return QtCore.QPoint(
+            max(4, min(x, owner.width() - label.width() - 4)),
+            max(4, min(y, owner.height() - label.height() - 4)),
+        )
 
     def _set_tip_opacity(self, opacity):
         self._tip_opacity = float(opacity)
@@ -403,8 +455,10 @@ class ToolTipSlider(Slider):
     def _set_tip_position(self, point):
         if self._value_label is not None:
             label, owner = self._value_label, self.window()
-            self._value_label.move(max(4, min(point.x(), owner.width()-label.width()-4)),
-                                   max(4, min(point.y(), owner.height()-label.height()-4)))
+            self._value_label.move(
+                max(4, min(point.x(), owner.width() - label.width() - 4)),
+                max(4, min(point.y(), owner.height() - label.height() - 4)),
+            )
 
     def _tip_fade_finished(self):
         if not self._tip_requested and self._value_label is not None:
@@ -436,7 +490,9 @@ class ToolTipSlider(Slider):
         label = self._value_label
         label.setFont(self.font())
         label.setText(self._value_format.format(value=self.sliderPosition()))
-        label.setStyleSheet(f'background:{theme.tokens.surface};color:{theme.tokens.text};border:1px solid {theme.tokens.border};border-radius:5px;padding:5px 9px;')
+        label.setStyleSheet(
+            f"background:{theme.tokens.surface};color:{theme.tokens.text};border:1px solid {theme.tokens.border};border-radius:5px;padding:5px 9px;"
+        )
         label.adjustSize()
         target = self._tip_target()
         if self._tip_requested:
@@ -451,7 +507,7 @@ class ToolTipSlider(Slider):
         self._tip_motion.stop()
         if not was_visible:
             self._tip_opacity = 0.0
-            self._set_tip_position(target+QtCore.QPoint(0, 6))
+            self._set_tip_position(target + QtCore.QPoint(0, 6))
         label.show()
         label.raise_()
         self._tip_fade.setStartValue(self._tip_opacity)
@@ -475,7 +531,7 @@ class ToolTipSlider(Slider):
         self._tip_fade.setEndValue(0.0)
         self._tip_fade.start()
         self._tip_motion.setStartValue(self._value_label.pos())
-        self._tip_motion.setEndValue(self._value_label.pos()+QtCore.QPoint(0, 4))
+        self._tip_motion.setEndValue(self._value_label.pos() + QtCore.QPoint(0, 4))
         self._tip_motion.start()
 
     def enterEvent(self, event):
@@ -533,6 +589,7 @@ class RangeSlider(Slider):
     Qt's rangeChanged still describes the allowed bounds; valuesChanged is the
     selected interval. Tab changes controls, Space switches the active handle.
     """
+
     valuesChanged = Signal(int, int)
     lowerValueChanged = Signal(int)
     upperValueChanged = Signal(int)
@@ -541,7 +598,7 @@ class RangeSlider(Slider):
         self._lower, self._upper = 25, 75
         self._display_lower, self._display_upper = 25.0, 75.0
         self._range_animation = None
-        self._active_handle = 'lower'
+        self._active_handle = "lower"
         self._syncing = False
         super().__init__(orientation, parent)
         self._range_animation = QtCore.QVariantAnimation(self)
@@ -553,46 +610,48 @@ class RangeSlider(Slider):
         self.sliderMoved.connect(self._position_changed)
         self.rangeChanged.connect(self._bounds_changed)
         self._sync_native()
-        self.setAccessibleName('区间选择')
+        self.setAccessibleName("区间选择")
 
     def values(self):
         return self._lower, self._upper
 
-    def lowerValue(self):  # noqa: N802
+    def lowerValue(self):
         return self._lower
 
-    def upperValue(self):  # noqa: N802
+    def upperValue(self):
         return self._upper
 
-    def setValues(self, lower, upper):  # noqa: N802
+    def setValues(self, lower, upper):
         if not isinstance(lower, int) or not isinstance(upper, int):
-            raise TypeError('range values must be integers')
+            raise TypeError("range values must be integers")
         if not self.minimum() <= lower <= upper <= self.maximum():
-            raise ValueError('values must be ordered and inside the slider bounds')
+            raise ValueError("values must be ordered and inside the slider bounds")
         previous = self.values()
         self._lower, self._upper = lower, upper
         self._sync_native()
         self._emit_values(previous)
 
-    def setLowerValue(self, value):  # noqa: N802
+    def setLowerValue(self, value):
         self.setValues(value, self._upper)
 
-    def setUpperValue(self, value):  # noqa: N802
+    def setUpperValue(self, value):
         self.setValues(self._lower, value)
 
-    def activeHandle(self):  # noqa: N802
+    def activeHandle(self):
         return self._active_handle
 
-    def setActiveHandle(self, handle):  # noqa: N802
-        if handle not in ('lower', 'upper'):
-            raise ValueError('handle must be lower or upper')
+    def setActiveHandle(self, handle):
+        if handle not in ("lower", "upper"):
+            raise ValueError("handle must be lower or upper")
         self._active_handle = handle
         self._sync_native()
         self.update()
 
     def _sync_native(self):
         self._syncing = True
-        QtWidgets.QSlider.setValue(self, self._lower if self._active_handle == 'lower' else self._upper)
+        QtWidgets.QSlider.setValue(
+            self, self._lower if self._active_handle == "lower" else self._upper
+        )
         self._syncing = False
 
     def _emit_values(self, previous):
@@ -603,17 +662,17 @@ class RangeSlider(Slider):
         if self._upper != previous[1]:
             self.upperValueChanged.emit(self._upper)
         self.valuesChanged.emit(*self.values())
-        self.setAccessibleDescription(f'{self._lower} – {self._upper}')
+        self.setAccessibleDescription(f"{self._lower} – {self._upper}")
         self._sync_visual_position()
         self.update()
 
     def _visual_value(self):
-        return self._display_lower if self._active_handle == 'lower' else self._display_upper
+        return self._display_lower if self._active_handle == "lower" else self._display_upper
 
     def _visual_range_target(self):
         lower, upper = self.values()
         if self.isSliderDown() and not self.hasTracking():
-            if self._active_handle == 'lower':
+            if self._active_handle == "lower":
                 lower = self.sliderPosition()
             else:
                 upper = self.sliderPosition()
@@ -623,13 +682,19 @@ class RangeSlider(Slider):
         if self._range_animation is None:
             return
         target = self._visual_range_target()
-        if (not self.isVisible() or not self.isEnabled()
-                or (self.isSliderDown() and self._pointer_dragging)):
+        if (
+            not self.isVisible()
+            or not self.isEnabled()
+            or (self.isSliderDown() and self._pointer_dragging)
+        ):
             self._range_animation.stop()
             self._display_lower, self._display_upper = target
             self.update()
             return
-        if self._range_animation.state() == QtCore.QAbstractAnimation.State.Running and target == self._range_end:
+        if (
+            self._range_animation.state() == QtCore.QAbstractAnimation.State.Running
+            and target == self._range_end
+        ):
             return
         self._range_animation.stop()
         current = self._display_lower, self._display_upper
@@ -643,7 +708,9 @@ class RangeSlider(Slider):
     def _set_display_range_progress(self, progress):
         fraction = float(progress)
         self._display_lower, self._display_upper = tuple(
-            start+(end-start)*fraction for start, end in zip(self._range_start, self._range_end))
+            start + (end - start) * fraction
+            for start, end in zip(self._range_start, self._range_end)
+        )
         self.update()
 
     def _reset_visual_position(self, *_args):
@@ -659,7 +726,7 @@ class RangeSlider(Slider):
         previous = self.values()
         self._lower = max(self.minimum(), min(self._lower, self.maximum()))
         self._upper = max(self.minimum(), min(self._upper, self.maximum()))
-        if self._active_handle == 'lower':
+        if self._active_handle == "lower":
             self._lower = max(self.minimum(), min(value, self._upper))
         else:
             self._upper = min(self.maximum(), max(value, self._lower))
@@ -669,28 +736,37 @@ class RangeSlider(Slider):
     def _position_changed(self, value):
         # Tracking off retains the committed pair until release, like QSlider.
         if not self.hasTracking():
-            bounded = min(value, self._upper) if self._active_handle == 'lower' else max(value, self._lower)
+            bounded = (
+                min(value, self._upper)
+                if self._active_handle == "lower"
+                else max(value, self._lower)
+            )
             if bounded != value:
                 self.setSliderPosition(bounded)
             self.update()
 
     def _bounds_changed(self, minimum, maximum):
-        self.setValues(max(minimum, min(self._lower, maximum)), max(minimum, min(self._upper, maximum)))
+        self.setValues(
+            max(minimum, min(self._lower, maximum)), max(minimum, min(self._upper, maximum))
+        )
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            lower, upper = self._point_for_value(self._display_lower), self._point_for_value(self._display_upper)
-            dl = (event.position()-lower).manhattanLength()
-            du = (event.position()-upper).manhattanLength()
+            lower, upper = (
+                self._point_for_value(self._display_lower),
+                self._point_for_value(self._display_upper),
+            )
+            dl = (event.position() - lower).manhattanLength()
+            du = (event.position() - upper).manhattanLength()
             if dl != du:
-                self.setActiveHandle('lower' if dl < du else 'upper')
+                self.setActiveHandle("lower" if dl < du else "upper")
         super().mousePressEvent(event)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Space:
             self._keyboard_focus = True
             self._animate_center(1.0)
-            self.setActiveHandle('upper' if self._active_handle == 'lower' else 'lower')
+            self.setActiveHandle("upper" if self._active_handle == "lower" else "lower")
             event.accept()
         else:
             super().keyPressEvent(event)
@@ -700,6 +776,6 @@ class RangeSlider(Slider):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         lower, upper = self._display_lower, self._display_upper
         self._draw_track(painter, lower, upper)
-        inactive, active = (upper, lower) if self._active_handle == 'lower' else (lower, upper)
+        inactive, active = (upper, lower) if self._active_handle == "lower" else (lower, upper)
         self._draw_handle(painter, inactive, active=False)
         self._draw_handle(painter, active, active=True)

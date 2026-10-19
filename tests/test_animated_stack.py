@@ -1,13 +1,14 @@
 """Animated page switching preserves layout, effect ownership and lifetime."""
 
 import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import sys
 import unittest
 
 from fluentpy import AnimatedStackedWidget, ElevatedCardWidget
-from fluentpy.qt import QtCore, QtGui, QtWidgets
+from fluentpy.qt import QtCore, QtWidgets
 
 
 class AnimatedStackTests(unittest.TestCase):
@@ -19,6 +20,7 @@ class AnimatedStackTests(unittest.TestCase):
         self.errors, self.messages = [], []
         self.old_hook = sys.excepthook
         sys.excepthook = lambda kind, value, tb: self.errors.append(str(value))
+
         def capture_message(kind, context, message):
             if self.app.platformName() == "offscreen" and (
                 message == "This plugin does not support propagateSizeHints()"
@@ -26,6 +28,7 @@ class AnimatedStackTests(unittest.TestCase):
             ):
                 return
             self.messages.append(message)
+
         self.old_message_handler = QtCore.qInstallMessageHandler(capture_message)
         self.host = QtWidgets.QWidget()
         self.host.resize(640, 420)
@@ -84,7 +87,9 @@ class AnimatedStackTests(unittest.TestCase):
         self.assertEqual(animation.animationCount(), 2)
         effect = self.pages[1].graphicsEffect()
         self.assertEqual(effect.opacity(), 0.0)
-        self.assertEqual(self.pages[1].pos(), self.stack.contentsRect().topLeft() + QtCore.QPoint(22, 0))
+        self.assertEqual(
+            self.pages[1].pos(), self.stack.contentsRect().topLeft() + QtCore.QPoint(22, 0)
+        )
         animation.setCurrentTime(90)
         self.assertGreater(effect.opacity(), 0.0)
         self.assertLess(effect.opacity(), 1.0)
@@ -222,6 +227,7 @@ class AnimatedStackTests(unittest.TestCase):
         def redirect(_old, new):
             if new == 1:
                 self.stack.setCurrentIndex(2)
+
         self.stack.currentAboutToChange.connect(redirect)
         self.stack.setCurrentIndex(1)
         self.finish()

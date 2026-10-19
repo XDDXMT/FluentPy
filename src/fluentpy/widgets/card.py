@@ -23,6 +23,7 @@ class CardWidget(QtWidgets.QFrame):
     The card does not handle clicks or keyboard activation. Buttons, inputs,
     and other child widgets retain their own ordinary Qt interactions.
     """
+
     _static_surface = False
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
@@ -54,10 +55,10 @@ class CardWidget(QtWidgets.QFrame):
             self._border_radius = radius
             self.update()
 
-    def borderRadius(self) -> int:  # noqa: N802
+    def borderRadius(self) -> int:
         return self.border_radius()
 
-    def setBorderRadius(self, radius: int) -> None:  # noqa: N802
+    def setBorderRadius(self, radius: int) -> None:
         self.set_border_radius(radius)
 
     def _set_hover_progress(self, value: float) -> None:

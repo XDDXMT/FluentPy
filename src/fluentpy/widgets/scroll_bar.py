@@ -59,7 +59,9 @@ class FluentScrollBar(QtWidgets.QScrollBar):
             self._drag_offset = round(pos - self._main_start(handle))
         else:
             step = self.pageStep()
-            self.setValue(self.value() - step if pos < self._main_start(handle) else self.value() + step)
+            self.setValue(
+                self.value() - step if pos < self._main_start(handle) else self.value() + step
+            )
         self.update()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -141,8 +143,12 @@ class FluentScrollBar(QtWidgets.QScrollBar):
         painter.drawPolygon(right)
 
     def _handle_rect(self) -> QtCore.QRectF:
-        length = self.height() if self.orientation() == QtCore.Qt.Orientation.Vertical else self.width()
-        thickness = self.width() if self.orientation() == QtCore.Qt.Orientation.Vertical else self.height()
+        length = (
+            self.height() if self.orientation() == QtCore.Qt.Orientation.Vertical else self.width()
+        )
+        thickness = (
+            self.width() if self.orientation() == QtCore.Qt.Orientation.Vertical else self.height()
+        )
         arrow_margin = 16 if self._hover else 4
         track_length = max(1, length - arrow_margin * 2)
         total = max(1, self.maximum() - self.minimum() + self.pageStep())
@@ -161,16 +167,26 @@ class FluentScrollBar(QtWidgets.QScrollBar):
         return QtCore.QRectF(offset, y, handle_length, height)
 
     def _set_value_from_position(self, position: float) -> None:
-        length = self.height() if self.orientation() == QtCore.Qt.Orientation.Vertical else self.width()
+        length = (
+            self.height() if self.orientation() == QtCore.Qt.Orientation.Vertical else self.width()
+        )
         arrow_margin = 16 if self._hover else 4
         handle = self._handle_rect()
-        handle_length = handle.height() if self.orientation() == QtCore.Qt.Orientation.Vertical else handle.width()
+        handle_length = (
+            handle.height()
+            if self.orientation() == QtCore.Qt.Orientation.Vertical
+            else handle.width()
+        )
         travel = max(1.0, length - arrow_margin * 2 - handle_length)
         ratio = max(0.0, min(1.0, (position - arrow_margin) / travel))
         self.setValue(round(self.minimum() + ratio * (self.maximum() - self.minimum())))
 
     def _event_position(self, event: QtGui.QMouseEvent) -> float:
-        return event.position().y() if self.orientation() == QtCore.Qt.Orientation.Vertical else event.position().x()
+        return (
+            event.position().y()
+            if self.orientation() == QtCore.Qt.Orientation.Vertical
+            else event.position().x()
+        )
 
     def _main_start(self, rect: QtCore.QRectF) -> float:
         return rect.top() if self.orientation() == QtCore.Qt.Orientation.Vertical else rect.left()

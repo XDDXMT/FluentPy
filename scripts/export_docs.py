@@ -1,18 +1,25 @@
 """Export the website into an independent, self-contained documentation checkout."""
+
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
-from pathlib import Path
 import shutil
 import subprocess
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "sites/fluentpy-docs"
 PUBLIC = {".html", ".css", ".js", ".svg", ".png", ".gif", ".txt"}
-PUBLIC_TOOLS = {"build_content.py", "validate_site.py", "package_deploy.py", "source_project.py", "启动本地文档.bat"}
-README = '''# FluentPy Docs
+PUBLIC_TOOLS = {
+    "build_content.py",
+    "validate_site.py",
+    "package_deploy.py",
+    "source_project.py",
+    "启动本地文档.bat",
+}
+README = """# FluentPy Docs
 
 [官网](https://fluentpy.mcxmcl.cn/) · [组件库源码](https://github.com/XDDXMT/FluentPy) · [文档问题](https://github.com/XDDXMT/FluentPy-Docs/issues)
 
@@ -78,13 +85,17 @@ python package_deploy.py --output build/FluentPy-docs-complete.zip
 本仓库由组件库内的 `scripts/export_docs.py` 导出；对应版本见 `SOURCE.json`。组件库内保留文档副本，贡献文档时请明确修改的来源并同步相关内容。
 
 FluentPy 的网站源码及文档采用 MIT，保留原始版权声明与许可文本。Microsoft Fluent System Icons 的许可在 `dist/assets/icons-LICENSE.txt`；第三方声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。Qt/PySide6 及可选 PyQt6 的许可单独适用，本仓库不分发它们的二进制。
-'''
+"""
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True, help="A new or empty directory")
-    parser.add_argument("--update", action="store_true", help="Refresh an unmodified previous export, preserving Git metadata")
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        help="Refresh an unmodified previous export, preserving Git metadata",
+    )
     args = parser.parse_args()
     destination = args.output.resolve()
     if destination.exists() and any(destination.iterdir()):
@@ -95,7 +106,11 @@ def main():
             parser.error("The destination is not a FluentPy documentation export.")
         for name, checksum in previous["sha256"].items():
             path = (destination / name).resolve()
-            if not path.is_relative_to(destination) or not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != checksum:
+            if (
+                not path.is_relative_to(destination)
+                or not path.is_file()
+                or hashlib.sha256(path.read_bytes()).hexdigest() != checksum
+            ):
                 parser.error(f"Preserving modified destination file: {name}")
     if destination == ROOT or ROOT in destination.parents:
         parser.error("Choose a directory outside the component repository.")
@@ -106,7 +121,11 @@ def main():
             shutil.copy2(path, destination / path.name)
             exported.add(path.name)
     for path in (SITE / "dist").rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in PUBLIC or path.name == "showcase-light.gif":
+        if (
+            not path.is_file()
+            or path.suffix.lower() not in PUBLIC
+            or path.name == "showcase-light.gif"
+        ):
             continue
         relative = path.relative_to(SITE)
         if any(part.startswith(".") for part in relative.parts):
@@ -118,9 +137,15 @@ def main():
     shutil.copy2(ROOT / "LICENSE", destination / "LICENSE")
     (destination / "README.md").write_text(README, encoding="utf-8")
     (destination / "requirements.txt").write_text("Pillow>=10\n", encoding="utf-8")
-    (destination / ".gitignore").write_text("__pycache__/\n*.py[cod]\n.venv/\nvenv/\n.openai/\nnode_modules/\nbuild/\n*.log\n*.zip\n.env\n.env.*\n# Capture tools are maintained in the component repository.\n/capture_*.py\n", encoding="utf-8")
-    (destination / ".gitattributes").write_text("* text=auto eol=lf\n*.png binary\n*.gif binary\n", encoding="utf-8")
-    (destination / "THIRD_PARTY_NOTICES.md").write_text('''# Third-party notices
+    (destination / ".gitignore").write_text(
+        "__pycache__/\n*.py[cod]\n.venv/\nvenv/\n.openai/\nnode_modules/\nbuild/\n*.log\n*.zip\n.env\n.env.*\n# Capture tools are maintained in the component repository.\n/capture_*.py\n",
+        encoding="utf-8",
+    )
+    (destination / ".gitattributes").write_text(
+        "* text=auto eol=lf\n*.png binary\n*.gif binary\n", encoding="utf-8"
+    )
+    (destination / "THIRD_PARTY_NOTICES.md").write_text(
+        """# Third-party notices
 
 ## Microsoft Fluent UI System Icons
 
@@ -133,19 +158,48 @@ def main():
 ## Qt for Python
 
 Screenshots and recordings are produced from FluentPy's Qt controls. Qt, PySide6 and the optional PyQt6 fallback are separately licensed dependencies used to run capture and validation scripts. Their binaries are not bundled here; FluentPy's MIT license does not replace their licenses.
-''', encoding="utf-8")
-    exported.update({"LICENSE", "README.md", "requirements.txt", ".gitignore", ".gitattributes", "THIRD_PARTY_NOTICES.md"})
+""",
+        encoding="utf-8",
+    )
+    exported.update(
+        {
+            "LICENSE",
+            "README.md",
+            "requirements.txt",
+            ".gitignore",
+            ".gitattributes",
+            "THIRD_PARTY_NOTICES.md",
+        }
+    )
     for name in exported:
         path = destination / name
         if path.suffix.lower() not in {".png", ".gif"}:
             path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n"))
-    inventory = {name: hashlib.sha256((destination / name).read_bytes()).hexdigest() for name in sorted(exported)}
-    website_data = json.loads((SITE / "dist/data.js").read_text(encoding="utf-8").removeprefix("window.DOCS_DATA = ").rstrip(";\n"))
-    metadata = {"component_repository":"https://github.com/XDDXMT/FluentPy", "component_version":website_data["version"],
-        "component_commit":subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-        "component_worktree_dirty":bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT)),
-        "documentation_directory":"sites/fluentpy-docs", "sha256":inventory}
-    (destination / "SOURCE.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    inventory = {
+        name: hashlib.sha256((destination / name).read_bytes()).hexdigest()
+        for name in sorted(exported)
+    }
+    website_data = json.loads(
+        (SITE / "dist/data.js")
+        .read_text(encoding="utf-8")
+        .removeprefix("window.DOCS_DATA = ")
+        .rstrip(";\n")
+    )
+    metadata = {
+        "component_repository": "https://github.com/XDDXMT/FluentPy",
+        "component_version": website_data["version"],
+        "component_commit": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+        ).strip(),
+        "component_worktree_dirty": bool(
+            subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT)
+        ),
+        "documentation_directory": "sites/fluentpy-docs",
+        "sha256": inventory,
+    }
+    (destination / "SOURCE.json").write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     print(f"Exported {len(inventory) + 1} files to {destination}")
 
 

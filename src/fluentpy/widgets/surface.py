@@ -62,7 +62,9 @@ QFrame#fluentCard {{
 
         sheen = QtGui.QLinearGradient(rect.left(), rect.top(), rect.right(), rect.bottom())
         sheen.setColorAt(0.0, QtGui.QColor(255, 255, 255, 0))
-        sheen.setColorAt(0.38, QtGui.QColor(255, 255, 255, 18 if tokens.mode.value == "dark" else 30))
+        sheen.setColorAt(
+            0.38, QtGui.QColor(255, 255, 255, 18 if tokens.mode.value == "dark" else 30)
+        )
         sheen.setColorAt(0.52, QtGui.QColor(255, 255, 255, 0))
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(sheen)
@@ -189,7 +191,11 @@ class _SourceOpenButton(QtWidgets.QAbstractButton):
             fill.setAlpha(18 if theme.tokens.mode.value == "dark" else 10)
             painter.setBrush(fill)
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
-            painter.drawRoundedRect(QtCore.QRectF(self.rect()).adjusted(2, 2, -2, -2), theme.tokens.radius, theme.tokens.radius)
+            painter.drawRoundedRect(
+                QtCore.QRectF(self.rect()).adjusted(2, 2, -2, -2),
+                theme.tokens.radius,
+                theme.tokens.radius,
+            )
 
         rect = QtCore.QRect(6, 6, 16, 16)
         pixmap = QtGui.QPixmap(rect.size())
