@@ -36,3 +36,15 @@ zig-out/
 # Unused showcase recording contains transition capture artifacts.
 /docs/assets/showcase-light.gif
 /sites/fluentpy-docs/dist/assets/previews/showcase-light.gif
+
+# Local maintainer tools and working notes are not public project sources.
+/AGENTS.md
+/QA_CHECKLIST.md
+/UPDATE_LOG.md
+/上传到PyPI.bat
+/scripts/publish_pypi.py
+/scripts/publish_workbench.py
+/tests/test_pypi_release.py
+/docs/context.md
+/docs/visual-research.md
+/docs/winui-resource-notes.md

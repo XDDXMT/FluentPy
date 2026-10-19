@@ -2,7 +2,7 @@
 
 官网：[fluentpy.mcxmcl.cn](https://fluentpy.mcxmcl.cn/)。纯静态文档，无在线字体或服务器运行时依赖。
 
-独立开源仓库：[XDDXMT/FluentPy-Docs](https://github.com/XDDXMT/FluentPy-Docs)，包含网页源码、完整静态页面及媒体生成脚本，采用 MIT 许可。本目录保留组件库内的文档副本；运行 `python scripts/export_docs.py --output <空目录>` 可导出独立仓库内容，忽略本机配置、缓存和构建产物。
+独立开源仓库：[XDDXMT/FluentPy-Docs](https://github.com/XDDXMT/FluentPy-Docs)，包含网页源码、完整静态页面及生成、校验和打包工具，采用 MIT 许可。媒体录制脚本统一保留在组件库的本目录，避免在文档仓库根目录重复分发。运行 `python scripts/export_docs.py --output <空目录>` 可导出独立仓库内容，忽略本机配置、缓存和构建产物。
 
 独立检出后，可直接用 `python -m http.server 8767 --bind 0.0.0.0 --directory dist` 预览。生成 API 或 Qt 媒体时，把组件库克隆在旁边的 `FluentPy/` 目录，或设置环境变量 `FLUENTPY_SOURCE_ROOT`；脚本不再依赖固定的本机路径。
 

@@ -257,7 +257,7 @@ python -m pytest
 | `tests/` | 正确性、生命周期与交互测试 |
 | `scripts/`、`benchmarks/` | 构建工具、性能复现脚本与报告 |
 
-后续后端运算以C作为首选加速实现，并维护可用的Python兼容路径；Python同时保持公开接口、绑定和Qt界面逻辑。扩展缺失不能导致组件不可用，详见[开发约定](AGENTS.md)。
+后续后端运算以C作为首选加速实现，并维护可用的Python兼容路径；Python同时保持公开接口、绑定和Qt界面逻辑。扩展缺失不能导致组件不可用，详见[后端选择与兼容回退](docs/backends.md)。
 
 欢迎通过 [Issues](https://github.com/XDDXMT/FluentPy/issues) 提交问题与建议。使用场景可参考 [FluentMelody](https://github.com/XDDXMT/FluentMelody)。
 

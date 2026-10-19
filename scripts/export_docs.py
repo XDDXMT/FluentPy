@@ -11,11 +11,12 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "sites/fluentpy-docs"
 PUBLIC = {".html", ".css", ".js", ".svg", ".png", ".gif", ".txt"}
+PUBLIC_TOOLS = {"build_content.py", "validate_site.py", "package_deploy.py", "source_project.py", "启动本地文档.bat"}
 README = '''# FluentPy Docs
 
 [官网](https://fluentpy.mcxmcl.cn/) · [组件库源码](https://github.com/XDDXMT/FluentPy) · [文档问题](https://github.com/XDDXMT/FluentPy-Docs/issues)
 
-FluentPy 0.7.1 中文文档的独立开源仓库。首页保留项目简介、Qt 接口演示和 C 流程说明，并展示新版工作台截图。包含网站 HTML、CSS、JavaScript、全部静态页面数据、107 个 Fluent 图标、真实 Qt 控件截图和 GIF，以及内容生成、媒体录制、校验和打包脚本。项目采用 [MIT 许可证](LICENSE)。
+FluentPy 0.7.1 中文文档的独立开源仓库。首页保留项目简介、Qt 接口演示和 C 流程说明，并展示新版工作台截图。包含网站 HTML、CSS、JavaScript、全部静态页面数据、107 个 Fluent 图标、真实 Qt 控件截图和 GIF，以及内容生成、校验和打包脚本。项目采用 [MIT 许可证](LICENSE)。
 
 ## 直接预览
 
@@ -36,11 +37,10 @@ python -m http.server 8767 --bind 0.0.0.0 --directory dist
 | `dist/data.js` | 生成的页面数据，不直接编辑 |
 | `dist/assets/` | 本地图片、GIF、SVG 与许可文件 |
 | `dist/native-flow.*`、`dist/migration.*` | C 后端说明和 Qt 接口过渡动画 |
-| `capture_*.py` | 使用 FluentPy 原生 Qt 控件生成媒体 |
 | `validate_site.py`、`package_deploy.py` | 校验与完整静态包 |
 | `SOURCE.json` | 本次同步对应的组件库提交和文件校验值 |
 
-编辑 HTML、CSS 或 JS 后即可预览。修改文档内容、提取 API 或录制 Qt 画面时，需要单独检出组件库：
+编辑 HTML、CSS 或 JS 后即可预览。修改文档内容、提取 API 时，需要单独检出组件库：
 
 ```sh
 git clone https://github.com/XDDXMT/FluentPy.git ../FluentPy
@@ -60,7 +60,7 @@ python validate_site.py
 
 Linux/macOS 使用 `export FLUENTPY_SOURCE_ROOT=/path/to/FluentPy`。组件库中的 Python 回退可在没有 C 扩展时运行；后端计算以 C 为首选加速，Qt 继续负责界面。
 
-更新首页实际界面用 `python capture_workbench_redesign.py`。其他控件由对应的 `capture_*.py` 维护；录制需要 Qt、Pillow 和适合的系统字体。临时报告写入组件库的 `build/`，工作台配图也会同步该组件库的 README 图片。重新录制后运行内容生成与校验。
+Qt 截图和动图的录制工具集中在[组件库的文档目录](https://github.com/XDDXMT/FluentPy/tree/main/sites/fluentpy-docs)，本仓库保留生成后的媒体。需要重新录制时，在组件库根目录运行 `python sites/fluentpy-docs/capture_workbench_redesign.py` 或对应的 `capture_*.py`，然后重新生成、校验并同步文档。
 
 ## 部署
 
@@ -102,7 +102,7 @@ def main():
     destination.mkdir(parents=True, exist_ok=True)
     exported = set()
     for path in SITE.iterdir():
-        if path.is_file() and path.suffix in {".py", ".bat"}:
+        if path.is_file() and path.name in PUBLIC_TOOLS:
             shutil.copy2(path, destination / path.name)
             exported.add(path.name)
     for path in (SITE / "dist").rglob("*"):
@@ -118,7 +118,7 @@ def main():
     shutil.copy2(ROOT / "LICENSE", destination / "LICENSE")
     (destination / "README.md").write_text(README, encoding="utf-8")
     (destination / "requirements.txt").write_text("Pillow>=10\n", encoding="utf-8")
-    (destination / ".gitignore").write_text("__pycache__/\n*.py[cod]\n.venv/\nvenv/\n.openai/\nnode_modules/\nbuild/\n*.log\n*.zip\n.env\n.env.*\n", encoding="utf-8")
+    (destination / ".gitignore").write_text("__pycache__/\n*.py[cod]\n.venv/\nvenv/\n.openai/\nnode_modules/\nbuild/\n*.log\n*.zip\n.env\n.env.*\n# Capture tools are maintained in the component repository.\n/capture_*.py\n", encoding="utf-8")
     (destination / ".gitattributes").write_text("* text=auto eol=lf\n*.png binary\n*.gif binary\n", encoding="utf-8")
     (destination / "THIRD_PARTY_NOTICES.md").write_text('''# Third-party notices
 

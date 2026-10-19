@@ -1,6 +1,4 @@
 include LICENSE THIRD_PARTY_NOTICES.md README.md README-PyPI.md pyproject.toml setup.py
-include UPDATE_LOG.md AGENTS.md
-include 上传到PyPI.bat
 include .editorconfig .gitattributes
 recursive-include src *.py *.svg
 recursive-include native *.c *.h
@@ -12,4 +10,7 @@ include benchmarks/baseline-original.json
 include benchmarks/text-performance*.json
 recursive-include docs *.md *.png
 recursive-include licenses *.txt
+exclude AGENTS.md QA_CHECKLIST.md UPDATE_LOG.md 上传到PyPI.bat
+exclude scripts/publish_pypi.py scripts/publish_workbench.py tests/test_pypi_release.py
+exclude docs/context.md docs/visual-research.md docs/winui-resource-notes.md
 global-exclude *.pyd *.dll *.so *.pyc *.pyo
