@@ -1,0 +1,136 @@
+
+name: "✨ 功能建议 | Feature Request"
+description: "为 FluentPy 提出新功能、控件或改进建议"
+title: "[Feature] "
+labels:
+  - enhancement
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ✨ FluentPy 功能建议
+
+        感谢你为 FluentPy 提出建议！
+
+        我们欢迎有关新控件、界面设计、交互体验、
+        API 设计及现有功能改进的建议。
+
+        提交前请先搜索现有 Issue，
+        避免重复提交相同或类似的需求。
+
+        请尽可能清晰地描述你的想法。
+        建议不保证一定被采纳或实现。
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: "提交前确认"
+      options:
+        - label: "我已搜索现有 Issue，确认没有重复建议"
+          required: true
+        - label: "我确认该 Issue 属于功能建议，而非 Bug 反馈"
+          required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: "功能分类"
+      description: "请选择最符合该建议的类别"
+      options:
+        - "新增 UI 控件"
+        - "现有控件功能改进"
+        - "Fluent Design 视觉与动画"
+        - "窗口与导航系统"
+        - "主题、颜色及样式系统"
+        - "API 与开发体验"
+        - "性能与资源占用"
+        - "兼容性与无障碍支持"
+        - "文档及示例改进"
+        - "其他"
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: "需求背景"
+      description: "为什么需要这个功能？当前存在什么不足？"
+      placeholder: |
+        请描述当前使用 FluentPy 时遇到的问题，
+        或现有功能无法满足的实际使用场景。
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature
+    attributes:
+      label: "功能描述"
+      description: "请详细描述希望新增或改进的功能"
+      placeholder: |
+        我希望 FluentPy 能够支持……
+
+        具体功能包括：
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: behavior
+    attributes:
+      label: "预期行为与交互效果"
+      description: "描述功能的外观、行为及交互方式"
+      placeholder: |
+        例如：
+        - 控件应该如何显示？
+        - 用户操作时应如何响应？
+        - 是否需要动画或状态反馈？
+        - 是否需要支持深色/浅色主题？
+    validations:
+      required: true
+
+  - type: textarea
+    id: api
+    attributes:
+      label: "预期 API 或使用示例"
+      description: "如涉及 Python API，可提供预期调用方式"
+      render: python
+      placeholder: |
+        # 可选：填写期望的 Python 使用示例
+    validations:
+      required: false
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: "设计参考与补充资料"
+      description: "可以提供截图、设计稿、参考链接等"
+      placeholder: |
+        例如：
+        - Windows 11 原生控件截图
+        - Microsoft Fluent 设计规范
+        - 其他 UI 库中的类似实现
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "需求重要程度"
+      description: "仅代表建议者的判断，最终由维护者评估"
+      options:
+        - "低 - 可选的体验改进"
+        - "中 - 能明显改善开发或使用体验"
+        - "高 - 对实际开发需求影响较大"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: "其他补充信息"
+      description: "任何有助于理解或评估该功能的信息"
+    validations:
+      required: false
