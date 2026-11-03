@@ -21,39 +21,11 @@ from fluentpy.qt import QtCore, QtGui, QtWidgets
 
 
 def sample_image():
-    """Original vector-like landscape rendered by Qt, requiring no downloads."""
-    image = QtGui.QImage(960, 600, QtGui.QImage.Format.Format_RGB32)
-    painter = QtGui.QPainter(image)
-    painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-    sky = QtGui.QLinearGradient(0, 0, 960, 600)
-    sky.setColorAt(0, QtGui.QColor("#153f78"))
-    sky.setColorAt(0.6, QtGui.QColor("#5ac8cd"))
-    sky.setColorAt(1, QtGui.QColor("#e0f3ed"))
-    painter.fillRect(image.rect(), sky)
-    painter.setPen(QtCore.Qt.PenStyle.NoPen)
-    painter.setBrush(QtGui.QColor("#f5dc96"))
-    painter.drawEllipse(QtCore.QPointF(720, 155), 66, 66)
-    for color, points in (
-        (
-            "#31677a",
-            [(0, 460), (270, 180), (570, 480), (810, 270), (960, 420), (960, 600), (0, 600)],
-        ),
-        ("#174e60", [(0, 530), (350, 350), (650, 530), (960, 380), (960, 600), (0, 600)]),
-        ("#103a49", [(0, 600), (0, 540), (400, 480), (700, 570), (960, 500), (960, 600)]),
-    ):
-        painter.setBrush(QtGui.QColor(color))
-        painter.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(x, y) for x, y in points]))
-    painter.setPen(QtGui.QColor("#e1f6f1"))
-    font = painter.font()
-    font.setPixelSize(38)
-    font.setBold(True)
-    painter.setFont(font)
-    painter.drawText(48, 76, "FLUENTPY / LANDSCAPE")
-    font.setPixelSize(17)
-    font.setBold(False)
-    painter.setFont(font)
-    painter.drawText(50, 108, "Explore the details. Make it yours.")
-    painter.end()
+    """Load the bundled sample shared by the workbench and image documentation."""
+    path = Path(__file__).with_name("assets") / "image-demo.png"
+    image = QtGui.QImage(str(path))
+    if image.isNull():
+        raise RuntimeError(f"Cannot load the bundled image example: {path}")
     return image
 
 

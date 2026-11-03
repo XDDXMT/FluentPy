@@ -103,8 +103,6 @@ def main():
         "benchmark_text",
         "--hidden-import",
         "workbench_smoke",
-        "--collect-data",
-        "fluentpy",
         "--exclude-module",
         "PyQt6",
         "--exclude-module",
@@ -119,6 +117,8 @@ def main():
         "numpy",
     ]
     data_files = [
+        (ROOT / "examples/assets", "assets"),
+        (ROOT / "src/fluentpy/assets", "fluentpy/assets"),
         (ROOT / "LICENSE", "."),
         (ROOT / "THIRD_PARTY_NOTICES.md", "."),
         (ROOT / "licenses", "licenses"),

@@ -4,6 +4,7 @@ recursive-include src *.py *.svg *.json
 recursive-include native *.c *.h
 recursive-include scripts *.py *.ps1 *.bat
 recursive-include examples *.py *.bat
+recursive-include examples/assets *.png
 recursive-include tests *.py
 include benchmarks/baseline-original-source.json
 include benchmarks/baseline-original.json
