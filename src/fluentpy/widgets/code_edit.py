@@ -1,46 +1,15 @@
-"""A small Fluent code editor with a synchronized gutter and JSON highlighting."""
+"""Fluent code editor with line numbers and selectable syntax highlighting."""
 
 from __future__ import annotations
 
 import re
 
-from ..backends.text import backend_name, json_spans_native, json_spans_python
+from ..backends.syntax import supported_languages
+from ..backends.text import backend_name
 from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..theme import theme
 from .scroll_bar import FluentScrollBar
-
-
-class _JsonHighlighter(QtGui.QSyntaxHighlighter):
-    _kinds = ("key", "string", "number", "literal")
-
-    def __init__(self, document: QtGui.QTextDocument) -> None:
-        super().__init__(document)
-        self.language = "json"
-        self.formats: dict[str, QtGui.QTextCharFormat] = {}
-        self._select_backend()
-
-    def _select_backend(self) -> None:
-        self.backend = backend_name()
-        self._scan = json_spans_native if self.backend == "native" else json_spans_python
-
-    def rehighlight(self) -> None:
-        # Resolve configuration once per pass, rather than once per line.
-        self._select_backend()
-        super().rehighlight()
-
-    def set_colors(self, colors: dict[str, str]) -> None:
-        self.formats = {}
-        for name, color in colors.items():
-            text_format = QtGui.QTextCharFormat()
-            text_format.setForeground(QtGui.QColor(color))
-            self.formats[name] = text_format
-        self.rehighlight()
-
-    def highlightBlock(self, text: str) -> None:
-        if self.language != "json" or not self.formats:
-            return
-        for start, length, kind in self._scan(text):
-            self.setFormat(start, length, self.formats[self._kinds[kind]])
+from .syntax_highlighter import SyntaxHighlighter
 
 
 class _LineNumbers(QtWidgets.QWidget):
@@ -251,13 +220,14 @@ class _TextArea(QtWidgets.QPlainTextEdit):
 
 
 class CodeEdit(QtWidgets.QWidget):
-    """Editable JSON/plain text with line numbers and a Fluent focus underline.
+    """Editable code with selectable languages, line numbers and a focus underline.
 
     ``text_edit`` exposes the underlying QPlainTextEdit for Qt cursor, selection,
     clipboard and document APIs. Highlighting does not validate JSON.
     """
 
     textChanged = Signal()
+    highlightingError = Signal(str)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None, *, language: str = "json") -> None:
         super().__init__(parent)
@@ -279,32 +249,37 @@ class CodeEdit(QtWidgets.QWidget):
         layout.setContentsMargins(1, 5, 1, 5)
         layout.setSpacing(0)
         layout.addWidget(self.text_edit)
-        self._highlighter = _JsonHighlighter(self.text_edit.document())
+        self._highlighter = SyntaxHighlighter(self.text_edit.document())
+        self._highlighter.errorOccurred.connect(self.highlightingError)
         self.set_language(language)
         self._apply_theme()
         theme.subscribe(self, self._apply_theme)
 
     def set_code(self, code: str) -> None:
-        if self.language() == "json":
-            self._highlighter._select_backend()
+        self._highlighter._select_backend()
         self.text_edit.setPlainText(code)
 
     def code(self) -> str:
         return self.text_edit.toPlainText()
 
     def set_language(self, language: str) -> None:
-        if language not in ("json", "plain"):
-            raise ValueError("language must be 'json' or 'plain'")
-        if language == "json":
-            backend_name()
-        self._highlighter.language = language
-        self._highlighter.rehighlight()
+        self._highlighter.set_language(language)
+
+    @staticmethod
+    def supported_languages() -> tuple[str, ...]:
+        return supported_languages()
+
+    def syntax_highlighter(self) -> SyntaxHighlighter:
+        return self._highlighter
+
+    def set_token_provider(self, provider) -> None:
+        self._highlighter.set_token_provider(provider)
 
     def language(self) -> str:
         return self._highlighter.language
 
     def acceleration_backend(self) -> str:
-        """Return the JSON backend used by the current highlighter."""
+        """Return native, python or custom for the current syntax highlighter."""
         return self._highlighter.backend
 
     def set_font_size(self, pixels: int) -> None:
@@ -374,6 +349,15 @@ class CodeEdit(QtWidgets.QWidget):
                 "string": "#00a42f" if light else "#68a850",
                 "number": "#0059ff" if light else "#00b8cc",
                 "literal": "#003fff" if light else "#dc8b55",
+                "keyword": "#0000cc" if light else "#c586c0",
+                "comment": "#608060" if light else "#6a9955",
+                "operator": "#555555" if light else "#d4d4d4",
+                "function": "#795e26" if light else "#dcdcaa",
+                "type": "#267f99" if light else "#4ec9b0",
+                "tag": "#800000" if light else "#569cd6",
+                "attribute": "#e50000" if light else "#9cdcfe",
+                "decorator": "#795e26" if light else "#dcdcaa",
+                "variable": "#001080" if light else "#9cdcfe",
             }
         )
         self.text_edit.update_gutter_width()

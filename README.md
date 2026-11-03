@@ -4,13 +4,13 @@
 
 FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小馒头** 独立开发，采用 [MIT 许可证](LICENSE)。从输入框、卡片和日期滚轮，到带动画的导航、代码编辑器和消息浮层，可以逐个使用，也可以组合成完整工作台。
 
-界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前源码版本为 **0.7.3**，仍处于早期开发阶段。
+界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前版本为 **0.8.0**，仍处于早期开发阶段。
 
-[官方文档](https://fluentpy.mcxmcl.cn/) · [文档源码](https://github.com/XDDXMT/FluentPy-Docs) · [快速开始](#快速开始) · [组件与示例](#组件与示例) · [C 后端与性能](#c-后端与性能) · [问题反馈](https://github.com/XDDXMT/FluentPy/issues)
+[项目主页](https://fluentpy.mcxmcl.cn/) · [官方文档](https://fluentpy.mcxmcl.cn/docs/) · [文档源码](https://github.com/XDDXMT/FluentPy-Docs) · [快速开始](#快速开始) · [组件与示例](#组件与示例) · [C 后端与性能](#c-后端与性能) · [问题反馈](https://github.com/XDDXMT/FluentPy/issues)
 
 ## 界面展示
 
-组件示例程序包含组件概览、14个组件页面和底部固定的设置页，直接使用 FluentWindow 的导航、标题栏与页面历史。组件页面涵盖按钮与右键菜单、输入、表格、滑块、日期时间、日历、拖放、颜色与取色、快捷键、卡片、导航、消息、代码编辑和音符。搜索和概览固定，中间导航列表独立滚动，底部设置随时可用。
+组件示例程序包含组件概览、17个组件页面和底部固定的设置页，直接使用 FluentWindow 的导航、标题栏与页面历史。组件页面涵盖按钮与右键菜单、输入、表格、树形列表、滑块、日期时间、日历、拖放、颜色与取色、快捷键、卡片、导航、消息、代码编辑、图像与头像、音视频播放和音符。搜索和概览固定，中间导航列表独立滚动，底部设置随时可用。
 
 0.7.0 的主页将欢迎横幅、半透明快捷入口与紧凑组件分类组合在一起。分类支持整卡点击、键盘操作与名称／API 搜索，宽屏居中、窄窗口自动换列；文档简介页保留原有布局与说明，展示新版工作台截图。
 
@@ -35,6 +35,16 @@ FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小
 
 工作台“表格”提供 `TableView` 与 `TableWidget`，支持普通／圆角／细线行、搜索、原生排序、编辑、复选项、多选复制与高级右键菜单；外观设置默认收起。两种 Qt 数据接口各自保留编辑，详见[表格](docs/tables.md)。
 
+0.8.0 新增 `TreeTableView` 与 `TreeTableWidget`，提供层级分组、列格式、数值热度、进度、状态与单元格操作。工作台“树形列表”包含应用资源、项目任务和外部 Qt 文件模型三个场景；支持局部更新、保留父路径的搜索与自定义代理。详见[树形数据列表](docs/tree-tables.md)，独立运行 `python examples/tree_tables.py`。
+
+0.8.0 还提供以下独立控件与示例，均不依赖工作台内部实现：
+
+- [多语言代码高亮](docs/code-editor.md)：17 种语言模式、C 扫描与 Python 回退，可提供自己的分词器。`python examples/code_editor.py`。
+- [图像与头像](docs/images.md)：图片 / GIF、圆形头像、本地头像裁剪、独立裁剪画布与实时区域放大镜。`python examples/images.py`。
+- [音视频播放](docs/media.md)：紧凑与完整音频条、原生视频输出，共用控制器和可扩展左 / 中 / 右布局。`python examples/media.py`。
+
+图标目录收录 2624 个 MIT 许可的 Microsoft Fluent System Icons 和一个 FluentPy 叶子图标；文档支持按用途分类与中英文搜索。独立展示主页位于 `sites/fluentpy-home`，完整网站部署工具会将它与原有文档组合为 `/` 和 `/docs/`，保留原文档简介与作者说明。
+
 `FluentWindow` 保留原生 Qt 主窗口与系统标题栏，可按需注册页面，使用响应式侧栏、顶部导航、前进／后退和底部设置。可选 `FluentTitleBar` 为搜索框、标签与额外操作提供普通 Qt 布局；页面与输入在切换布局时保留。运行 `python examples/fluent_window.py` 体验，详见[流畅窗口](docs/fluent-window.md)。
 
 `SplashScreen` 提供居中图标、可选加载提示和完成渐隐。启动时顶部只保留三个窗口操作，结束后恢复完整标题栏。工作台“页面导航 → 启动页面”可调整并重播，也可运行 `python examples/splash_screen.py`。详见[启动页面](docs/splash-screen.md)。
@@ -47,7 +57,7 @@ FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小
 
 需要 **Python 3.10+**。PyPI 安装名为 **`fluentpy-qt`**，代码导入名仍是 **`fluentpy`**。PyPI 上的 `fluentpy` 属于其他项目，不要用它安装本组件库，也不要将两个项目装在同一环境。
 
-**0.7.3 整理了组件模块、代码格式与注释，并加入发布前质量检查，原有公开导入方式保持兼容。** 0.7.2 新增的双行分体按钮和 0.7.1 对窗口通知定位的修复继续保留。已有虚拟环境时，以下命令安装或升级到最新发布版本：
+**0.8.0 新增树形数据列表、多语言代码高亮、图像与头像控件及音视频播放器，并扩充图标目录。** 原有公开导入方式保持兼容，继续保留双行分体按钮和窗口通知定位修复。已有虚拟环境时，以下命令安装或升级到最新发布版本：
 
 ```console
 python -m pip install --upgrade fluentpy-qt
@@ -145,7 +155,7 @@ sys.exit(app.exec())
 | 反馈与状态 | `InfoBar`、`ProgressInfoBar`：横纵消息条、嵌入布局与任务状态；`Toast`、`ColorToast`、`ProgressToast`：顶部色条、操作按钮、六种位置混合堆叠与单段进度；`ToggleSwitch`、`Slider`、`ProgressBar` |
 | 窗口与容器 | `FluentWindow`、无边框对话框、页内遮罩对话框、`FluentScrollBar`、`Card`、`ExamplePanel` |
 | 音符视图 | `NoteTimeline`、`NoteEvent`：单轨／多轨概览、配色、进度游标与时间定位 |
-| 主题与资源 | 浅色／深色主题、强调色、统一字体、107 个 Microsoft Fluent System Icons |
+| 主题与资源 | 浅色／深色主题、强调色、统一字体、2624 个 Microsoft Fluent System Icons 与自有 Leaf（均 MIT） |
 
 独立 Demo 适合只看一个组件。在已安装依赖的环境中，从仓库根目录运行：
 

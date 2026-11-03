@@ -31,7 +31,7 @@ LINKS = (
         "开始使用",
         "安装组件库，创建你的第一个\nFluentPy 桌面窗口。",
         None,
-        "https://fluentpy.mcxmcl.cn/#/getting-started",
+        "https://fluentpy.mcxmcl.cn/docs/#/getting-started",
     ),
     (
         "项目源码",
@@ -43,7 +43,7 @@ LINKS = (
         "组件示例",
         "从按钮到表格，探索布局、\n交互与明暗主题。",
         FluentIcon.GRID,
-        "https://fluentpy.mcxmcl.cn/#/cards",
+        "https://fluentpy.mcxmcl.cn/docs/#/cards",
     ),
     (
         "交流反馈",

@@ -33,9 +33,14 @@ FluentPy may use or adapt resources from third-party open-source projects only w
 - Copyright (c) 2020 Microsoft Corporation.
 - License: MIT; complete text in `licenses/Microsoft-Fluent-System-Icons-LICENSE.txt`.
 - Usage: bundled SVG icons for `IconButton`, examples, and future controls.
-- Bundled files: `src/fluentpy/assets/icons/ic_fluent_*_24_regular.svg` (107 icons).
+- Bundled files: `src/fluentpy/assets/icons/ic_fluent_*_24_regular.svg` (2624 icons, including localized variants).
+- Complete 24px Regular inventory pinned to Microsoft commit `9eb184e96268d3293462f9d9d19225b4c7b07774`; individual sources, hashes and preserved earlier variants are recorded in `src/fluentpy/assets/icons/UPSTREAM.json` and `SOURCE.md`. The upstream NOTICE is retained in `licenses/Microsoft-Fluent-System-Icons-NOTICE.txt`.
 - Eyedropper: original Microsoft `assets/Eyedropper/SVG/ic_fluent_eyedropper_24_regular.svg`, bundled unchanged as `FluentIcon.EYEDROPPER`; download URL and checksum in `src/fluentpy/assets/icons/SOURCE.md`.
 - Music Note 2: original `assets/Music Note 2/SVG/ic_fluent_music_note_2_24_regular.svg` from the official Microsoft repository, bundled unchanged as `FluentIcon.MUSIC_NOTE_2`. Its pinned source and checksum are recorded in `src/fluentpy/assets/icons/SOURCE.md`.
+
+## FluentPy assets
+
+The additional `src/fluentpy/assets/icons/fluentpy_leaf_24_regular.svg` is an independently drawn FluentPy asset under this project's MIT license. It is not a Microsoft asset. Its public entry is `FluentIcon.LEAF`.
 
 ## Qt for Python
 

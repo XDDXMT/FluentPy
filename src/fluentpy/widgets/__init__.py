@@ -1,5 +1,6 @@
 from .action_menu import ActionMenu
 from .affix_line_edit import AffixLineEdit
+from .avatar import AvatarPicker, AvatarWidget
 from .button import (
     AccentButton,
     AccentIconButton,
@@ -37,6 +38,9 @@ from .drop import DropArea, FileDropWidget, FolderDropWidget
 from .expandable_card import AccordionWidget, ExpandableCardWidget
 from .eyedropper import EyeDropperButton, ScreenColorPicker
 from .header_card import GroupHeaderCardWidget, HeaderCardWidget
+from .image_cropper import ImageCropDialog, ImageCropper
+from .image_magnifier import ImageMagnifier
+from .image_view import ImageView
 from .info_bar import InfoBar, ProgressInfoBar
 from .line_edit import (
     DoubleSpinBox,
@@ -48,6 +52,8 @@ from .line_edit import (
     TextEdit,
 )
 from .loading_button import LoadingButton
+from .media_controller import MediaController
+from .media_player import AudioPlayer, CompactAudioPlayer, VideoPlayer
 from .menu_button import AccentDropDownButton, DropDownButton
 from .navigation import AnimatedStackedWidget, NavigationItem, NavigationSidebar, NavigationView
 from .navigation_controls import BreadcrumbBar, Pivot, SegmentedToolWidget, SegmentedWidget, TabBar
@@ -62,6 +68,7 @@ from .slider import RangeSlider, Slider, ToolTipSlider
 from .splash_screen import SplashScreen
 from .split_button import AccentSplitButton, SplitButton
 from .surface import Card, ExamplePanel
+from .syntax_highlighter import SyntaxHighlighter
 from .system_tray_menu import SystemTrayMenu
 from .table_view import TableItemDelegate, TableView, TableWidget
 from .time_picker import TimePicker
@@ -69,9 +76,36 @@ from .title_bar import FluentTitleBar
 from .toast import Toast
 from .toggle_button import PillToggleButton, ToggleButton, ToggleIconButton
 from .toggle_switch import ToggleSwitch
+from .tree_flatten_proxy import TreeFlattenProxyModel
+from .tree_table import TreeFilterProxyModel, TreeTableView
+from .tree_table_delegate import TreeItemDelegate
+from .tree_table_types import TreeCell, TreeColumn, TreeRole
+from .tree_table_widget import TreeTableWidget
+from .volume_control import VolumeControl, VolumeFlyout
 from .window import FluentWindow
 
 __all__ = [
+    "VolumeControl",
+    "VolumeFlyout",
+    "MediaController",
+    "AudioPlayer",
+    "CompactAudioPlayer",
+    "VideoPlayer",
+    "ImageView",
+    "AvatarWidget",
+    "AvatarPicker",
+    "ImageCropper",
+    "ImageCropDialog",
+    "ImageMagnifier",
+    "SyntaxHighlighter",
+    "TreeFlattenProxyModel",
+    "TreeCell",
+    "TreeColumn",
+    "TreeRole",
+    "TreeFilterProxyModel",
+    "TreeItemDelegate",
+    "TreeTableView",
+    "TreeTableWidget",
     "TableView",
     "TableWidget",
     "TableItemDelegate",

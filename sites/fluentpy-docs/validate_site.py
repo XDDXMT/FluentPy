@@ -40,6 +40,7 @@ def report_error(kind, error, trace):
 
 sys.excepthook = report_error
 checked = 0
+user_file_snippets = 0
 animated_previews = data.get("animatedPreviews", {})
 for name, media in animated_previews.items():
     directory = SITE / "dist" / "assets" / "previews"
@@ -68,6 +69,17 @@ for name, media in animated_previews.items():
 for name in data["api"]:
     assert hasattr(fluentpy, name), name
 assert {icon["name"] for icon in data["icons"]} == {icon.name for icon in fluentpy.FluentIcon}
+category_ids = {category["id"] for category in data["iconCategories"]}
+assert len(category_ids) == len(data["iconCategories"]), "Icon category IDs must be unique"
+assert all(icon["category"] in category_ids for icon in data["icons"])
+assert all(isinstance(icon["localized"], bool) for icon in data["icons"])
+for category in data["iconCategories"]:
+    assert category["icon"] in fluentpy.FluentIcon.__members__, category
+    assert any(icon["category"] == category["id"] for icon in data["icons"]), category
+upstream = json.loads((ROOT / "src/fluentpy/assets/icons/UPSTREAM.json").read_text("utf-8"))
+assert sum(icon["localized"] for icon in data["icons"]) == sum(
+    len(Path(icon["upstream_path"]).parts) > 4 for icon in upstream["icons"].values()
+), "Every localized icon must remain discoverable through the optional filter"
 assert len({p["id"] for p in data["pages"]}) == len(data["pages"])
 page_ids = {p["id"] for p in data["pages"]}
 navigation_ids = [identifier for group in data["groups"] for identifier in group["pages"]]
@@ -132,6 +144,13 @@ for page in data["pages"]:
         ):
             continue
         parsed = ast.parse(code)
+        if section.get("requiresUserFiles"):
+            # These examples use caller-owned file paths and modal selection.
+            # Syntax is checked here; generated real files exercise playback,
+            # cropping and image signals in test_images.py and test_media.py.
+            compile(parsed, f"{page['id']}/{section['id']}", "exec")
+            user_file_snippets += 1
+            continue
         # The browser shows complete app setup; this check reuses one QApplication.
         parsed.body = [
             node
@@ -146,5 +165,5 @@ for icon in data["icons"]:
     assert (SITE / "dist" / icon["file"]).exists(), icon
 assert not errors, errors
 print(
-    f"Validated {len(data['pages'])} pages, {len(data['api'])} API entries, {checked} executable Python snippets, {len(data['icons'])} icons, {len(animated_previews)} animations and all Qt preview images."
+    f"Validated {len(data['pages'])} pages, {len(data['api'])} API entries, {checked} executed Python snippets, {user_file_snippets} compiled caller-file snippets, {len(data['icons'])} icons, {len(animated_previews)} animations and all Qt preview images."
 )

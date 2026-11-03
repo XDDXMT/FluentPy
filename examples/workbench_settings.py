@@ -37,7 +37,7 @@ ACCENTS = {
 }
 AUTHOR_NAME = "性邓的小馒头"
 AUTHOR_PROFILE = "https://github.com/XDDXMT"
-DOCUMENTATION_URL = "https://fluentpy.mcxmcl.cn/"
+DOCUMENTATION_URL = "https://fluentpy.mcxmcl.cn/docs/"
 REPOSITORY_URL = "https://github.com/XDDXMT/FluentPy"
 ISSUES_URL = REPOSITORY_URL + "/issues"
 

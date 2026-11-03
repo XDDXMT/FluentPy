@@ -12,6 +12,8 @@
   let observer;
   let nativeFlowCleanup;
   let migrationCleanup;
+  let iconCatalogCleanup;
+  const iconCatalogState = {};
   let toastTimer;
   let searchIndex=0;
   let themePreference=document.documentElement.dataset.preference||'system';
@@ -46,7 +48,7 @@
     return `<div class="code-block"><div class="code-top"><span>${escape(label)}</span><button class="copy-button" data-copy="${index}" aria-label="复制代码">${copyIcon}复制</button></div><div class="code-body">${highlight(code).split('\n').map(line=>`<span class="code-line">${line||' '}</span>`).join('')}</div></div>`;
   }
   function preview(type){
-    if(type==='icons')return `<input class="icon-search" id="icon-filter" placeholder="搜索图标名称，例如 add、home、arrow" aria-label="搜索图标"><div class="icon-grid" id="icon-grid"></div><a href="assets/icons-LICENSE.txt" target="_blank" class="api-intro">查看 Microsoft Fluent System Icons 完整许可 ↗</a>`;
+    if(type==='icons')return `<div id="icon-browser"></div><a href="assets/icons-LICENSE.txt" target="_blank" class="api-intro">查看 Microsoft Fluent System Icons 完整许可 ↗</a>`;
     if(type==='api-index')return `<input class="icon-search index-filter" id="api-filter" placeholder="按名称或说明过滤接口" aria-label="过滤接口"><div class="api-index" id="api-index-grid"></div>`;
     if(animatedPreviews[type]){
       const item=animatedPreviews[type];
@@ -72,10 +74,6 @@
       const anchor=page.classes.includes(item.name)?'api-'+item.name:page.sections[0].id;
       return `<a class="index-card" href="${route(page.id,anchor)}"><code>${escape(item.name)}</code><small>${escape(item.description)}</small></a>`;
     }).join(''):'<p>没有匹配的接口。</p>';
-  }
-  function renderIcons(filter=''){
-    const matches=icons.filter(icon=>icon.name.toLowerCase().includes(filter.toLowerCase()));
-    $('#icon-grid').innerHTML=matches.length?matches.map(icon=>`<button class="icon-cell" data-icon="${escape(icon.name)}" aria-label="复制 FluentIcon.${escape(icon.name)}"><img src="${escape(icon.file)}" alt="" loading="lazy"><span>${escape(icon.name)}</span></button>`).join(''):'<p>没有匹配的图标。</p>';
   }
   function closeMenu(){$('#sidebar').classList.remove('open');$('#sidebar-shade').classList.remove('visible');$('#menu-toggle').setAttribute('aria-expanded','false');}
   function setPreviewPaused(box,paused,manual=false){
@@ -149,7 +147,6 @@
   $('#menu-toggle').addEventListener('click',()=>{const open=$('#sidebar').classList.toggle('open');$('#sidebar-shade').classList.toggle('visible',open);$('#menu-toggle').setAttribute('aria-expanded',String(open));});
   $('#sidebar-shade').addEventListener('click',closeMenu);
   main.addEventListener('input',e=>{
-    if(e.target.id==='icon-filter')renderIcons(e.target.value);
     if(e.target.id==='api-filter')renderIndex(e.target.value);
   });
   main.addEventListener('click',async e=>{
@@ -223,7 +220,7 @@
     if(!page){page=pages.find(item=>item.id==='introduction');history.replaceState(null,'',route(page.id));}
     const anchor=parts[1];
     if(currentPage===page.id){closeMenu();updateDocumentView(page,anchor);return;}
-    nativeFlowCleanup?.();nativeFlowCleanup=null;migrationCleanup?.();migrationCleanup=null;
+    nativeFlowCleanup?.();nativeFlowCleanup=null;migrationCleanup?.();migrationCleanup=null;iconCatalogCleanup?.();iconCatalogCleanup=null;
     observer?.disconnect();codeSnippets=[];currentPage=page.id;document.body.dataset.page=page.id;
     document.title=page.id==='introduction'?'FluentPy · Qt for Python 组件库':`${page.title} · FluentPy 文档`;
     $$('.nav-link').forEach(link=>{const active=link.dataset.page===page.id;link.classList.toggle('active',active);if(active){link.setAttribute('aria-current','page');link.closest('details').open=true;}else link.removeAttribute('aria-current');});
@@ -241,7 +238,9 @@
     }
     const nativeRoot=$('[data-native-flow]',main);if(nativeRoot&&window.FluentNativeFlow)nativeFlowCleanup=window.FluentNativeFlow.mount(nativeRoot);
     const migrationRoot=$('[data-api-migration]',main);if(migrationRoot&&window.FluentMigration)migrationCleanup=window.FluentMigration.mount(migrationRoot);
-    if($('#icon-grid'))renderIcons();if($('#api-index-grid'))renderIndex();
+    const iconRoot=$('#icon-browser');
+    if(iconRoot)iconCatalogCleanup=window.FluentIconCatalog.mount(iconRoot,{icons,categories:window.DOCS_DATA.iconCategories,state:iconCatalogState});
+    if($('#api-index-grid'))renderIndex();
     if(page.catalog){catalogCategory='all';renderCatalog();}
     closeMenu();updateDocumentView(page,anchor);
   }

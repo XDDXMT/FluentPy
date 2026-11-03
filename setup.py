@@ -50,6 +50,7 @@ setup(
                 "native/calendar_accel.c",
                 "native/color_accel.c",
                 "native/input_accel.c",
+                "native/syntax_accel.c",
             ],
             depends=[
                 "native/date_accel.h",
@@ -59,6 +60,7 @@ setup(
                 "native/calendar_accel.h",
                 "native/color_accel.h",
                 "native/input_accel.h",
+                "native/syntax_accel.h",
             ],
             optional=MODE != "1",
         )

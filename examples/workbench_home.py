@@ -8,9 +8,12 @@ from fluentpy import Button, FluentIcon, __version__, fluent_icon, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets, Signal
 
 DESCRIPTIONS = {
+    "images": "展示图像与头像，裁剪图片和查看局部细节。",
+    "media": "播放本地音频和视频，自定义播放控件。",
     "buttons": "触发动作，展开菜单与右键操作。",
     "inputs": "输入文字，选择、组合与验证内容。",
     "tables": "展示数据，体验排序、编辑与多选。",
+    "tree-tables": "展开层级，组合数值、状态与操作。",
     "sliders": "拖动调节数值，选择连续区间。",
     "wheels": "滚动选择日期、小时与分钟。",
     "calendar": "挑选日期，设定范围与时间。",

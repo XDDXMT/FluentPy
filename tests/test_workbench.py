@@ -37,7 +37,7 @@ class WorkbenchTests(unittest.TestCase):
 
     def test_startup_is_catalog_without_automatic_tasks_or_extra_windows(self):
         self.assertEqual(self.window.navigation.current_route(), "overview")
-        self.assertEqual(len(PAGES), 16)
+        self.assertEqual(len(PAGES), 19)
         self.assertEqual(len({key for key, _, _ in PAGES}), len(PAGES))
         visible = {
             widget for widget in self.app.topLevelWidgets() if widget.isVisible()

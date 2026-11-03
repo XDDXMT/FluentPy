@@ -11,9 +11,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "sites/fluentpy-docs"
-PUBLIC = {".html", ".css", ".js", ".svg", ".png", ".gif", ".txt"}
+PUBLIC = {".html", ".css", ".js", ".svg", ".png", ".gif", ".txt", ".json"}
 PUBLIC_TOOLS = {
     "build_content.py",
+    "icon_categories.py",
+    "media_image_pages.py",
     "validate_site.py",
     "package_deploy.py",
     "source_project.py",
@@ -23,7 +25,7 @@ README = """# FluentPy Docs
 
 [官网](https://fluentpy.mcxmcl.cn/) · [组件库源码](https://github.com/XDDXMT/FluentPy) · [文档问题](https://github.com/XDDXMT/FluentPy-Docs/issues)
 
-FluentPy 0.7.3 中文文档的独立开源仓库。首页保留项目简介、Qt 接口演示和 C 流程说明，并展示新版工作台截图。包含网站 HTML、CSS、JavaScript、全部静态页面数据、107 个 Fluent 图标、真实 Qt 控件截图和 GIF，以及内容生成、校验和打包脚本。项目采用 [MIT 许可证](LICENSE)。
+FluentPy 0.8.0 中文文档的独立开源仓库。首页保留项目简介、Qt 接口演示和 C 流程说明，并展示新版工作台截图。包含网站 HTML、CSS、JavaScript、全部静态页面数据、2625 个 SVG 图标、真实 Qt 控件截图和 GIF，以及内容生成、校验和打包脚本。项目采用 [MIT 许可证](LICENSE)。
 
 ## 直接预览
 
@@ -151,8 +153,9 @@ def main():
 
 - Source: https://github.com/microsoft/fluentui-system-icons
 - Copyright (c) 2020 Microsoft Corporation. MIT licensed.
-- Bundled resources: 107 SVG icons in `dist/assets/icons/`.
-- Complete license: `dist/assets/icons-LICENSE.txt`.
+- Bundled resources: 2624 Microsoft SVG icons named `ic_fluent_*` in `dist/assets/icons/`.
+- The additional `fluentpy_leaf_24_regular.svg` is independently drawn by FluentPy under the project's MIT license.
+- Complete license: `dist/assets/icons-LICENSE.txt`; upstream notices: `dist/assets/icons-NOTICE.txt`; pinned inventory: `dist/assets/icons-UPSTREAM.json`.
 - FluentPy's own brand mark is in `dist/assets/mark.svg`.
 
 ## Qt for Python

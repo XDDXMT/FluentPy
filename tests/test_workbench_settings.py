@@ -261,7 +261,7 @@ class WorkbenchSettingsTests(unittest.TestCase):
             form.preferenceChanged.connect(lambda *args: changes.append(args))
             open_url.assert_not_called()
             expected = {
-                form.documentation_link: "https://fluentpy.mcxmcl.cn/",
+                form.documentation_link: "https://fluentpy.mcxmcl.cn/docs/",
                 form.author_link: "https://github.com/XDDXMT",
                 form.repository_link: "https://github.com/XDDXMT/FluentPy",
                 form.issues_link: "https://github.com/XDDXMT/FluentPy/issues",

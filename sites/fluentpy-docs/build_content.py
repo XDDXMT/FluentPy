@@ -9,6 +9,8 @@ import shutil
 from pathlib import Path
 
 SITE = Path(__file__).resolve().parent
+from icon_categories import enrich_icons
+from media_image_pages import build_media_image_pages
 from source_project import source_root, source_version
 
 ROOT = source_root()
@@ -16,6 +18,28 @@ VERSION = source_version()
 SRC = ROOT / "src" / "fluentpy"
 
 DESCRIPTIONS = {
+    "VolumeControl": "可独立嵌入的音量选择行，含微软扬声器图标、数值与滑块，连接真实媒体控制器。",
+    "VolumeFlyout": "点击扬声器打开的原生 Qt 音量浮层，支持屏幕避让、键盘和外部点击关闭。",
+    "ImageView": "显示静态图片和 GIF，提供源像素坐标映射、缩放模式和帧信号。",
+    "AvatarWidget": "显示圆形头像或文字占位。",
+    "AvatarPicker": "点击或键盘选择本地图片，经裁剪确认后输出头像，不覆盖原文件。",
+    "ImageCropper": "可独立使用的图像裁剪画布，支持源像素选区、拖动、比例、旋转与镜像。",
+    "ImageCropDialog": "组合裁剪画布与确认工具栏，确认才提交结果。",
+    "ImageMagnifier": "可配置镜片和预览区域，实时输出源区域与放大图像。",
+    "MediaController": "按需加载 Qt Multimedia，公开真实播放、跳转、音量、错误和原生播放器接口。",
+    "AudioPlayer": "完整音频播放条，提供左、中、右三个公开控制布局。",
+    "CompactAudioPlayer": "一行播放、进度与音量，复用完整播放器的控制器和状态同步。",
+    "VideoPlayer": "Qt 原生视频输出，复用完整控制条并开放视频帧接口。",
+    "SyntaxHighlighter": "直接连接 QTextDocument，选择多语言词法着色或应用自定义分词器，保留跨行状态。",
+    "SyntaxToken": "自定义分词器使用的公共 token 类型枚举，位置单位为 Qt UTF-16。",
+    "TreeColumn": "树形列表的列定义，配置格式、对齐、宽度、热度、进度、状态与原始排序角色。",
+    "TreeCell": "可选单元格元数据：图标、副标题、提示、勾选、类型、颜色与编辑标志。",
+    "TreeRole": "外部 Qt 模型可选提供的层级、单元格与表头数据角色。",
+    "TreeTableView": "原生 QTreeView 模型接口，按列扩展显示与编辑，保留调用方模型、层级、懒加载与选择。",
+    "TreeTableWidget": "直接添加、查找和增量更新条目，暴露标准源模型与树形筛选代理。",
+    "TreeFilterProxyModel": "Qt 递归筛选与同级排序，匹配子项保留父路径，支持按列指定原始排序角色。",
+    "TreeFlattenProxyModel": "将已加载的多级 Qt 条目适配为平铺索引，连接 Qt 排序代理即可全局排序，不复制源单元格。",
+    "TreeItemDelegate": "仅绘制可见树形单元格，支持主题、元数据与原生编辑器，可按列继承替换。",
     "TableView": "原生 QTableView 模型接口，支持三种行样式、原生排序与编辑、多选 TSV 复制和高级右键菜单。",
     "TableWidget": "原生 QTableWidget 项目接口，与 TableView 共用行样式、状态动画和现有 FluentPy 编辑控件。",
     "TableItemDelegate": "只绘制可见单元格，保留 Qt 数据角色、图标、勾选与可用状态，可继承定制列编辑器。",
@@ -107,7 +131,7 @@ DESCRIPTIONS = {
     "ShortcutPicker": "用键帽显示快捷键，点击铅笔在页内录制，保存后回填，支持重置、清空和冲突提示。",
     "ShortcutDialog": "单组合快捷键录制浮层，保存／取消分离，校验与冲突检查优先C、不可用时回退Python。",
     "FluentScrollBar": "悬浮时展开的自绘滚动条。",
-    "CodeEdit": "JSON／纯文本编辑框，支持同步行号、缩进辅助线、当前行背景与焦点底线。",
+    "CodeEdit": "支持 17 种语言模式与自定义分词器，保留同步行号、缩进辅助线、当前行背景与焦点底线。",
     "DatePicker": "年、月、日三列滚轮日期选择器，支持确认、取消、范围限制和 C 日历运算。",
     "TimePicker": "24／12小时制时间滚轮，支持AM／PM、确认／取消、页内动画、C优先与Python回退。",
     "CalendarPicker": "日历日期选择器，支持月／年视图、跨月选择、禁用日期、键盘操作与页内动画。",
@@ -121,7 +145,7 @@ DESCRIPTIONS = {
     "ThemeManager": "全局主题管理器，可切换模式、强调色和窗口激活状态。",
     "ThemeMode": "light／dark 主题模式枚举。",
     "ThemeTokens": "不可变主题参数与派生颜色。",
-    "FluentIcon": "107 个 Microsoft Fluent System Icons 的枚举入口。",
+    "FluentIcon": "2625 个 SVG 图标的公共入口，包含 2624 个 Microsoft 图标与独立绘制的 Leaf。",
     "fluent_icon": "将 FluentIcon 或资源名转换为 Qt 图标。",
     "fluent_icon_name": "读取图标的资源名。",
     "QT_API": "当前选用的 Qt 后端：优先 PySide6，缺失时尝试 PyQt6。",
@@ -677,7 +701,7 @@ NATIVE_LAYERS = [
     {
         "name": "C",
         "role": "运算后端",
-        "text": "承接 JSON 扫描、文本位置映射、日期与时间计算、拖放与快捷键策略。",
+        "text": "承接 JSON 与多语言词法扫描、文本位置映射、日期与时间计算、拖放与快捷键策略。",
     },
     {"name": "Qt", "role": "界面呈现", "text": "管理文档、布局、绘制与输入交互。"},
 ]
@@ -687,6 +711,14 @@ NATIVE_METRICS = [
 ]
 
 ANIMATED_PREVIEWS = {
+    "tree-list-motion": {
+        "image": "tree-list-motion-light.gif",
+        "poster": "tree-list-motion-light.png",
+        "width": 1020,
+        "height": 640,
+        "alt": "真实 Qt 树形列表展开与折叠、全局平铺排序、局部更新、搜索恢复和选择动画。",
+        "caption": "树形列表 · 原生层级与增量数据交互",
+    },
     "tables-motion": {
         "image": "tables-motion-light.gif",
         "poster": "tables-motion-light.png",
@@ -1002,7 +1034,7 @@ edit.textChanged.connect(lambda text: print(text))""",
                 "控件共享主题管理器，支持浅色、深色与自定义强调色。输入焦点、选中状态和常用字体由组件统一处理，减少逐个控件配置样式的重复工作。",
                 links=[
                     {"label": "了解主题与强调色 →", "page": "themes"},
-                    {"label": "浏览 107 个 Fluent 图标 →", "page": "icons"},
+                    {"label": "浏览 2625 个 SVG 图标 →", "page": "icons"},
                 ],
             ),
             section(
@@ -2459,13 +2491,13 @@ progress.setValue(64)""",
         "代码编辑器",
         "CodeEdit",
         "扩展组件",
-        "带行号、缩进辅助线、当前行提示和 JSON 高亮的轻量编辑区域。",
-        ["CodeEdit"],
+        "带行号、缩进辅助线、当前行提示和多语言高亮的轻量编辑区域。",
+        ["CodeEdit", "SyntaxHighlighter", "SyntaxToken"],
         [
             section(
                 "codeedit",
                 "CodeEdit",
-                "支持 json 与 plain 两种模式。下图为实际 Qt 控件的亮色截图，以 760×540 展示嵌套 JSON；控件默认推荐尺寸保持不变。",
+                "支持 Python、Java、JavaScript、TypeScript、C/C++、C#、Go、Rust、SQL、HTML/XML、CSS、YAML、Shell、JSON 与纯文本。切换语言保留内容与光标；下图保留原 JSON 示例。新增多语言接口目前位于开发源码中。",
                 """from fluentpy import CodeEdit
 
 editor = CodeEdit(language="json")
@@ -2564,7 +2596,7 @@ timeline.clear()""",
         "图标",
         "Fluent System Icons",
         "扩展组件",
-        "107 个可缩放的官方 Fluent SVG 图标，保留完整 MIT 许可与来源。",
+        "2625 个可缩放 SVG 图标：2624 个 Microsoft Fluent 图标和独立绘制的 Leaf，保留各自 MIT 许可与来源。",
         ["FluentIcon", "fluent_icon", "fluent_icon_name"],
         [
             section(
@@ -2579,7 +2611,7 @@ button.setIcon(fluent_icon(FluentIcon.DOCUMENT_SAVE))""",
             section(
                 "icon-library",
                 "图标库",
-                "搜索名称以过滤图标。图标资源来自 Microsoft Fluent UI System Icons。",
+                "按用途选择分类，再用中文关键词或枚举名查找。点击图标即可复制名称，其他语言的文字样式可以按需显示。",
                 preview="icons",
             ),
             section(
@@ -3155,9 +3187,9 @@ short_descriptions = {
     "cards": "基础、悬浮、分组与动画折叠卡片。",
     "dialogs": "遮罩与无边框确认对话框。",
     "feedback": "消息条、顶部色条、自定义操作与任务进度提示。",
-    "code-editor": "行号、JSON 高亮和缩进参考线。",
+    "code-editor": "行号、多语言高亮、自定义分词器和缩进参考线。",
     "note-timeline": "按音高和时间展示多轨音符。",
-    "icons": "Microsoft Fluent System Icons 图标。",
+    "icons": "公共 SVG 图标库，包含 Microsoft 图标和 FluentPy Leaf。",
 }
 for item in pages:
     if item["id"] in short_descriptions:
@@ -3957,6 +3989,144 @@ copied = table.copy_selection(include_headers=True)""",
     )
 )
 
+pages.append(
+    page(
+        "tree-tables",
+        "树形数据列表",
+        "Tree tables",
+        "数据与文件",
+        "层级、分组与可配置单元格，连接任务、文件、设备等不同业务数据。自 FluentPy 0.8.0 起提供。",
+        [
+            "TreeTableView",
+            "TreeTableWidget",
+            "TreeColumn",
+            "TreeCell",
+            "TreeRole",
+            "TreeFilterProxyModel",
+            "TreeFlattenProxyModel",
+            "TreeItemDelegate",
+        ],
+        [
+            section(
+                "demo",
+                "三种场景，直接体验",
+                "工作台侧栏“树形列表”提供应用资源、项目任务与外部 Qt 文件模型。支持密度切换、搜索、批量更新、复制、勾选与自定义菜单。资源数值均为演示数据。",
+                "python examples/tree_tables.py",
+                "tree-list-demo",
+            ),
+            section(
+                "motion",
+                "展开、更新与搜索",
+                "展开与折叠即时更新层级，箭头、悬停和选择使用轻量状态动画，默认关闭整段子树截图动画。资源演示使用 Windows 表面及 CPU、内存、磁盘、网络、GPU 列。工作台点击表头会将所有条目平铺并按原始值全局排序，切回层级可恢复之前的展开状态。组件默认仍保留同级排序，按需启用 flat_sorting。",
+                preview="tree-list-motion",
+            ),
+            section(
+                "items",
+                "直接添加分组与子项",
+                "TreeColumn 配置列，TreeCell 可选补充元数据。唯一键便于局部更新；省略键时继续直接使用返回的 QStandardItem。",
+                """from fluentpy import TreeColumn, TreeCell, TreeTableWidget, FluentIcon
+
+tree = TreeTableWidget([
+    TreeColumn("name", "名称", width=260, stretch=True),
+    TreeColumn("state", "状态", kind="badge"),
+    TreeColumn("progress", "进度", kind="progress", formatter=lambda v: f"{v:.0f}%"),
+    TreeColumn("action", "操作", width=90, kind="action"),
+], window)
+project = tree.append_item({"name": "示例项目"}, key="project", group=True)
+tree.append_item({"name": TreeCell("准备资源", icon=FluentIcon.FOLDER,
+                                  subtitle="支持元数据与勾选"),
+                  "state": "进行中", "progress": 42.0, "action": "暂停"},
+                 parent=project, key="download")
+tree.expandAll()
+window.content_layout.addWidget(tree)""",
+                "tree-list-tasks",
+            ),
+            section(
+                "updates",
+                "搜索与局部更新",
+                "搜索会保留父路径，清空后恢复搜索前的展开与选择。batch_update 合并绘制与代理排序，保持源模型正常发送信号；数据更新使用现有条目。",
+                """tree.set_filter_text("资源")
+tree.set_filter_text("")
+with tree.batch_update():
+    tree.update_item("download", {"progress": 65.0})
+tree.set_header_summary("progress", "65%")""",
+                note="汇总由调用方提供；组件不默认累加业务值。增量更新保留持久索引和展开状态；完整 model reset 遵守 Qt 重置语义。所有模型修改在界面线程执行。",
+            ),
+            section(
+                "model",
+                "接入原有 Qt 模型",
+                "TreeTableView.setModel 保留标准语义。可直接连接模型，或显式使用 TreeFilterProxyModel；模型负责懒加载、拖放、编辑与数据通知。",
+                """from fluentpy import TreeColumn, TreeTableView, TreeFilterProxyModel
+from fluentpy.qt import QtCore, QtGui
+
+source = QtGui.QStandardItemModel(window)
+source.setHorizontalHeaderLabels(["文件", "字节数"])
+folder = QtGui.QStandardItem("文档")
+source.appendRow([folder, QtGui.QStandardItem()])
+size = QtGui.QStandardItem()
+size.setData(8192, QtCore.Qt.ItemDataRole.DisplayRole)
+folder.appendRow([QtGui.QStandardItem("使用说明.md"), size])
+proxy = TreeFilterProxyModel(window)
+proxy.setSourceModel(source)
+view = TreeTableView([TreeColumn("name", "文件", width=250, stretch=True),
+                      TreeColumn("size", "大小", formatter=lambda v: f"{v:,} B")], window)
+view.setModel(proxy)
+view.expandAll()
+window.content_layout.addWidget(view)""",
+                "tree-list-resources",
+            ),
+            section(
+                "extension",
+                "自定义交互、绘制与编辑",
+                "cellActionTriggered 提供操作索引，contextMenuAboutToShow 提供 QAction 容器和目标索引。继承 TreeItemDelegate 或接入原有 QStyledItemDelegate，可逐列自定义单元格及编辑器。",
+                """from fluentpy import TreeRole
+
+tree.cellActionTriggered.connect(
+    lambda index: print(index.siblingAtColumn(0).data(TreeRole.Key)))
+
+def extend_menu(menu, index):
+    if index.isValid():
+        menu.addAction("查看详情")
+
+tree.contextMenuAboutToShow.connect(extend_menu)""",
+                note="普通 Qt 数据角色继续可用。TreeRole 可选补充副标题、分组、类型、图标着色与表头汇总。右键表头可显隐列，Ctrl+C 按当前可见行列顺序复制。默认不为每格创建 QWidget。",
+            ),
+        ],
+        catalogDescription="通用层级列表、可配置列、热度与进度、局部更新及 Qt 模型扩展。",
+    )
+)
+
+icon_page = next(item for item in pages if item["id"] == "icons")
+icon_page["sections"].sort(key=lambda item: item["id"] != "icon-library")
+
+code_page = next(item for item in pages if item["id"] == "code-editor")
+code_page["sections"].insert(
+    1,
+    section(
+        "languages",
+        "语言与分词器由开发者选择",
+        "17 种语言模式可切换，保留文档、光标与撤销。新增扫描器分别提供 C 实现和 Python 回退；也可传入自己的 provider 接入特定语言。provider 接收单行文字和上一行状态，返回 UTF-16 spans 与当前行状态。",
+        r"""from fluentpy import CodeEdit, SyntaxToken
+
+editor = CodeEdit(language="python")
+editor.set_code('def greet(name):\n    return "Hello, " + name')
+editor.set_language("java")  # 仅切换着色，不改写内容
+print(CodeEdit.supported_languages())
+
+# 示例：把每行作为注释着色；可替换为应用自己的分词器。
+def provider(text, previous_state):
+    length = len(text.encode("utf-16-le")) // 2
+    return [(0, length, SyntaxToken.Comment)], 0
+
+editor.set_token_provider(provider)
+editor.set_token_provider(None)  # 返回内置语言扫描器""",
+        "code-editor-languages",
+        note="这是词法着色，不执行代码、不提供编译校验或 LSP。多行注释与字符串由块状态连续处理。",
+    ),
+)
+
+pages.extend(build_media_image_pages(page, section))
+
 groups = [
     {"name": "开始使用", "pages": ["introduction", "getting-started", "components", "faq"]},
     {
@@ -3983,8 +4153,12 @@ groups = [
             "cards",
         ],
     },
+    {"name": "图像与媒体", "pages": ["images", "media"]},
     {"name": "消息与反馈", "pages": ["dialogs", "feedback"]},
-    {"name": "数据与文件", "pages": ["tables", "drag-drop", "code-editor", "note-timeline"]},
+    {
+        "name": "数据与文件",
+        "pages": ["tables", "tree-tables", "drag-drop", "code-editor", "note-timeline"],
+    },
     {"name": "指南与资源", "pages": ["themes", "icons", "performance", "api-index"]},
 ]
 
@@ -4009,6 +4183,10 @@ for cls in tree.body:
                 if (SRC / "assets" / "icons" / filename).exists():
                     icons.append({"name": name, "file": "assets/icons/" + filename})
 
+icon_categories = enrich_icons(
+    icons, json.loads((SRC / "assets/icons/UPSTREAM.json").read_text("utf-8"))
+)
+
 preview_assets = sorted(
     p
     for p in (SITE / "dist" / "assets" / "previews").iterdir()
@@ -4022,7 +4200,8 @@ data = {
     "groups": groups,
     "api": api,
     "icons": icons,
-    "sourceDate": "2026-10-19",
+    "iconCategories": icon_categories,
+    "sourceDate": "2026-10-31",
     "version": VERSION,
     "previewVersion": preview_version,
     "animatedPreviews": ANIMATED_PREVIEWS,
@@ -4040,6 +4219,8 @@ site_assets = (
     "native-flow.js",
     "migration.js",
     "app.js",
+    "icon-catalog.js",
+    "icon-catalog.css",
     "styles.css",
     "native-flow.css",
     "migration.css",
@@ -4049,12 +4230,12 @@ asset_version = hashlib.sha256(
     b"".join((SITE / "dist" / name).read_bytes() for name in site_assets)
 ).hexdigest()[:10]
 index = re.sub(
-    r'src="(data|native-flow|migration|app)\.js(?:\?v=[a-z0-9]+)?"',
+    r'src="(data|native-flow|migration|icon-catalog|app)\.js(?:\?v=[a-z0-9]+)?"',
     lambda m: f'src="{m.group(1)}.js?v={asset_version}"',
     index,
 )
 index = re.sub(
-    r'href="(styles|native-flow|migration|workbench-home)\.css(?:\?v=[a-z0-9]+)?"',
+    r'href="(styles|native-flow|migration|icon-catalog|workbench-home)\.css(?:\?v=[a-z0-9]+)?"',
     lambda m: f'href="{m.group(1)}.css?v={asset_version}"',
     index,
 )
@@ -4071,4 +4252,12 @@ shutil.copy2(ROOT / "LICENSE", SITE / "dist" / "assets" / "FluentPy-LICENSE.txt"
 shutil.copy2(SRC / "assets" / "brand" / "fluentpy.svg", SITE / "dist" / "assets" / "mark.svg")
 print(
     f"Built {len(pages)} pages, {len(api)} public API entries and {len(icons)} icons from FluentPy source."
+)
+
+# Keep the complete provenance with the standalone static documentation.
+shutil.copy2(SRC / "assets/icons/UPSTREAM.json", SITE / "dist/assets/icons-UPSTREAM.json")
+shutil.copy2(SRC / "assets/icons/SOURCE.md", SITE / "dist/assets/icons-SOURCE.txt")
+shutil.copy2(
+    ROOT / "licenses/Microsoft-Fluent-System-Icons-NOTICE.txt",
+    SITE / "dist/assets/icons-NOTICE.txt",
 )

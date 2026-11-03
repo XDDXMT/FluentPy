@@ -40,6 +40,7 @@ def build_with_zig(zig: Path, output: Path) -> Path:
             "calendar_accel.c",
             "color_accel.c",
             "input_accel.c",
+            "syntax_accel.c",
         )
     ]
     for source in sources:

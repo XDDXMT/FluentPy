@@ -43,7 +43,6 @@ from fluentpy import (  # noqa: E402
     Pivot,
     RadioButton,
     SearchLineEdit,
-    SegmentedWidget,
     Slider,
     SpinBox,
     SplashScreen,
@@ -70,6 +69,7 @@ from fluentpy.backends import input as input_backend
 from fluentpy.backends import (
     shortcut as shortcut_backend,
 )
+from fluentpy.backends import syntax as syntax_backend
 from fluentpy.backends import (
     text as text_backend,
 )  # noqa: E402
@@ -100,6 +100,7 @@ PAGES = (
     ("buttons", "按钮与菜单", FluentIcon.TOOLBOX),
     ("inputs", "文本与选择", FluentIcon.TEXT_FONT),
     ("tables", "表格", FluentIcon.TABLE),
+    ("tree-tables", "树形列表", FluentIcon.APPS_LIST),
     ("sliders", "滑块", FluentIcon.FILTER),
     ("wheels", "日期与时间滚轮", FluentIcon.CLOCK),
     ("calendar", "日历选择", FluentIcon.CALENDAR_LTR),
@@ -110,6 +111,8 @@ PAGES = (
     ("navigation", "页面导航", FluentIcon.NAVIGATION),
     ("feedback", "消息与对话框", FluentIcon.ALERT),
     ("code", "代码编辑器", FluentIcon.CODE),
+    ("images", "图像与头像", FluentIcon.IMAGE),
+    ("media", "音视频播放", FluentIcon.MUSIC_NOTE_2),
     ("notes", "音符时间轴", FluentIcon.MUSIC_NOTE_2),
     ("settings", "设置", FluentIcon.SETTINGS),
 )
@@ -281,6 +284,7 @@ class Showcase(FluentWindow):
             "日历选择": calendar_backend.backend_name(),
             "颜色": color_backend.backend_name(),
             "分格输入": input_backend.backend_name(),
+            "多语言高亮": syntax_backend.backend_name(),
         }
         modes = set(backends.values())
         status = (
@@ -341,6 +345,7 @@ class Showcase(FluentWindow):
             "inputs": self._inputs_page,
             "drop": self._drop_page,
             "tables": self._tables_page,
+            "tree-tables": self._tree_tables_page,
             "calendar": self._calendar_page,
             "wheels": self._wheels_page,
             "navigation": self._navigation_page,
@@ -350,6 +355,8 @@ class Showcase(FluentWindow):
             "cards": self._cards_page,
             "feedback": self._feedback_page,
             "colors": self._colors_page,
+            "images": self._images_page,
+            "media": self._media_page,
             "code": self._code_page,
             "notes": self._notes_page,
             "settings": self._settings_page,
@@ -460,6 +467,40 @@ class Showcase(FluentWindow):
         panel.body.addWidget(self.table_examples)
         body.addWidget(panel)
         body.addStretch(1)
+        return page
+
+    def _tree_tables_page(self):
+        from tree_tables import TreeTableExamples
+
+        page, body = self._page(
+            "树形数据列表",
+            "层级、分组与可配置列；切换资源、项目和文件场景，体验局部更新与原生 Qt 模型。",
+        )
+        panel = Panel("自定义与测试")
+        self.tree_table_examples = TreeTableExamples(panel)
+        panel.body.addWidget(self.tree_table_examples)
+        body.addWidget(panel)
+        body.addStretch(1)
+        return page
+
+    def _images_page(self):
+        from images import ImageExamples
+
+        page, body = self._page(
+            "图像与头像", "图片 / GIF、头像、裁剪与局部放大；所有控件均可独立使用。"
+        )
+        self.image_examples = ImageExamples(page)
+        body.addWidget(self.image_examples)
+        body.addStretch()
+        return page
+
+    def _media_page(self):
+        from media import MediaExamples
+
+        page, body = self._page("音视频播放", "本地音频与视频，独立控制器和可扩展的播放条。")
+        self.media_examples = MediaExamples(page)
+        body.addWidget(self.media_examples)
+        body.addStretch()
         return page
 
     def _cards_page(self):
@@ -628,7 +669,7 @@ class Showcase(FluentWindow):
         section = QtWidgets.QHBoxLayout()
         section.setSpacing(12)
         section.addWidget(caption("探索组件", 20, bold=True))
-        self.catalog_count = label("14 个分类", role="muted")
+        self.catalog_count = label(f"{len(PAGES) - 2} 个分类", role="muted")
         section.addWidget(self.catalog_count)
         section.addStretch(1)
         self.component_filter = SearchLineEdit("搜索名称或 API")
@@ -645,6 +686,7 @@ class Showcase(FluentWindow):
             "inputs": "LineEdit · AffixLineEdit · PinCodeEdit · ComboBox · CheckBox",
             "sliders": "Slider · ToolTipSlider · RangeSlider",
             "tables": "TableView · TableWidget · 排序 / 编辑 / 多选",
+            "tree-tables": "TreeTableView · TreeTableWidget · TreeColumn · 层级 / 分组 / 热度 / 进度 / 状态",
             "wheels": "DatePicker · TimePicker",
             "calendar": "CalendarPicker · DateRangePicker · DateTimePicker",
             "drop": "FileDropWidget · FolderDropWidget",
@@ -653,7 +695,9 @@ class Showcase(FluentWindow):
             "cards": "CardWidget · ExpandableCardWidget",
             "navigation": "FluentWindow · SplashScreen · NavigationView · Pivot · TabBar",
             "feedback": "Toast · ColorToast · ProgressToast · MaskedDialog",
-            "code": "CodeEdit · JSON / Plain text",
+            "images": "ImageView · AvatarWidget · AvatarPicker · ImageCropper · ImageCropDialog · ImageMagnifier",
+            "media": "MediaController · AudioPlayer · CompactAudioPlayer · VideoPlayer",
+            "code": "CodeEdit · Python / Java / JavaScript / C++ / JSON / SQL / 自定义高亮",
             "notes": "NoteTimeline · NoteEvent",
         }
         for key, title, icon in PAGES[1:]:
@@ -940,19 +984,25 @@ class Showcase(FluentWindow):
         self.activity.setText(message)
 
     def _code_page(self):
+        from code_editor import LANGUAGE_LABELS, LANGUAGE_SAMPLES
+
         page, body = self._page(
-            "代码编辑器", "编辑一段 JSON，观察行号、缩进引导和高亮。性能测量在独立窗口中运行。"
+            "代码编辑器", "选择 Python、Java 等高亮语言；切换语言保留代码，点击还原载入对应示例。"
         )
-        code = Panel(
-            "可编辑的 JSON", "C 扩展可用时，代码编辑器自动使用 C 分词；Qt 继续负责文本布局和绘制。"
-        )
+        code = Panel("代码与语言", "选择语言颜色渲染，使用原生 Qt 编辑、撤销与选择接口。")
         self.code_editor = CodeEdit()
         self.code_editor.set_indent_size(2)
         self.code_editor.set_code(SAMPLE)
         self.code_editor.setMinimumHeight(285)
         code.body.addWidget(self.code_editor)
         reset = Button("还原示例")
-        reset.clicked.connect(lambda: self.code_editor.set_code(SAMPLE))
+        reset.clicked.connect(
+            lambda: self.code_editor.set_code(
+                SAMPLE
+                if self.code_editor.language() == "json"
+                else LANGUAGE_SAMPLES[self.code_editor.language()]
+            )
+        )
         copy = Button("复制代码")
         copy.clicked.connect(lambda: self._copy(self.code_editor.code(), "代码已复制"))
         undo = TextButton("撤销")
@@ -962,10 +1012,13 @@ class Showcase(FluentWindow):
         code.body.addLayout(button_row(reset, copy, undo, redo))
         controls = QtWidgets.QHBoxLayout()
         controls.setSpacing(10)
-        modes = SegmentedWidget()
-        modes.add_item("json", "JSON")
-        modes.add_item("plain", "纯文本")
-        modes.currentChanged.connect(self.code_editor.set_language)
+        modes = ComboBox()
+        modes.setAccessibleName("语法高亮语言")
+        for language, title in LANGUAGE_LABELS.items():
+            modes.addItem(title, language)
+        modes.currentIndexChanged.connect(
+            lambda index: self.code_editor.set_language(modes.currentData())
+        )
         controls.addWidget(modes)
         controls.addStretch()
         controls.addWidget(label("字号", role="muted"))
