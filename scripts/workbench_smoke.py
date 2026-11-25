@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import sys
 import time
 from importlib import resources
@@ -20,10 +21,24 @@ def main(destination: Path) -> int:
     started = time.perf_counter()
     modules = {
         name: importlib.import_module("fluentpy.backends." + name)
-        for name in ("text", "date", "time", "calendar", "drop", "shortcut", "color", "input")
+        for name in (
+            "text",
+            "date",
+            "time",
+            "calendar",
+            "drop",
+            "shortcut",
+            "color",
+            "input",
+            "syntax",
+        )
     }
     backends = {name: module.backend_name() for name, module in modules.items()}
-    assert set(backends.values()) == {"native"}, backends
+    expected = os.environ.get("FLUENTPY_BACKEND", "auto")
+    if expected in ("python", "native"):
+        assert set(backends.values()) == {expected}, backends
+    else:
+        assert set(backends.values()) <= {"native", "python"}, backends
     assert modules["text"].json_spans('{"ok":true}')
     assert modules["date"].days_in_month(2024, 2) == 29
     assert modules["time"].step_time(23, 59, 1, 1) == (23, 0)
@@ -32,6 +47,7 @@ def main(destination: Path) -> int:
     assert modules["shortcut"].normalize(ord("s"), 0x04000000) == (ord("S"), 0x04000000)
     assert modules["color"].parse_hex("#123456") == (18, 52, 86, 255)
     assert modules["input"].split_code("1234", 4) == ("1", "2", "3", "4")
+    assert modules["syntax"].syntax_spans("class Example { return true; }", "java")[0]
     app = QtWidgets.QApplication([])
     app.setQuitOnLastWindowClosed(False)
     errors, frames, checked = [], [], []

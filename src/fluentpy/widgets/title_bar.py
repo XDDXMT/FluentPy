@@ -262,7 +262,7 @@ class FluentTitleBar(QtWidgets.QWidget):
                 callback(*self._caption_visibility)
 
     def uses_native_caption_buttons(self) -> bool:
-        """Whether Windows owns the visible window caption controls."""
+        """Whether the operating system owns the visible caption controls."""
         return self._native_caption
 
     def _set_native_caption(self, enabled, safe_margins=None):

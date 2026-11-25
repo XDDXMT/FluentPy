@@ -17,6 +17,9 @@ keywords = ["qt", "pyside6", "fluent", "widgets", "desktop"]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Environment :: X11 Applications :: Qt",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS :: MacOS X",
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",

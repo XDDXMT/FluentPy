@@ -7,7 +7,7 @@ import weakref
 
 from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..theme import ThemeMode, theme
-from ..theme.fonts import ui_font
+from ..theme.fonts import font_family_css, ui_font
 from ..window_effects import apply_integrated_window_frame, apply_system_backdrop
 
 
@@ -415,9 +415,20 @@ class FluentWindow(QtWidgets.QMainWindow):
         self.set_title_bar_enabled(True)
         self._sync_history()
 
-    def set_title_bar_enabled(self, enabled: bool) -> None:
+    def set_title_bar_enabled(self, enabled: bool, *, native_frame: bool | None = None) -> None:
         enabled = bool(enabled)
-        if enabled == self._title_bar_enabled and (not enabled or self._title_bar is not None):
+        application = QtWidgets.QApplication.instance()
+        platform = application.platformName().lower() if application else ""
+        use_native = enabled and (
+            bool(native_frame)
+            if native_frame is not None
+            else sys.platform == "darwin" or platform.startswith("wayland")
+        )
+        if (
+            enabled == self._title_bar_enabled
+            and use_native == self._native_caption
+            and (not enabled or self._title_bar is not None)
+        ):
             return
         if enabled and self._title_bar is None:
             from .title_bar import FluentTitleBar
@@ -427,12 +438,16 @@ class FluentWindow(QtWidgets.QMainWindow):
             self.setMenuWidget(self._title_bar)
         visible, geometry, state = self.isVisible(), self.geometry(), self.windowState()
         self._title_bar_enabled = enabled
-        self._native_caption = False
-        self._integrated_windows_frame = enabled and self._native_windows_platform()
+        self._native_caption = use_native
+        self._integrated_windows_frame = (
+            enabled and not use_native and self._native_windows_platform()
+        )
         flags = self.windowFlags()
         frameless = QtCore.Qt.WindowType.FramelessWindowHint
         flags = QtCore.Qt.WindowType(
-            int(flags) | int(frameless) if enabled else int(flags) & ~int(frameless)
+            int(flags) | int(frameless)
+            if enabled and not use_native
+            else int(flags) & ~int(frameless)
         )
         self.setWindowFlags(flags)
         if self._title_bar is not None:
@@ -465,13 +480,16 @@ class FluentWindow(QtWidgets.QMainWindow):
 
     def uses_native_caption_buttons(self) -> bool:
         """True for the default OS frame; an integrated caption is Qt-rendered."""
-        return self._native_windows_platform() and not self._title_bar_enabled
+        return self._native_caption or (
+            not self._title_bar_enabled
+            and not bool(self.windowFlags() & QtCore.Qt.WindowType.FramelessWindowHint)
+        )
 
     def _sync_native_caption_area(self, *_arguments) -> None:
         if self._title_bar is None:
             return
         if hasattr(self._title_bar, "_set_native_caption"):
-            self._title_bar._set_native_caption(False)
+            self._title_bar._set_native_caption(self._native_caption)
 
     def _set_native_caption_visibility(self, minimize, maximize, close):
         if not self._native_caption:
@@ -747,7 +765,7 @@ class FluentWindow(QtWidgets.QMainWindow):
                 self._set_widget_theme_palette(widget, palette)
         stylesheet = f"""
 QWidget {{
-    font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI";
+    font-family: {font_family_css()};
     font-size: {tokens.font_size}px;
 }}
 QLabel {{
