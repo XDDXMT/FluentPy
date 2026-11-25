@@ -2,7 +2,7 @@
 
 import os
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import gc
 import sys
@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 from fluentpy import Toast, theme
 from fluentpy.qt import QtCore, QtWidgets
+from fluentpy.theme.fonts import font_families
 
 if "PySide6" in QtCore.__name__:
     from PySide6.QtTest import QTest
@@ -239,7 +240,7 @@ class ToastTests(unittest.TestCase):
         for mode, fill in (("light", "#f8f8f8"), ("dark", "#2b2b2b")):
             theme.set_mode(mode)
             self.app.processEvents()
-            self.assertIn("Microsoft YaHei UI", toast.font().families())
+            self.assertIn(font_families()[0], toast.font().families())
             self.assertEqual(toast.font().pixelSize(), theme.tokens.font_size + 2)
             self.assertIn(theme.tokens.text, toast.styleSheet())
             path = toast._card_path()

@@ -19,17 +19,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-14, macos-15-intel]
+        os: [ubuntu-22.04, windows-2022, macos-15, macos-15-intel]
         qt: [latest]
         include:
           - os: ubuntu-22.04
             qt: '6.8.3'
-          - os: macos-14
+          - os: macos-15
             qt: '6.8.3'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:
-      QT_QPA_PLATFORM: offscreen
+      QT_QPA_PLATFORM: ${{ startsWith(matrix.os, 'macos') && 'cocoa' || 'offscreen' }}
       PYTHONUTF8: '1'
       PYTHONPATH: src
     steps:
@@ -41,7 +41,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y libegl1 libopengl0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxcb-render-util0 libasound2 fonts-noto-cjk xvfb
+          sudo apt-get install -y libegl1 libopengl0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxcb-render-util0 libasound2 libpulse0 fonts-noto-cjk xvfb
       - name: Install Qt and test tools
         shell: bash
         run: |
@@ -84,7 +84,7 @@ jobs:
           python -m venv build/installed
           if [ "$RUNNER_OS" = Windows ]; then py=build/installed/Scripts/python; else py=build/installed/bin/python; fi
           "$py" -m pip install build/wheels/native/*.whl
-          "$py" scripts/check_release_install.py --expect-backend native --expect-version 0.8.0 --report build/installed-native.json
+          "$py" scripts/check_release_install.py --expect-backend native --expect-version 0.8.1 --report build/installed-native.json
       - name: Build and validate universal wheel without an extension
         shell: bash
         env:
@@ -94,7 +94,7 @@ jobs:
           if [ "$RUNNER_OS" = Windows ]; then py=build/installed/Scripts/python; else py=build/installed/bin/python; fi
           "$py" -m pip uninstall -y fluentpy-qt
           "$py" -m pip install build/wheels/python/*.whl
-          "$py" scripts/check_release_install.py --expect-backend python --expect-version 0.8.0 --report build/installed-python.json
+          "$py" scripts/check_release_install.py --expect-backend python --expect-version 0.8.1 --report build/installed-python.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -111,7 +111,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-14]
+        os: [ubuntu-22.04, windows-2022, macos-15]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     env:

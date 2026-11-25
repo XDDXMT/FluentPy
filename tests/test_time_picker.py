@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from fluentpy import QT_API, TimePicker, theme
 from fluentpy.backends import _time_python
 from fluentpy.backends import time as clock

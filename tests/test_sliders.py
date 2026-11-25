@@ -4,7 +4,7 @@ import os
 import sys
 import unittest
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from fluentpy import RangeSlider, Slider, ToolTipSlider, theme
 from fluentpy.qt import QT_API, QtCore, QtWidgets
 

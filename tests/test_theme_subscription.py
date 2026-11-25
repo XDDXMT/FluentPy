@@ -4,7 +4,7 @@ import os
 import sys
 import unittest
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from fluentpy.qt import QtCore, QtWidgets
 from fluentpy.theme.manager import ThemeManager
 

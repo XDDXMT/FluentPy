@@ -5,7 +5,7 @@ import sys
 import unittest
 from pathlib import Path
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from fluentpy import (
     Button,
     ColorToast,

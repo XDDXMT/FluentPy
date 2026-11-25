@@ -4,7 +4,9 @@
 
 FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小馒头** 独立开发，采用 [MIT 许可证](LICENSE)。从输入框、卡片和日期滚轮，到带动画的导航、代码编辑器和消息浮层，可以逐个使用，也可以组合成完整工作台。
 
-界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前版本为 **0.8.0**，仍处于早期开发阶段。
+界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前版本为 **0.8.1**，仍处于早期开发阶段。
+
+0.8.1 加入 Linux、macOS 的窗口策略、系统字体和用户数据目录适配，并提供三平台原生构建与安装检查。macOS 和 Wayland 默认保留系统窗口边框，Windows 继续使用集成标题栏。系统材质、屏幕取色和媒体格式支持取决于操作系统能力；安装与打包见[跨平台使用](docs/platforms.md)。
 
 [项目主页](https://fluentpy.mcxmcl.cn/) · [官方文档](https://fluentpy.mcxmcl.cn/docs/) · [文档源码](https://github.com/XDDXMT/FluentPy-Docs) · [快速开始](#快速开始) · [组件与示例](#组件与示例) · [C 后端与性能](#c-后端与性能) · [问题反馈](https://github.com/XDDXMT/FluentPy/issues)
 

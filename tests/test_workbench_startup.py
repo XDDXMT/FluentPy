@@ -87,14 +87,18 @@ class WorkbenchStartupTests(unittest.TestCase):
             window.startup_splash.firstFramePainted.connect(first_frame)
             window.show()
             self.until(lambda: window.startup_splash.isHidden())
-            self.assertEqual(frames, [(0, 0, False, False, [True, True, True])])
+            custom_caption = not window.title_bar().uses_native_caption_buttons()
+            self.assertEqual(frames, [(0, 0, False, False, [custom_caption] * 3)])
             # Editors now resolve their own lexer as they are constructed.
             # The contract is that none of these checks precede the first frame.
             self.assertGreaterEqual(backend.call_count, 1)
         visible = {w for w in self.app.topLevelWidgets() if w.isVisible()} - before
         self.assertEqual(visible, {window})
         self.assertEqual(len(window._page_indexes), len(PAGES))
-        self.assertTrue(window.title_bar().title_label.isVisible())
+        self.assertEqual(
+            window.title_bar().title_label.isVisible(),
+            not window.title_bar().uses_native_caption_buttons(),
+        )
         self.assertTrue(window.theme_toggle.isVisible())
 
     def test_initialization_is_batched_and_finish_is_tied_to_actual_completion(self):

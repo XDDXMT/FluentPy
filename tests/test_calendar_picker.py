@@ -5,7 +5,7 @@ import random
 import unittest
 from unittest.mock import patch
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from fluentpy import QT_API, CalendarPicker, DateRangePicker, DateTimePicker, TimePicker, theme
 from fluentpy.backends import _calendar_python
 from fluentpy.backends import calendar as policy

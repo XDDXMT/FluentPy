@@ -3,7 +3,7 @@
 import os
 
 # A Qt.Popup must never appear on the user's desktop while this file runs.
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import json
 import subprocess
@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 from fluentpy import QT_API, DatePicker, theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets
+from fluentpy.theme.fonts import font_families
 from fluentpy.widgets import date_picker as picker_module
 
 if QT_API == "PySide6":
@@ -362,8 +363,8 @@ class DatePickerTests(unittest.TestCase):
 
     def test_font_fallback_and_theme_switch_update_live_picker_and_popup(self):
         popup = self.open_popup((2024, 6, 15))
-        self.assertIn("Microsoft YaHei UI", self.view.font().families())
-        self.assertIn("Microsoft YaHei UI", popup.wheel.font().families())
+        self.assertIn(font_families()[0], self.view.font().families())
+        self.assertIn(font_families()[0], popup.wheel.font().families())
         self.assertEqual(self.view.font().pixelSize(), theme.tokens.font_size)
         self.assertEqual(popup.wheel.font().pixelSize(), 16)
         available = set(QtGui.QFontDatabase.families())

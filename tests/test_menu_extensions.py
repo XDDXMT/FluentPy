@@ -5,7 +5,7 @@ import sys
 import unittest
 from pathlib import Path
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from fluentpy import ActionMenu, Button, LineEdit, SystemTrayMenu, theme
 from fluentpy.qt import QT_API, QtCore, QtGui, QtWidgets
 

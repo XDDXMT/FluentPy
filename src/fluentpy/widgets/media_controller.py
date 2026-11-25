@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import sys
 from pathlib import Path
 
 from ..qt import QT_API, QtCore, Signal, Slot
@@ -10,10 +11,19 @@ from ..qt import QT_API, QtCore, Signal, Slot
 
 def multimedia_modules():
     """Import only when a media source/output is actually requested."""
-    if QT_API == "PySide6":
-        from PySide6 import QtMultimedia, QtMultimediaWidgets
-    else:
-        from PyQt6 import QtMultimedia, QtMultimediaWidgets
+    try:
+        if QT_API == "PySide6":
+            from PySide6 import QtMultimedia, QtMultimediaWidgets
+        else:
+            from PyQt6 import QtMultimedia, QtMultimediaWidgets
+    except ImportError as error:
+        hint = (
+            " On Debian/Ubuntu install libpulse0, libasound2 (libasound2t64 on newer releases), "
+            "libegl1 and libopengl0."
+            if sys.platform.startswith("linux")
+            else " Check the Qt Multimedia installation."
+        )
+        raise ImportError(f"Qt Multimedia could not be loaded: {error}.{hint}") from error
     return QtMultimedia, QtMultimediaWidgets
 
 
