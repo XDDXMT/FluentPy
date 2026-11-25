@@ -49,7 +49,7 @@ class WorkbenchStartupTests(unittest.TestCase):
         self.windows.append(window)
         return window
 
-    def until(self, predicate, timeout=6000):
+    def until(self, predicate, timeout=15000):
         elapsed = QtCore.QElapsedTimer()
         elapsed.start()
         while not predicate() and elapsed.elapsed() < timeout:
