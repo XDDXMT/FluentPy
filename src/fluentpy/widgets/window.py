@@ -69,20 +69,6 @@ class FluentWindow(QtWidgets.QMainWindow):
 
     def __init__(self, title: str = "FluentPy", parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        # Cocoa's native widget style supplies dynamic system palette colors.
-        # Scope Fusion to this Fluent window so its explicit theme is respected
-        # without changing QApplication's style or native window decoration.
-        self._platform_style = None
-        if sys.platform == "darwin":
-            application = QtWidgets.QApplication.instance()
-            style = getattr(application, "_fluent_widget_style", None)
-            if style is None:
-                style = QtWidgets.QStyleFactory.create("Fusion")
-                style.setParent(application)
-                application._fluent_widget_style = style
-            self._platform_style = style
-        if self._platform_style is not None:
-            self.setStyle(self._platform_style)
         self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setWindowTitle(title)
         self.resize(980, 640)
@@ -745,10 +731,25 @@ class FluentWindow(QtWidgets.QMainWindow):
             self._backdrop_snapshot_depth -= 1
 
     def _set_widget_theme_palette(self, widget, palette):
-        if self._platform_style is not None and not widget.testAttribute(
-            QtCore.Qt.WidgetAttribute.WA_SetStyle
+        # Cocoa supplies dynamic system colors to unstyled QWidget surfaces.
+        # Style only explicit opaque containers, preserving caller-owned QSS
+        # and QApplication's native style. No shared QStyle lifetime is involved.
+        if (
+            sys.platform == "darwin"
+            and type(widget) is QtWidgets.QWidget
+            and widget.autoFillBackground()
         ):
-            widget.setStyle(self._platform_style)
+            previous = widget.property("_fluentSurfaceStyle")
+            if not widget.styleSheet() or widget.styleSheet() == previous:
+                widget.setProperty("fluentOpaqueSurface", True)
+                sheet = (
+                    'QWidget[fluentOpaqueSurface="true"] { background-color: '
+                    + palette.color(widget.backgroundRole()).name()
+                    + "; }"
+                )
+                if widget.styleSheet() != sheet:
+                    widget.setStyleSheet(sheet)
+                widget.setProperty("_fluentSurfaceStyle", sheet)
         widget.ensurePolished()
         widget.setPalette(palette)
         if isinstance(widget, QtWidgets.QLabel) and widget.objectName() == "muted":
@@ -788,6 +789,10 @@ QLabel {{
     border: none;
 }}
 """
+        if sys.platform == "darwin":
+            stylesheet += (
+                f"QLabel {{color:{tokens.text};}}QLabel#muted {{color:{tokens.text_muted};}}"
+            )
         if self.styleSheet() != stylesheet:
             self.setStyleSheet(stylesheet)
         # Cocoa and stylesheet polishing can restore the system palette.

@@ -47,8 +47,7 @@ class PlatformSupportTests(unittest.TestCase):
             window.set_title_bar_enabled(True, native_frame=False)
             self.assertFalse(window.uses_native_caption_buttons())
             self.assertIs(self.app.style(), application_style)
-            self.assertEqual(window._platform_style.objectName().lower(), "fusion")
-            self.assertIs(window._platform_style.parent(), self.app)
+            self.assertNotIn("_fluent_widget_style", self.app.__dict__)
             window.close()
             window.deleteLater()
 
