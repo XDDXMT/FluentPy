@@ -72,11 +72,16 @@ class FluentWindow(QtWidgets.QMainWindow):
         # Cocoa's native widget style supplies dynamic system palette colors.
         # Scope Fusion to this Fluent window so its explicit theme is respected
         # without changing QApplication's style or native window decoration.
-        self._platform_style = (
-            QtWidgets.QStyleFactory.create("Fusion") if sys.platform == "darwin" else None
-        )
+        self._platform_style = None
+        if sys.platform == "darwin":
+            application = QtWidgets.QApplication.instance()
+            style = getattr(application, "_fluent_widget_style", None)
+            if style is None:
+                style = QtWidgets.QStyleFactory.create("Fusion")
+                style.setParent(application)
+                application._fluent_widget_style = style
+            self._platform_style = style
         if self._platform_style is not None:
-            self._platform_style.setParent(self)
             self.setStyle(self._platform_style)
         self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setWindowTitle(title)

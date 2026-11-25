@@ -48,6 +48,7 @@ class PlatformSupportTests(unittest.TestCase):
             self.assertFalse(window.uses_native_caption_buttons())
             self.assertIs(self.app.style(), application_style)
             self.assertEqual(window._platform_style.objectName().lower(), "fusion")
+            self.assertIs(window._platform_style.parent(), self.app)
             window.close()
             window.deleteLater()
 

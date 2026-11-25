@@ -174,7 +174,10 @@ class CalendarWidgetTests(unittest.TestCase):
         QTest.qWait(240)
         cal = self.picker._popup.calendar
         self.click_day(cal, (2024, 2, 29))
-        QTest.qWait(170)
+        elapsed = QtCore.QElapsedTimer()
+        elapsed.start()
+        while self.picker._popup.isVisible() and elapsed.elapsed() < 2000:
+            QTest.qWait(10)
         self.assertEqual(self.picker.date(), QtCore.QDate(2024, 2, 29))
         self.assertEqual(len(changed), 1)
         self.assertEqual(len(accepted), 1)
