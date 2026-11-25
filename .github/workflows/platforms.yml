@@ -56,11 +56,11 @@ jobs:
       - name: Full suite with C
         env:
           FLUENTPY_BACKEND: native
-        run: python -m pytest -q --tb=short --timeout=60 --junitxml=build/test-native.xml
+        run: python -m pytest -q --tb=short --timeout=60 --timeout-method=thread --junitxml=build/test-native.xml
       - name: Full suite with Python fallback
         env:
           FLUENTPY_BACKEND: python
-        run: python -m pytest -q --tb=short --timeout=60 --junitxml=build/test-python.xml
+        run: python -m pytest -q --tb=short --timeout=60 --timeout-method=thread --junitxml=build/test-python.xml
       - name: Real desktop startup and workbench routes
         if: runner.os != 'Linux'
         shell: bash

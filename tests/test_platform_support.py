@@ -39,12 +39,15 @@ class PlatformSupportTests(unittest.TestCase):
         window.deleteLater()
 
     def test_macos_selects_native_frame_by_default_and_allows_explicit_override(self):
+        application_style = self.app.style()
         with patch("fluentpy.widgets.window.sys.platform", "darwin"):
             window = FluentWindow()
             window.set_title_bar_enabled(True)
             self.assertTrue(window.uses_native_caption_buttons())
             window.set_title_bar_enabled(True, native_frame=False)
             self.assertFalse(window.uses_native_caption_buttons())
+            self.assertIs(self.app.style(), application_style)
+            self.assertEqual(window._platform_style.objectName().lower(), "fusion")
             window.close()
             window.deleteLater()
 

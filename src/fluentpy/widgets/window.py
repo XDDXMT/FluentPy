@@ -69,6 +69,15 @@ class FluentWindow(QtWidgets.QMainWindow):
 
     def __init__(self, title: str = "FluentPy", parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        # Cocoa's native widget style supplies dynamic system palette colors.
+        # Scope Fusion to this Fluent window so its explicit theme is respected
+        # without changing QApplication's style or native window decoration.
+        self._platform_style = (
+            QtWidgets.QStyleFactory.create("Fusion") if sys.platform == "darwin" else None
+        )
+        if self._platform_style is not None:
+            self._platform_style.setParent(self)
+            self.setStyle(self._platform_style)
         self.setFont(ui_font(theme.tokens.font_size, self.font()))
         self.setWindowTitle(title)
         self.resize(980, 640)
@@ -730,8 +739,11 @@ class FluentWindow(QtWidgets.QMainWindow):
         finally:
             self._backdrop_snapshot_depth -= 1
 
-    @staticmethod
-    def _set_widget_theme_palette(widget, palette):
+    def _set_widget_theme_palette(self, widget, palette):
+        if self._platform_style is not None and not widget.testAttribute(
+            QtCore.Qt.WidgetAttribute.WA_SetStyle
+        ):
+            widget.setStyle(self._platform_style)
         widget.ensurePolished()
         widget.setPalette(palette)
         if isinstance(widget, QtWidgets.QLabel) and widget.objectName() == "muted":
