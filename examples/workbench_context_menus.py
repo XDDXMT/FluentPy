@@ -378,7 +378,10 @@ class WorkbenchContextMenus(QtCore.QObject):
         text, separator, shortcut = action.text().partition("\t")
         if name in _EDIT_LABELS:
             action.setText(_EDIT_LABELS[name])
-            if separator and shortcut and action.shortcut().isEmpty():
+            standard = _EDIT_KEYS.get(name)
+            if standard is not None and action.shortcut().isEmpty():
+                action.setShortcuts(QtGui.QKeySequence.keyBindings(standard))
+            elif separator and shortcut and action.shortcut().isEmpty():
                 action.setShortcut(
                     QtGui.QKeySequence.fromString(
                         shortcut, QtGui.QKeySequence.SequenceFormat.NativeText

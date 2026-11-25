@@ -288,8 +288,19 @@ class TableTests(unittest.TestCase):
 
     def test_hover_is_animated_and_model_changes_and_hide_stop_timers(self):
         index = self.model.index(1, 0)
-        QTest.mouseMove(self.view.viewport(), self.view.visualRect(index).center())
-        QTest.qWait(35)
+        position = QtCore.QPointF(self.view.visualRect(index).center())
+        self.app.sendEvent(
+            self.view.viewport(),
+            QtGui.QMouseEvent(
+                QtCore.QEvent.Type.MouseMove,
+                position,
+                position,
+                QtCore.Qt.MouseButton.NoButton,
+                QtCore.Qt.MouseButton.NoButton,
+                QtCore.Qt.KeyboardModifier.NoModifier,
+            ),
+        )
+        self.view._hover_animation.setCurrentTime(35)
         self.assertGreater(self.view._hover_amount(index), 0)
         self.assertLess(self.view._hover_amount(index), 1)
         self.model.removeRow(1)

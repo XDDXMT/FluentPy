@@ -60,7 +60,10 @@ def stage(directory: Path) -> dict:
     # One content fingerprint invalidates stale CSS, scripts and screenshots
     # after a manual deployment. The editable source keeps working on its own.
     homepage_files = {
-        key: digest for key, digest in inventory.items() if not key.startswith("docs/")
+        key: digest
+        for key, digest in inventory.items()
+        if not key.startswith("docs/")
+        or key.startswith(("docs/platform-showcase.", "docs/assets/previews/platform-"))
     }
     asset_version = hashlib.sha256(
         json.dumps(homepage_files, sort_keys=True).encode("utf-8")
@@ -113,7 +116,7 @@ def main():
             "将压缩包内的 index.html、home.css、home.js、assets/ 和 docs/ 解压到网站根目录。\n"
             "根路径为展示主页；/docs/ 为文档。旧的根路径 #/ 文档链接会自动跳转。\n"
             "服务器不需要 Python、Qt 或 Node.js。不要只上传单个 index.html。\n"
-            "新接口目前对应开发源码；网站上线和 PyPI 发布是独立操作。\n"
+            "网站部署与 PyPI 安装包分别维护。Python 接口版本以文档和发行记录为准。\n"
         )
         with zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
             for relative in manifest["sha256"]:

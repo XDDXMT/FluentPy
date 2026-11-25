@@ -16,6 +16,7 @@ from fluentpy import (
     theme,
 )
 from fluentpy.qt import QtCore, QtWidgets
+from fluentpy.theme.fonts import font_families
 
 if "PySide6" in QtCore.__name__:
     from PySide6.QtTest import QTest
@@ -218,7 +219,7 @@ class HeaderCardTests(unittest.TestCase):
         row = group.add_group("i", "字体", "中文说明", Button("操作"))
         for mode in ("light", "dark"):
             theme.set_mode(mode)
-            self.assertIn("Microsoft YaHei UI", group.title_label.font().families())
+            self.assertIn(font_families()[0], group.title_label.font().families())
             self.assertEqual(group.title_label.font().pixelSize(), theme.tokens.font_size + 2)
             self.assertIn(theme.tokens.text_muted, row.content_label.styleSheet())
         group.remove_group(row)

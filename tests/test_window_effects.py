@@ -260,7 +260,10 @@ class BackdropPolicyTests(unittest.TestCase):
             self.assertFalse(self.policy())
             self.dwm.DwmIsCompositionEnabled.assert_not_called()
             with patch.object(
-                window_effects.sys, "getwindowsversion", return_value=SimpleNamespace(build=26200)
+                window_effects.sys,
+                "getwindowsversion",
+                return_value=SimpleNamespace(build=26200),
+                create=True,
             ):
                 self.dwm.DwmIsCompositionEnabled.side_effect = None
                 self.dwm.DwmIsCompositionEnabled.return_value = -1

@@ -30,7 +30,7 @@ class SplashScreenTests(unittest.TestCase):
         self.old_hook = sys.excepthook
         sys.excepthook = lambda kind, error, tb: self.errors.append(str(error))
         self.host = FluentWindow("Startup test")
-        self.host.set_title_bar_enabled(True)
+        self.host.set_title_bar_enabled(True, native_frame=False)
         self.host.setWindowIcon(brand_icon())
         self.host.resize(720, 480)
         self.editor = LineEdit()
@@ -81,7 +81,7 @@ class SplashScreenTests(unittest.TestCase):
         self.host.set_title_bar_enabled(False)
         self.app.processEvents()
         self.assertEqual(self.splash.geometry(), self.host.rect())
-        self.host.set_title_bar_enabled(True)
+        self.host.set_title_bar_enabled(True, native_frame=False)
         self.host.title_bar().set_bar_height(60)
         self.app.processEvents()
         self.assertEqual(self.splash.y(), 60)

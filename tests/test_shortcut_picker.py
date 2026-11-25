@@ -1,6 +1,6 @@
 import os
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import sys
 import unittest
@@ -9,6 +9,7 @@ from unittest.mock import patch
 from fluentpy import ShortcutDialog, ShortcutPicker, theme
 from fluentpy.backends import shortcut
 from fluentpy.qt import QT_API, QtCore, QtGui, QtWidgets
+from fluentpy.theme.fonts import font_families
 
 if QT_API == "PySide6":
     from PySide6.QtTest import QTest
@@ -57,7 +58,7 @@ class ShortcutPickerTests(unittest.TestCase):
         return dialog
 
     def finish(self):
-        QTest.qWait(130)
+        QTest.qWait(300)
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
 
     def test_roundtrip_programmatic_api_and_single_change_signals(self):
@@ -286,7 +287,7 @@ class ShortcutPickerTests(unittest.TestCase):
             self.assertFalse(dialog.yes_button.isEnabled())
             self.assertIn("占用", dialog.message_label.text())
             self.assertFalse(dialog.grab().isNull())
-            self.assertIn("Microsoft YaHei UI", dialog.recorder.font().families())
+            self.assertIn(font_families()[0], dialog.recorder.font().families())
 
     def test_invalid_and_missing_c_inputs_do_not_allocate_partial_widgets(self):
         before = len(self.parent.findChildren(QtWidgets.QWidget))

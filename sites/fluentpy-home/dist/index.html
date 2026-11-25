@@ -11,6 +11,7 @@
     <title>FluentPy · 熟悉的 Windows 体验，你的 Qt 应用</title>
     <link rel="icon" href="assets/mark.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="home.css?v=source" />
+    <link rel="stylesheet" href="docs/platform-showcase.css?v=source" />
     <script>
       try {
         const t = localStorage.getItem('fluentpy-home-theme');
@@ -19,6 +20,7 @@
       } catch {}
     </script>
     <script src="home.js?v=source" defer></script>
+    <script src="docs/platform-showcase.js?v=source" defer></script>
   </head>
   <body>
     <a class="skip" href="#main">跳到正文</a>
@@ -30,6 +32,7 @@
       >
       <nav aria-label="主导航">
         <a href="#preview" class="desktop-link">界面预览</a>
+        <a href="#platforms" class="desktop-link">跨平台</a>
         <a href="docs/#/getting-started">文档</a>
         <a href="https://github.com/XDDXMT/FluentPy" target="_blank" rel="noopener noreferrer"
           >GitHub <span aria-hidden="true">↗</span></a
@@ -63,10 +66,8 @@
             <a class="button secondary" href="docs/#/components">浏览组件</a>
           </div>
           <p class="hero-note">Python 3.10+ · PySide6 · 可选 C 加速</p>
-          <a
-            class="download-link"
-            href="https://github.com/XDDXMT/FluentPy/releases/download/v0.8.0/FluentPy-Workbench-0.8.0-windows-x64.zip"
-            >先体验一下？下载 Windows 工作台 <span aria-hidden="true">↗</span></a
+          <a class="download-link" href="https://github.com/XDDXMT/FluentPy/releases/tag/v0.8.1"
+            >下载 Windows、Linux 或 macOS 工作台</a
           >
         </div>
         <div class="hero-visual">
@@ -117,6 +118,17 @@
           <h2>明暗之间，一样舒服</h2>
           <p>统一主题、强调色与状态反馈，为你的桌面应用留出自己的风格。</p>
         </article>
+      </section>
+
+      <section class="platform-section shell" id="platforms" aria-labelledby="platforms-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="platforms-title">跨平台运行</h2>
+            <p>使用同一套 FluentPy 控件构建桌面应用。展开对应平台，查看工作台实际运行的界面。</p>
+          </div>
+          <a class="text-link" href="docs/#/platforms">查看跨平台安装指南</a>
+        </div>
+        <div data-platform-showcase></div>
       </section>
 
       <section class="preview-section shell" id="preview" aria-labelledby="preview-title">

@@ -94,7 +94,7 @@ window.historyChanged.connect(lambda: print("可返回", window.can_go_back()))
 
 ## 可扩展标题栏
 
-自定义标题栏默认关闭。启用后使用一行式标题栏：返回、图标、标题和窗口按钮处在同一行，背景跟随明暗主题，不再叠加一行普通系统标题栏。Windows 保留系统边框能力，由 DWM 处理圆角与阴影，并使用系统移动、边缘缩放及窗口操作。
+Fluent 工具栏默认关闭。启用后，Windows 与 X11 默认将返回、图标、标题和窗口按钮放在同一行。Windows 由 DWM 处理圆角和阴影。macOS 与 Wayland 默认保留系统边框，Fluent 工具栏显示在内容区顶部。
 
 ```python
 from fluentpy import SearchLineEdit, Button
@@ -116,7 +116,7 @@ title_bar.set_bar_height(56)
 
 标题栏的空白与标题区域可拖动，双击可最大化／还原；`set_double_click_enabled(False)` 关闭双击操作。`set_caption_buttons_visible(minimize=True, maximize=True, close=True)` 控制窗口按钮，最大化按钮隐藏或禁用时，双击也不会最大化。前进、后退和窗口操作按钮均为既有按钮控件，可通过公开属性调整。
 
-`uses_native_caption_buttons()` 区分系统绘制的窗口操作与一体式 Qt 标题栏。在 Windows 上，未启用自定义标题栏的普通窗口使用系统窗口按钮；一体式模式返回 `False`。圆角与阴影由当前桌面系统决定，最大化时保持系统的直角边界，不绘制额外的假阴影。
+`set_title_bar_enabled(True, native_frame=True)` 可显式采用系统边框与 Fluent 工具栏，`native_frame=False` 采用一体式标题栏。`uses_native_caption_buttons()` 可判断窗口是否使用系统窗口按钮。圆角、阴影及最大化边界由桌面系统决定。各平台的行为见[跨平台使用](platforms.md)。
 
 最大化和全屏时关闭外层圆角与可见边线，恢复普通窗口后重新使用系统圆角、边框和阴影。最大化遵循显示器工作区，完整全屏才覆盖任务栏区域。导航主内容保留 10px 左上圆角，以露出标题栏／侧栏共用的外壳表面；该裁剪只作用于子页面容器，不给原生窗口设置遮罩。侧栏展开状态、当前页面和输入内容在窗口状态切换时保留。
 

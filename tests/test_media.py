@@ -204,6 +204,18 @@ class MediaTests(unittest.TestCase):
         self.assertTrue(all(image.size() == QtCore.QSize(160, 90) for image in frames))
         self.assertNotEqual(frames[0].pixelColor(0, 0), frames[-1].pixelColor(0, 0))
         self.assertEqual(errors, [])
+        self.controller.stop()
+        self.assertFalse(self.controller.is_playing())
+        self.assertEqual(self.controller.position(), 0)
+        self.assertFalse(self.controller.source().isEmpty())
+        frames.clear()
+        self.controller.play()
+        self.wait_for(lambda: len(frames) >= 3)
+        self.controller.pause()
+        self.controller.clear()
+        self.assertTrue(self.controller.source().isEmpty())
+        self.assertFalse(self.controller.is_playing())
+        self.assertIs(self.controller.player().videoOutput(), video.video_widget)
 
     def test_parameter_validation_and_optional_pause_on_hide(self):
         with self.assertRaises(ValueError):

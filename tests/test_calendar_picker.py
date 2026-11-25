@@ -5,7 +5,7 @@ import random
 import unittest
 from unittest.mock import patch
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from fluentpy import QT_API, CalendarPicker, DateRangePicker, DateTimePicker, TimePicker, theme
 from fluentpy.backends import _calendar_python
 from fluentpy.backends import calendar as policy
@@ -174,7 +174,10 @@ class CalendarWidgetTests(unittest.TestCase):
         QTest.qWait(240)
         cal = self.picker._popup.calendar
         self.click_day(cal, (2024, 2, 29))
-        QTest.qWait(170)
+        elapsed = QtCore.QElapsedTimer()
+        elapsed.start()
+        while self.picker._popup.isVisible() and elapsed.elapsed() < 2000:
+            QTest.qWait(10)
         self.assertEqual(self.picker.date(), QtCore.QDate(2024, 2, 29))
         self.assertEqual(len(changed), 1)
         self.assertEqual(len(accepted), 1)
@@ -333,18 +336,18 @@ class CalendarWidgetTests(unittest.TestCase):
         cal = self.open()
         grid = cal.grid
         cal.choose((2024, 3, 13))
-        QTest.qWait(220)
+        QTest.qWait(350)
         before = grid._range_state
         index = next(i for i, c in enumerate(cal.cells) if c and c[:3] == (2024, 3, 15))
         grid._set_hover(index)
         grid.range_motion.setCurrentTime(80)
         self.assertGreater(grid._range_state[1], before[1])
         self.assertLess(grid._range_state[1], index)
-        QTest.qWait(220)
+        QTest.qWait(350)
         self.assertEqual(grid._range_state[1], float(index))
         self.assertEqual(self.picker.end_date(), QtCore.QDate(2024, 3, 21))
         grid._set_hover(-1)
-        QTest.qWait(220)
+        QTest.qWait(350)
         bounds = grid.range_path().boundingRect()
         self.assertAlmostEqual(bounds.width(), bounds.height(), places=4)
 

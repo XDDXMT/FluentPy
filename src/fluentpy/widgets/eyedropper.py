@@ -147,7 +147,10 @@ class ScreenColorPicker(QtCore.QObject):
         for screen in QtGui.QGuiApplication.screens():
             pixmap = screen.grabWindow(0)
             if pixmap.isNull():
-                raise RuntimeError("当前系统不允许读取屏幕颜色")
+                raise RuntimeError(
+                    "当前系统不允许读取屏幕颜色。macOS 请检查屏幕录制权限；"
+                    "Wayland 桌面可能限制屏幕捕获，可使用应用内颜色面板。"
+                )
             frames.append((QtCore.QRect(screen.geometry()), pixmap.toImage()))
         return frames
 

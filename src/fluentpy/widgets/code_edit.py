@@ -8,6 +8,7 @@ from ..backends.syntax import supported_languages
 from ..backends.text import backend_name
 from ..qt import QtCore, QtGui, QtWidgets, Signal
 from ..theme import theme
+from ..theme.fonts import code_font, font_family_css
 from .scroll_bar import FluentScrollBar
 from .syntax_highlighter import SyntaxHighlighter
 
@@ -35,19 +36,7 @@ class _TextArea(QtWidgets.QPlainTextEdit):
         self.setVerticalScrollBar(FluentScrollBar(parent=self))
         self.setHorizontalScrollBar(FluentScrollBar(QtCore.Qt.Orientation.Horizontal, self))
         self.document().setDocumentMargin(6)
-        font = QtGui.QFont()
-        font.setFamilies(
-            [
-                "Consolas",
-                "Cascadia Code",
-                "Microsoft YaHei UI",
-                "Noto Sans Mono CJK SC",
-                "DejaVu Sans Mono",
-            ]
-        )
-        font.setStyleHint(QtGui.QFont.StyleHint.Monospace)
-        font.setPixelSize(theme.tokens.font_size)
-        self.setFont(font)
+        self.setFont(code_font(theme.tokens.font_size))
         self.line_numbers = _LineNumbers(self)
         self.blockCountChanged.connect(self.update_gutter_width)
         self.updateRequest.connect(self._update_gutter)
@@ -339,7 +328,7 @@ class CodeEdit(QtWidgets.QWidget):
         }
         self.text_edit.setStyleSheet(
             f"QPlainTextEdit {{ background: {self._background}; color: {text}; border: none;"
-            f' font-family: "Consolas", "Cascadia Code", "Microsoft YaHei UI", "Noto Sans Mono CJK SC", "DejaVu Sans Mono", monospace; font-size: {self._font_size}px;'
+            f" font-family: {font_family_css(monospace=True)}; font-size: {self._font_size}px;"
             f" selection-background-color: {'#b8e8eb' if light else '#264f78'};"
             f" selection-color: {text}; }}"
         )

@@ -268,7 +268,7 @@ else:
 from fluentpy import DatePicker,FileDropWidget,ShortcutPicker,TimePicker,CalendarPicker,DateRangePicker,DateTimePicker
 import fluentpy
 assert Path(fluentpy.__file__).is_relative_to(source)
-from fluentpy.qt import QtCore,QtWidgets,QT_API
+from fluentpy.qt import QtCore,QtGui,QtWidgets,QT_API
 if QT_API=='PySide6':
     from PySide6.QtTest import QTest
 else:
@@ -302,11 +302,15 @@ with tempfile.TemporaryDirectory() as folder:
     assert not files.is_busy() and len(files.selected_paths())==1
 keys=ShortcutPicker('Ctrl+Shift+A',host)
 keys.set_reserved_sequences(['Ctrl+S'])
-keys.show(); keys.open_editor(); QTest.qWait(200)
+keys.show(); keys.open_editor()
 editor=keys._editor
+editor._fade.setCurrentTime(editor._fade.duration())
+app.processEvents()
 QTest.keyClick(editor.recorder,QtCore.Qt.Key.Key_L,QtCore.Qt.KeyboardModifier.AltModifier)
-editor.yes_button.click(); QTest.qWait(150)
-assert keys.key_sequence().toString()=='Alt+L'
+assert editor.key_sequence()==QtGui.QKeySequence('Alt+L')
+editor.yes_button.click()
+editor._fade.setCurrentTime(editor._fade.duration())
+assert keys.key_sequence()==QtGui.QKeySequence('Alt+L')
 time_picker=TimePicker(host,use_12_hour=True)
 time_picker.setGeometry(300,260,300,38)
 time_picker.setTime(QtCore.QTime(23,59)); time_picker.show(); time_picker.show_popup()

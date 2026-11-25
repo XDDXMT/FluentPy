@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import sys
 from pathlib import Path
 
 from ..qt import QT_API, QtCore, Signal, Slot
@@ -10,10 +11,19 @@ from ..qt import QT_API, QtCore, Signal, Slot
 
 def multimedia_modules():
     """Import only when a media source/output is actually requested."""
-    if QT_API == "PySide6":
-        from PySide6 import QtMultimedia, QtMultimediaWidgets
-    else:
-        from PyQt6 import QtMultimedia, QtMultimediaWidgets
+    try:
+        if QT_API == "PySide6":
+            from PySide6 import QtMultimedia, QtMultimediaWidgets
+        else:
+            from PyQt6 import QtMultimedia, QtMultimediaWidgets
+    except ImportError as error:
+        hint = (
+            " On Debian/Ubuntu install libpulse0, libasound2 (libasound2t64 on newer releases), "
+            "libegl1 and libopengl0."
+            if sys.platform.startswith("linux")
+            else " Check the Qt Multimedia installation."
+        )
+        raise ImportError(f"Qt Multimedia could not be loaded: {error}.{hint}") from error
     return QtMultimedia, QtMultimediaWidgets
 
 
@@ -85,22 +95,31 @@ class MediaController(QtCore.QObject):
 
     def clear(self):
         if self._player is not None:
-            self._player.stop()
+            # setSource already stops playback. PySide releases the GIL for
+            # setSource, allowing any in-flight Python video callback to finish.
             self._player.setSource(QtCore.QUrl())
+
+    def _invoke_player_slot(self, slot, *arguments):
+        # PySide releases the GIL for invokeMethod. Keep these calls synchronous
+        # while allowing the decoder to finish any pending Python callbacks.
+        if not QtCore.QMetaObject.invokeMethod(
+            self.player(), slot, QtCore.Qt.ConnectionType.DirectConnection, *arguments
+        ):
+            raise RuntimeError(f"Qt Multimedia could not invoke {slot}")
 
     @Slot()
     def play(self):
-        self.player().play()
+        self._invoke_player_slot("play")
 
     @Slot()
     def pause(self):
         if self._player is not None:
-            self._player.pause()
+            self._invoke_player_slot("pause")
 
     @Slot()
     def stop(self):
         if self._player is not None:
-            self._player.stop()
+            self._invoke_player_slot("stop")
 
     @Slot()
     def toggle_playback(self):
@@ -123,7 +142,8 @@ class MediaController(QtCore.QObject):
         if not isinstance(milliseconds, int) or isinstance(milliseconds, bool):
             raise TypeError("seek position must be an integer number of milliseconds")
         if self.is_seekable():
-            self._player.setPosition(max(0, min(self.duration(), milliseconds)))
+            position = max(0, min(self.duration(), milliseconds))
+            self._invoke_player_slot("setPosition", QtCore.Q_ARG("qint64", position))
 
     def seek_by(self, milliseconds):
         self.seek(self.position() + milliseconds)

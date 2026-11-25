@@ -199,7 +199,7 @@ class FluentWindowTests(unittest.TestCase):
         self.window.show()
         self.app.processEvents()
         layout = self.window.content_layout
-        self.window.set_title_bar_enabled(True)
+        self.window.set_title_bar_enabled(True, native_frame=False)
         title = self.window.title_bar()
         self.assertIsInstance(title, FluentTitleBar)
         self.assertTrue(title.back_button.isEnabled())
@@ -210,7 +210,7 @@ class FluentWindowTests(unittest.TestCase):
         self.assertTrue(self.window.isVisible())
         self.assertIs(self.window.content_layout, layout)
         self.assertIs(self.window.current_page(), pages[1])
-        self.window.set_title_bar_enabled(True)
+        self.window.set_title_bar_enabled(True, native_frame=False)
         self.assertIs(self.window.title_bar(), title)
 
     def test_custom_title_bar_accepts_real_widgets_without_touching_content(self):
@@ -225,7 +225,7 @@ class FluentWindowTests(unittest.TestCase):
             self.window.set_title_bar(self.window)
 
     def test_system_resize_delegation_and_fixed_dimension_edges(self):
-        self.window.set_title_bar_enabled(True)
+        self.window.set_title_bar_enabled(True, native_frame=False)
         self.window.show()
         self.app.processEvents()
         handle = Mock()
@@ -241,7 +241,7 @@ class FluentWindowTests(unittest.TestCase):
         self.assertFalse(self.window._resize_edges(QtCore.QPoint(1, 1)))
 
     def test_replacing_or_deleting_title_bar_clears_only_the_current_owner(self):
-        self.window.set_title_bar_enabled(True)
+        self.window.set_title_bar_enabled(True, native_frame=False)
         old = self.window.title_bar()
         custom = QtWidgets.QWidget()
         self.window.set_title_bar(custom)
@@ -250,7 +250,7 @@ class FluentWindowTests(unittest.TestCase):
         custom.deleteLater()
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self.assertIsNone(self.window.title_bar())
-        self.window.set_title_bar_enabled(True)
+        self.window.set_title_bar_enabled(True, native_frame=False)
         self.assertIsInstance(self.window.title_bar(), FluentTitleBar)
         self.assertIsNot(self.window.title_bar(), old)
 

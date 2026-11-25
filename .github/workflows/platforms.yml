@@ -1,0 +1,191 @@
+name: Desktop platforms
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: ${{ matrix.os }} / Qt ${{ matrix.qt }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-15, macos-15-intel]
+        qt: [latest]
+        include:
+          - os: ubuntu-22.04
+            qt: '6.8.3'
+          - os: macos-15
+            qt: '6.8.3'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      QT_QPA_PLATFORM: ${{ startsWith(matrix.os, 'macos') && 'cocoa' || 'offscreen' }}
+      PYTHONUTF8: '1'
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Linux runtime libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libegl1 libopengl0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxcb-render-util0 libasound2 libpulse0 fonts-noto-cjk xvfb weston
+      - name: Install Qt and test tools
+        shell: bash
+        run: |
+          python -m pip install -U pip setuptools wheel build pytest pytest-subtests pytest-timeout Pillow
+          if [ "${{ matrix.qt }}" = latest ]; then
+            python -m pip install PySide6
+          else
+            python -m pip install "PySide6==${{ matrix.qt }}"
+          fi
+      - name: Compile the C extension with the host compiler
+        run: python scripts/build_native.py
+      - name: Cocoa palette and native window regression checks
+        if: runner.os == 'macOS'
+        env:
+          FLUENTPY_BACKEND: native
+        run: python -m pytest -q --tb=short --timeout=60 --timeout-method=thread tests/test_platform_support.py tests/test_workbench_startup.py tests/test_workbench_settings.py tests/test_workbench.py::WorkbenchTests::test_code_editor_uses_qt_edit_actions_in_the_advanced_menu
+      - name: Full suite with C
+        timeout-minutes: 10
+        env:
+          FLUENTPY_BACKEND: native
+        run: python -m pytest -q --tb=short -o faulthandler_timeout=45 --timeout=60 --timeout-method=thread --junitxml=build/test-native.xml
+      - name: Full suite with Python fallback
+        timeout-minutes: 10
+        env:
+          FLUENTPY_BACKEND: python
+        run: python -m pytest -q --tb=short -o faulthandler_timeout=45 --timeout=60 --timeout-method=thread --junitxml=build/test-python.xml
+      - name: Real desktop startup and workbench routes
+        if: runner.os != 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: ${{ runner.os == 'macOS' && 'cocoa' || 'windows' }}
+          FLUENTPY_BACKEND: native
+          FLUENTPY_SMOKE_VISIBLE: '1'
+        run: python scripts/workbench_launcher.py --self-test build/workbench-native.json
+      - name: X11 startup and workbench routes
+        if: runner.os == 'Linux'
+        env:
+          QT_QPA_PLATFORM: xcb
+          FLUENTPY_BACKEND: native
+          FLUENTPY_SMOKE_VISIBLE: '1'
+        run: xvfb-run -a python scripts/workbench_launcher.py --self-test build/workbench-x11.json
+      - name: Wayland compositor startup and workbench routes
+        if: runner.os == 'Linux' && matrix.qt == 'latest'
+        env:
+          QT_QPA_PLATFORM: wayland
+          FLUENTPY_BACKEND: native
+          FLUENTPY_SMOKE_VISIBLE: '1'
+        run: |
+          export XDG_RUNTIME_DIR=$(mktemp -d)
+          export WAYLAND_DISPLAY=fluentpy-wayland
+          weston --backend=headless-backend.so --use-pixman --socket="$WAYLAND_DISPLAY" --idle-time=0 --log="$PWD/build/weston.log" &
+          compositor=$!
+          trap 'kill "$compositor" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ] && break
+            sleep 1
+          done
+          test -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
+          python scripts/workbench_launcher.py --self-test build/workbench-wayland.json
+      - name: Build and validate installed native wheel
+        shell: bash
+        env:
+          FLUENTPY_BUILD_NATIVE: '1'
+        run: |
+          python -m build --no-isolation --sdist --outdir build/sdist
+          python -m pip wheel --no-deps --no-cache-dir --no-build-isolation build/sdist/*.tar.gz --wheel-dir build/wheels/native
+          python -m venv build/installed
+          if [ "$RUNNER_OS" = Windows ]; then py=build/installed/Scripts/python; else py=build/installed/bin/python; fi
+          "$py" -I -m pip install --force-reinstall build/wheels/native/*.whl
+          "$py" -I scripts/check_release_install.py --expect-backend native --expect-version 0.8.1 --report build/installed-native.json
+      - name: Build and validate universal wheel without an extension
+        shell: bash
+        env:
+          FLUENTPY_BUILD_NATIVE: '0'
+        run: |
+          python -m pip wheel --no-deps --no-cache-dir --no-build-isolation build/sdist/*.tar.gz --wheel-dir build/wheels/python
+          if [ "$RUNNER_OS" = Windows ]; then py=build/installed/Scripts/python; else py=build/installed/bin/python; fi
+          "$py" -I -m pip uninstall -y fluentpy-qt
+          "$py" -I -m pip install --force-reinstall build/wheels/python/*.whl
+          "$py" -I scripts/check_release_install.py --expect-backend python --expect-version 0.8.1 --report build/installed-python.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: platform-${{ matrix.os }}-qt-${{ matrix.qt }}
+          path: |
+            build/*.xml
+            build/*.json
+            build/frozen-*.png
+            build/wheels/**/*.whl
+          if-no-files-found: warn
+
+  portable:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'codex/cross-platform-')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: src
+      FLUENTPY_BACKEND: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install Qt and packaging dependencies
+        run: python -m pip install PySide6 Pillow pyinstaller setuptools
+      - name: Linux runtime libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libegl1 libopengl0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-render-util0 libasound2 libpulse0 fonts-noto-cjk xvfb
+      - name: Build native backend
+        run: python scripts/build_native.py
+      - name: Package the host application
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python scripts/build_workbench.py --require-native
+      - name: Validate the frozen desktop application
+        if: runner.os != 'Linux'
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: ${{ runner.os == 'macOS' && 'cocoa' || 'windows' }}
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            app=dist/workbench/0.8.1/FluentPy-Workbench.app/Contents/MacOS/FluentPy-Workbench
+          else
+            app=dist/workbench/0.8.1/FluentPy-Workbench/FluentPy-Workbench.exe
+          fi
+          "$app" --self-test "$PWD/build/frozen-report.json"
+      - name: Validate the frozen X11 application
+        if: runner.os == 'Linux'
+        env:
+          QT_QPA_PLATFORM: xcb
+        run: xvfb-run -a dist/workbench/0.8.1/FluentPy-Workbench/FluentPy-Workbench --self-test "$PWD/build/frozen-report.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: workbench-${{ matrix.os }}
+          path: |
+            dist/workbench/**/*.zip
+            dist/workbench/**/*.tar.gz
+            dist/workbench/**/*.json
+            dist/workbench/**/SHA256SUMS.txt
+            build/frozen-*.json
+            build/frozen-*.png

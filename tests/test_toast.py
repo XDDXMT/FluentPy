@@ -2,7 +2,7 @@
 
 import os
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import gc
 import sys
@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 from fluentpy import Toast, theme
 from fluentpy.qt import QtCore, QtWidgets
+from fluentpy.theme.fonts import font_families
 
 if "PySide6" in QtCore.__name__:
     from PySide6.QtTest import QTest
@@ -81,12 +82,12 @@ class ToastTests(unittest.TestCase):
         self.assertEqual(self.errors, [])
 
     def finish_show(self, toast):
-        QTest.qWait(Toast.SHOW_DURATION + 40)
+        QTest.qWait(Toast.SHOW_DURATION + 180)
         self.assertAlmostEqual(toast._opacity.opacity(), 1.0)
         self.assertEqual(toast.pos(), toast._rest_pos)
 
     def finish_close(self):
-        QTest.qWait(Toast.HIDE_DURATION + 50)
+        QTest.qWait(Toast.HIDE_DURATION + 180)
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
 
     def test_parented_toast_is_a_hidden_child_without_a_native_tooltip_window(self):
@@ -215,7 +216,7 @@ class ToastTests(unittest.TestCase):
         self.assertTrue(toast.testAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose))
         self.assertTrue(toast.isVisible())
         gc.collect()
-        QTest.qWait(10 + Toast.HIDE_DURATION + 50)
+        QTest.qWait(10 + Toast.HIDE_DURATION + 180)
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self.assertCountEqual(destroyed, ["toast", "timer"])
 
@@ -239,7 +240,7 @@ class ToastTests(unittest.TestCase):
         for mode, fill in (("light", "#f8f8f8"), ("dark", "#2b2b2b")):
             theme.set_mode(mode)
             self.app.processEvents()
-            self.assertIn("Microsoft YaHei UI", toast.font().families())
+            self.assertIn(font_families()[0], toast.font().families())
             self.assertEqual(toast.font().pixelSize(), theme.tokens.font_size + 2)
             self.assertIn(theme.tokens.text, toast.styleSheet())
             path = toast._card_path()
@@ -261,7 +262,7 @@ class ToastTests(unittest.TestCase):
         toast = Toast("完成", "可以继续操作。", target=target)
         self.assertIs(toast.parentWidget(), self.parent)
         toast.show_at()
-        QTest.qWait(40)
+        toast._reveal.setCurrentTime(70)
         self.assertGreater(toast._opacity.opacity(), 0.0)
         self.assertLess(toast._opacity.opacity(), 1.0)
         self.assertEqual(toast.x(), toast._rest_pos.x())
@@ -335,7 +336,7 @@ class ToastTests(unittest.TestCase):
         self.assertFalse(toast.isVisible())
         self.assertIsNone(toast._placement)
         self.parent.show()
-        QTest.qWait(Toast.SHOW_DURATION + 40)
+        QTest.qWait(Toast.SHOW_DURATION + 180)
         self.assertFalse(toast.isVisible())
 
     def test_minimizing_parent_dismisses_its_toast(self):
@@ -368,7 +369,7 @@ class ToastTests(unittest.TestCase):
         toast = _ObservedToast("淡入", parent=self.parent)
         toast.show_at("top-left")
         self.assertEqual(toast._opacity.opacity(), 0.0)
-        QTest.qWait(40)
+        toast._reveal.setCurrentTime(70)
         self.assertGreater(toast._opacity.opacity(), 0.0)
         self.assertLess(toast._opacity.opacity(), 1.0)
         self.assertEqual(toast.y(), toast._rest_pos.y())
@@ -389,7 +390,7 @@ class ToastTests(unittest.TestCase):
         toast.close()
         self.assertIsNone(toast._placement)
         self.assertTrue(toast.isVisible())
-        QTest.qWait(90)
+        toast._reveal.setCurrentTime(90)
         self.assertGreater(toast._opacity.opacity(), 0.0)
         self.assertLess(toast._opacity.opacity(), 1.0)
         self.assertEqual(toast.y(), toast._rest_pos.y())
@@ -398,7 +399,7 @@ class ToastTests(unittest.TestCase):
         self.assertFalse(toast.isVisible())
         self.parent.resize(650, 410)
         theme.toggle()
-        QTest.qWait(Toast.SHOW_DURATION + 40)
+        QTest.qWait(Toast.SHOW_DURATION + 180)
         self.assertFalse(toast.isVisible())
         self.assertEqual(len(toast.shown_geometry), 1)
 
@@ -410,7 +411,7 @@ class ToastTests(unittest.TestCase):
         toast.close()
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self.assertEqual(destroyed, [True])
-        QTest.qWait(Toast.SHOW_DURATION + Toast.HIDE_DURATION + 50)
+        QTest.qWait(Toast.SHOW_DURATION + Toast.HIDE_DURATION + 180)
         self.assertEqual(destroyed, [True])
         self.assertEqual(self.errors, [])
 

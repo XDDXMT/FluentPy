@@ -1,6 +1,6 @@
 """FluentPy public API."""
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"
 
 from .backends.syntax import SyntaxToken
 from .icons import FluentIcon, fluent_icon, fluent_icon_name

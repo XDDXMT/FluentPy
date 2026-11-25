@@ -33,7 +33,7 @@ class NativeWindowChromeTests(unittest.TestCase):
 
     def test_integrated_windows_caption_is_one_qt_row_and_is_reported_honestly(self):
         with patch.object(self.window, "_native_windows_platform", return_value=True):
-            self.window.set_title_bar_enabled(True)
+            self.window.set_title_bar_enabled(True, native_frame=False)
             bar = self.window.title_bar()
             self.assertFalse(self.window.uses_native_caption_buttons())
             self.assertFalse(bar.uses_native_caption_buttons())
@@ -58,7 +58,7 @@ class NativeWindowChromeTests(unittest.TestCase):
 
     def test_caption_visibility_and_double_click_do_not_create_a_second_native_caption(self):
         with patch.object(self.window, "_native_windows_platform", return_value=True):
-            self.window.set_title_bar_enabled(True)
+            self.window.set_title_bar_enabled(True, native_frame=False)
             bar = self.window.title_bar()
             bar.set_caption_buttons_visible(maximize=False)
             self.assertTrue(bar.maximize_button.isHidden())
@@ -76,7 +76,7 @@ class NativeWindowChromeTests(unittest.TestCase):
     def test_native_toggle_preserves_standard_frame_hints_and_reuses_command_contents(self):
         with patch.object(self.window, "_native_windows_platform", return_value=True):
             original_flags = self.window.windowFlags()
-            self.window.set_title_bar_enabled(True)
+            self.window.set_title_bar_enabled(True, native_frame=False)
             bar = self.window.title_bar()
             search = LineEdit()
             search.setText("Retained content")
@@ -84,14 +84,14 @@ class NativeWindowChromeTests(unittest.TestCase):
             self.window.set_title_bar_enabled(False)
             self.assertEqual(self.window.windowFlags(), original_flags)
             self.assertTrue(bar.isHidden())
-            self.window.set_title_bar_enabled(True)
+            self.window.set_title_bar_enabled(True, native_frame=False)
             self.assertIs(bar, self.window.title_bar())
             self.assertEqual(search.text(), "Retained content")
             self.assertFalse(self.window.uses_native_caption_buttons())
 
     def test_non_client_caption_is_removed_without_removing_the_whole_native_window(self):
         with patch.object(self.window, "_native_windows_platform", return_value=True):
-            self.window.set_title_bar_enabled(True)
+            self.window.set_title_bar_enabled(True, native_frame=False)
             import ctypes
             import ctypes.wintypes
 
@@ -104,7 +104,7 @@ class NativeWindowChromeTests(unittest.TestCase):
             self.assertTrue(self.window.is_title_bar_enabled())
 
     def test_close_hover_uses_windows_red_and_white_glyph_in_both_themes(self):
-        self.window.set_title_bar_enabled(True)
+        self.window.set_title_bar_enabled(True, native_frame=False)
         button = self.window.title_bar().close_button
         old_mode = theme.mode
         for mode in ("light", "dark"):
@@ -117,7 +117,7 @@ class NativeWindowChromeTests(unittest.TestCase):
         theme.set_mode(old_mode)
 
     def test_explicit_theme_refresh_follows_owner_background_pair_after_repeated_switches(self):
-        self.window.set_title_bar_enabled(True)
+        self.window.set_title_bar_enabled(True, native_frame=False)
         self.window.set_background_colors("#edf4fa", "#162231")
         bar = self.window.title_bar()
         original_mode = theme.mode
@@ -134,7 +134,7 @@ class NativeWindowChromeTests(unittest.TestCase):
             self.assertEqual(bar.height(), 48)
         original = self.window.windowFlags()
         self.window.set_title_bar_enabled(False)
-        self.window.set_title_bar_enabled(True)
+        self.window.set_title_bar_enabled(True, native_frame=False)
         self.assertIs(bar, self.window.title_bar())
         self.assertEqual(bar.height(), 48)
         self.assertEqual(self.window.windowFlags(), original)
@@ -143,6 +143,7 @@ class NativeWindowChromeTests(unittest.TestCase):
     def test_native_corner_request_preserves_styles_and_does_not_turn_the_client_transparent(self):
         self.window.show()
         with (
+            patch.object(window_effects.sys, "platform", "win32"),
             patch.object(window_effects, "_dwm_set_int", return_value=True) as request,
             patch.object(window_effects, "_set_window_long_ptr") as replace_style,
         ):
@@ -156,7 +157,7 @@ class NativeWindowChromeTests(unittest.TestCase):
 
     def test_window_state_change_refreshes_native_shape_for_both_caption_modes(self):
         for enabled in (False, True):
-            self.window.set_title_bar_enabled(enabled)
+            self.window.set_title_bar_enabled(enabled, native_frame=False)
             with (
                 self.subTest(integrated=enabled),
                 patch.object(self.window, "_native_windows_platform", return_value=True),

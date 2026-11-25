@@ -129,7 +129,8 @@ class ExpandableCardTests(unittest.TestCase):
         self.app.processEvents()
 
         card.set_expanded(True)
-        QTest.qWait(50)
+        card._animation.setCurrentTime(80)
+        self.app.processEvents()
         opening_height = card.height()
         self.assertGreater(opening_height, closed_height)
         self.assertLess(opening_height, open_height)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+
 from ..qt import Property, QtCore, QtGui, QtWidgets, Signal
 from ..theme import theme
 from ..theme.fonts import ui_font
@@ -83,7 +85,13 @@ class FramelessDialog(QtWidgets.QDialog):
             self.activateWindow()
             return
         self._prepare_geometry()
-        super().open()
+        if sys.platform == "darwin":
+            # QDialog.open() converts window-modal dialogs to Cocoa sheets,
+            # which replaces the geometry and decoration of this custom panel.
+            self.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+            self.show()
+        else:
+            super().open()
 
     def setContentWidget(self, widget: QtWidgets.QWidget) -> None:
         self.add_content_widget(widget)

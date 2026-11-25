@@ -223,9 +223,9 @@ class Showcase(FluentWindow):
         # show. A first late stylesheet repolishes the visible page and resets
         # its explicit palette to the operating system's colors.
         self._install_showcase_styles()
+        self.setProperty("fluentLazyThemeRefresh", True)
         self.set_title_bar_enabled(True)
         self.set_theme_transition_enabled(True)
-        self.setProperty("fluentLazyThemeRefresh", True)
         self.set_backdrop_enabled(state["mica_enabled"])
         title_bar = self.title_bar()
         self.brand_mark = title_bar.icon_label
@@ -668,7 +668,9 @@ class Showcase(FluentWindow):
         body.addWidget(self.home_banner)
         section = QtWidgets.QHBoxLayout()
         section.setSpacing(12)
-        section.addWidget(caption("探索组件", 20, bold=True))
+        self.catalog_heading = caption("探索组件", 20, bold=True)
+        self.catalog_heading.setObjectName("catalogHeading")
+        section.addWidget(self.catalog_heading)
         self.catalog_count = label(f"{len(PAGES) - 2} 个分类", role="muted")
         section.addWidget(self.catalog_count)
         section.addStretch(1)
@@ -743,6 +745,10 @@ class Showcase(FluentWindow):
 
     def _apply_theme(self):
         super()._apply_theme()
+        if hasattr(self, "catalog_heading"):
+            from gallery_home import text_color
+
+            text_color(self.catalog_heading, theme.tokens.text)
         # The root window refreshes child palettes on first show as well as on
         # theme changes. Keep the authored banner/card text roles afterwards.
         if hasattr(self, "home_banner"):

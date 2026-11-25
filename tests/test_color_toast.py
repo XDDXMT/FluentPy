@@ -1,6 +1,6 @@
 import os
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import sys
 import unittest
 
@@ -295,7 +295,11 @@ class ColorToastTests(unittest.TestCase):
             "Title", detail="带操作按钮", parent=self.owner, timeout_ms=80, action_text="Action"
         )
         self.assertFalse(toast._timeout.isActive())
-        self.settle(toast)
+        self.app.processEvents()
+        # Native enter events depend on the runner's pointer location.
+        # Start outside, then exercise the pause with a deliberate enter event.
+        self.app.sendEvent(toast, QtCore.QEvent(QtCore.QEvent.Type.Leave))
+        toast._reveal.setCurrentTime(toast.SHOW_DURATION)
         self.assertTrue(toast._timeout.isActive())
         self.app.sendEvent(
             toast,

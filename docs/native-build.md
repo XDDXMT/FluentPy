@@ -4,11 +4,11 @@ FluentPy的界面、信号和Qt对象由Python与Qt管理，`fluentpy._native`�
 
 日期日历、时制换算与时间滚轮、文件拖放策略、快捷键校验和文本扫描都优先使用同一扩展中的对应接口。缺失、不兼容或旧版二进制缺少某组接口时，仅该组切换到兼容实现，不禁用组件；可用的其他C接口继续使用。构建成功后重启应用即可恢复C加速。
 
-构建脚本编译`native/`中的文本、日期、时间、日历、拖放、快捷键、颜色和输入八份源文件。Python兼容策略位于`src/fluentpy/backends/`，与C实现保持返回值、输入校验和拒绝原因一致。Qt仍负责界面、原生文件信息、按键事件及QKeySequence转换。模式与诊断见[后端选择与回退](backends.md)。
+构建脚本编译`native/`中的文本、日期、时间、日历、拖放、快捷键、颜色、输入和多语言着色九份源文件。Python兼容策略位于`src/fluentpy/backends/`，与C实现保持返回值、输入校验和拒绝原因一致。Qt仍负责界面、原生文件信息、按键事件及QKeySequence转换。模式与诊断见[后端选择与回退](backends.md)。
 
 ## 当前支持范围
 
-- C 源码使用 CPython API，面向 Python 3.10 及以上；当前已验证 Windows x64、CPython 3.13。
+- C 源码使用 CPython API，面向 Python 3.10 及以上；0.8.1 CI 在 Windows、Linux、Intel Mac 和 Apple Silicon Mac 上使用本机编译器检查，详见[跨平台使用](platforms.md)。
 - 扩展使用普通 CPython ABI。生成的 `.pyd` 或 wheel 只适用于对应 Python 小版本、操作系统和架构，不能直接复制给其他 Python 版本使用。
 - 标准编译方式由 setuptools 调用平台编译器：Windows 使用兼容当前 Python 的 MSVC，Linux/macOS 使用系统 C 编译器。
 - 仓库还提供 Windows x64 的 Zig 编译入口，可在没有 Visual Studio 的电脑上使用。该入口暂不支持自由线程版 CPython。
@@ -80,3 +80,7 @@ Remove-Item Env:FLUENTPY_ZIG -ErrorAction SilentlyContinue
 源码包包含 C 文件、构建脚本、测试与基准复现资料，不包含已编译二进制、下载工具链或构建缓存。Python 包元数据、MIT 许可证、第三方许可证和图标来源说明均随构建保留。
 
 扩展机制与 wheel 的工作方式参见 [setuptools 扩展模块文档](https://setuptools.pypa.io/en/latest/userguide/ext_modules.html) 与 [CPython 扩展构建文档](https://docs.python.org/3/extending/building.html)。
+
+## 三平台构建
+
+Linux、macOS 的依赖、窗口差异及便携打包见[跨平台使用](platforms.md)。原生扩展使用目标平台的系统编译器；Windows Zig 工具只用于 Windows x64。

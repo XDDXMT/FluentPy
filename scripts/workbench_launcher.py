@@ -1,4 +1,4 @@
-"""GUI entry point for the Windows portable workbench."""
+"""GUI entry point for the portable workbench."""
 
 from __future__ import annotations
 
@@ -57,7 +57,9 @@ def main():
         sys.path[:0] = [str(root / "src"), str(root / "examples"), str(root / "scripts")]
     else:
         _restore_redirected_streams()
-        local = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "FluentPy" / "Workbench"
+        from workbench_paths import workbench_data_directory
+
+        local = workbench_data_directory()
         os.environ.setdefault(
             "FLUENTPY_BENCHMARK_REPORT", str(local / "benchmarks" / "text-performance.json")
         )
@@ -86,9 +88,13 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except Exception:
         details = traceback.format_exc()
-        directory = (
-            Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "FluentPy" / "Workbench"
-        )
+        # Startup errors must still be recorded if the Qt loader itself failed.
+        try:
+            from workbench_paths import workbench_data_directory
+
+            directory = workbench_data_directory()
+        except (ImportError, RuntimeError):
+            directory = Path.home() / ".fluentpy" / "Workbench"
         directory.mkdir(parents=True, exist_ok=True)
         destination = directory / "startup-error.log"
         destination.write_text(details, encoding="utf-8")

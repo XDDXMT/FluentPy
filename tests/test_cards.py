@@ -8,6 +8,7 @@ import unittest
 
 from fluentpy import theme
 from fluentpy.qt import QtCore, QtGui, QtWidgets
+from fluentpy.theme.fonts import font_families
 from fluentpy.widgets.card import CardWidget, ElevatedCardWidget, SimpleCardWidget
 from fluentpy.widgets.header_card import GroupHeaderCardWidget, HeaderCardWidget
 
@@ -92,7 +93,7 @@ class CardTests(unittest.TestCase):
             layout = QtWidgets.QVBoxLayout(card)
             layout.addWidget(QtWidgets.QLabel("任意 Qt 内容", card))
             self.assertIs(card.layout(), layout)
-            self.assertIn("Microsoft YaHei UI", card.font().families())
+            self.assertIn(font_families()[0], card.font().families())
             for invalid in (None, True, 1.5, "8"):
                 with self.assertRaises(TypeError):
                     card.set_border_radius(invalid)

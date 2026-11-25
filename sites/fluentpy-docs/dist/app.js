@@ -84,6 +84,9 @@
   }
   function sectionContent(section){
     const paragraphs=(section.paragraphs||[]).map(text=>`<p>${escape(text)}</p>`).join('');
+    const platforms = section.platformShowcase && window.FluentPlatformShowcase
+      ? window.FluentPlatformShowcase.markup('assets/previews', previewVersion)
+      : '';
     const nativeFlow=section.nativeFlow&&window.FluentNativeFlow?window.FluentNativeFlow.markup():'';
     const architecture=section.architecture?`<ol class="backend-layers" aria-label="Python、C 与 Qt 的职责分工">${section.architecture.map(layer=>`<li><div class="backend-layer-head"><span>${escape(layer.name)}</span><strong>${escape(layer.role)}</strong></div><p>${escape(layer.text)}</p></li>`).join('')}</ol>`:'';
     const metrics=section.metrics?`<dl class="native-metrics" aria-label="一万行 JSON 的本机 C 后端实测">${section.metrics.map(metric=>`<div><dt>${escape(metric.label)}</dt><dd><strong>${escape(metric.value)}</strong><span>${escape(metric.detail)}</span></dd></div>`).join('')}</dl>`:'';
@@ -94,7 +97,7 @@
     const migration=section.migration&&window.FluentMigration?window.FluentMigration.markup(section.migration,previewVersion):'';
     const steps=section.steps?`<div class="intro-steps">${section.steps.map((step,index)=>`<a class="intro-step" href="${route(step.page)}"><span class="intro-step-number">${index+1}</span><h3>${escape(step.title)}</h3><p>${escape(step.text)}</p><span class="intro-step-link">${escape(step.label)} →</span></a>`).join('')}</div>`:'';
     const callout=section.callout?`<aside class="license-callout" aria-label="${escape(section.callout.title)} 许可说明"><h3><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg>${escape(section.callout.title)}</h3><p>${escape(section.callout.text)}</p></aside>`:'';
-    return paragraphs+nativeFlow+architecture+items+metrics+table+gallery+migration+steps+links+callout;
+    return paragraphs+platforms+nativeFlow+architecture+items+metrics+table+gallery+migration+steps+links+callout;
   }
   function setTheme(preference){
     themePreference=preference;
