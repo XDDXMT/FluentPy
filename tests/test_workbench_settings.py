@@ -171,11 +171,44 @@ class WorkbenchSettingsTests(unittest.TestCase):
         self.form.theme_choice.setCurrentIndex(1)
         self.assertEqual(theme.tokens.accent, "#60cdff")
 
+    def test_catalog_heading_pixels_keep_contrast_in_both_themes(self):
+        self.window.set_page("overview", animated=False)
+        self.window.set_theme_transition_enabled(False)
+        for mode in ("dark", "light"):
+            theme.set_mode(mode)
+            self.app.processEvents()
+            expected = QtGui.QColor(theme.tokens.text)
+            labels = [
+                label
+                for label in self.window.findChildren(QtWidgets.QLabel)
+                if label.objectName() == "smallTitle" and label.isVisible()
+            ]
+            self.assertTrue(labels)
+            for label in labels:
+                image = label.grab().toImage()
+                self.assertTrue(
+                    any(
+                        max(
+                            abs(pixel.red() - expected.red()),
+                            abs(pixel.green() - expected.green()),
+                            abs(pixel.blue() - expected.blue()),
+                        )
+                        <= 15
+                        for y in range(image.height())
+                        for x in range(image.width())
+                        if (pixel := image.pixelColor(x, y)).alpha() > 0
+                    ),
+                    (mode, label.text()),
+                )
+
     def test_sidebar_width_expansion_page_motion_and_backend_visibility_apply(self):
         self.form.width_slider.setValue(248)
         self.assertEqual(self.window.sidebar.width(), 248)
         self.form.expanded_toggle.click()
-        QTest.qWait(180)
+        elapsed = QtCore.QElapsedTimer()
+        elapsed.start()
+        while self.window.sidebar.width() != 48 and elapsed.elapsed() < 3000:
+            QTest.qWait(10)
         self.assertAlmostEqual(self.window.sidebar.width(), 48, delta=1)
         self.assertFalse(self.window.sidebar_search.isVisible())
         self.assertTrue(self.window._route_buttons["settings"].isVisible())
