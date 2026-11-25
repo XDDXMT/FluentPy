@@ -742,7 +742,6 @@ class Showcase(FluentWindow):
             self._toast("链接未能打开", target, placement="top-right")
 
     def _apply_theme(self):
-        self._install_showcase_styles()
         super()._apply_theme()
         # The root window refreshes child palettes on first show as well as on
         # theme changes. Keep the authored banner/card text roles afterwards.
@@ -1213,7 +1212,6 @@ class Showcase(FluentWindow):
         # explicit FluentWindow palette, including on dynamically shown pages.
         styles = (
             "QWidget#showcasePage, QScrollArea#showcaseScroll { border: none; }"
-            f"QWidget#showcasePage {{ background:{self._resolved_background_color().name()}; }}"
             "QLabel#showcaseBrand { font-size: 19px; font-weight: 600; }"
             "QLabel#pageTitle { font-size: 24px; font-weight: 600; }"
             "QLabel#smallTitle { font-size: 15px; font-weight: 600; }"
