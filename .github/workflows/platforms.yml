@@ -59,10 +59,12 @@ jobs:
           FLUENTPY_BACKEND: native
         run: python -m pytest -q --tb=short --timeout=60 --timeout-method=thread tests/test_platform_support.py tests/test_workbench_startup.py tests/test_workbench_settings.py tests/test_workbench.py::WorkbenchTests::test_code_editor_uses_qt_edit_actions_in_the_advanced_menu
       - name: Full suite with C
+        timeout-minutes: 10
         env:
           FLUENTPY_BACKEND: native
         run: python -m pytest -q --tb=short -o faulthandler_timeout=45 --timeout=60 --timeout-method=thread --junitxml=build/test-native.xml
       - name: Full suite with Python fallback
+        timeout-minutes: 10
         env:
           FLUENTPY_BACKEND: python
         run: python -m pytest -q --tb=short -o faulthandler_timeout=45 --timeout=60 --timeout-method=thread --junitxml=build/test-python.xml

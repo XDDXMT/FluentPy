@@ -99,23 +99,27 @@ class MediaController(QtCore.QObject):
             # setSource, allowing any in-flight Python video callback to finish.
             self._player.setSource(QtCore.QUrl())
 
+    def _invoke_player_slot(self, slot, *arguments):
+        # PySide releases the GIL for invokeMethod. Keep these calls synchronous
+        # while allowing the decoder to finish any pending Python callbacks.
+        if not QtCore.QMetaObject.invokeMethod(
+            self.player(), slot, QtCore.Qt.ConnectionType.DirectConnection, *arguments
+        ):
+            raise RuntimeError(f"Qt Multimedia could not invoke {slot}")
+
     @Slot()
     def play(self):
-        self.player().play()
+        self._invoke_player_slot("play")
 
     @Slot()
     def pause(self):
         if self._player is not None:
-            self._player.pause()
+            self._invoke_player_slot("pause")
 
     @Slot()
     def stop(self):
         if self._player is not None:
-            # Invoke the native slot synchronously without holding Python's lock
-            # while the decoder finishes delivering its pending video frames.
-            QtCore.QMetaObject.invokeMethod(
-                self._player, "stop", QtCore.Qt.ConnectionType.DirectConnection
-            )
+            self._invoke_player_slot("stop")
 
     @Slot()
     def toggle_playback(self):
@@ -138,7 +142,8 @@ class MediaController(QtCore.QObject):
         if not isinstance(milliseconds, int) or isinstance(milliseconds, bool):
             raise TypeError("seek position must be an integer number of milliseconds")
         if self.is_seekable():
-            self._player.setPosition(max(0, min(self.duration(), milliseconds)))
+            position = max(0, min(self.duration(), milliseconds))
+            self._invoke_player_slot("setPosition", QtCore.Q_ARG("qint64", position))
 
     def seek_by(self, milliseconds):
         self.seek(self.position() + milliseconds)
