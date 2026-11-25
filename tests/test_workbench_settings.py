@@ -181,7 +181,7 @@ class WorkbenchSettingsTests(unittest.TestCase):
             labels = [
                 label
                 for label in self.window.findChildren(QtWidgets.QLabel)
-                if label.objectName() == "smallTitle" and label.isVisible()
+                if label.objectName() == "catalogHeading" and label.isVisible()
             ]
             self.assertTrue(labels)
             for label in labels:

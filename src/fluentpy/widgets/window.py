@@ -736,18 +736,6 @@ class FluentWindow(QtWidgets.QMainWindow):
     def _set_widget_theme_palette(self, widget, palette):
         if isinstance(widget, QtWidgets.QLabel) and widget.objectName() == "muted":
             widget.setForegroundRole(QtGui.QPalette.ColorRole.PlaceholderText)
-        if sys.platform == "darwin" and isinstance(widget, QtWidgets.QLabel):
-            previous = widget.property("_fluentLabelStyle")
-            if not widget.styleSheet() or widget.styleSheet() == previous:
-                widget.setProperty("fluentPaletteLabel", True)
-                sheet = (
-                    'QLabel[fluentPaletteLabel="true"] { color: '
-                    + palette.color(widget.foregroundRole()).name()
-                    + "; }"
-                )
-                if widget.styleSheet() != sheet:
-                    widget.setStyleSheet(sheet)
-                widget.setProperty("_fluentLabelStyle", sheet)
         widget.ensurePolished()
         widget.setPalette(palette)
 
