@@ -53,6 +53,11 @@ jobs:
           fi
       - name: Compile the C extension with the host compiler
         run: python scripts/build_native.py
+      - name: Cocoa palette and native window regression checks
+        if: runner.os == 'macOS'
+        env:
+          FLUENTPY_BACKEND: native
+        run: python -m pytest -q --tb=short --timeout=60 --timeout-method=thread tests/test_platform_support.py tests/test_workbench_startup.py tests/test_workbench_settings.py tests/test_workbench.py::WorkbenchTests::test_code_editor_uses_qt_edit_actions_in_the_advanced_menu
       - name: Full suite with C
         env:
           FLUENTPY_BACKEND: native

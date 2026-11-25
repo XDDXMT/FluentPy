@@ -78,7 +78,7 @@ python scripts/build_workbench.py --output dist/workbench/local
 
 ## 自动验证
 
-`.github/workflows/platforms.yml` 覆盖 Windows、Linux、Intel Mac 和 Apple Silicon Mac。每种系统编译 C 扩展，分别运行 C / Python 测试，并从同一个源码包在独立目录构建、安装和检查两种 wheel。Linux 另用 Xvfb / xcb，Mac 使用 Cocoa，检查实际 Qt 工作台页面与启动流程。手动运行工作流可生成各平台便携构建产物。
+`.github/workflows/platforms.yml` 覆盖 Windows、Linux、Intel Mac 和 Apple Silicon Mac。每种系统编译 C 扩展，分别运行 C / Python 测试，并从同一个源码包在独立目录构建、安装和检查两种 wheel。Linux 另用 Xvfb / xcb 及 Weston / Wayland，Mac 使用 Cocoa，检查实际 Qt 工作台页面与启动流程。手动运行工作流可生成各平台便携构建产物。
 
 CI 结果与构建产物见 [Desktop platforms](https://github.com/XDDXMT/FluentPy/actions/workflows/platforms.yml)。自动测试不代表每个 Linux 桌面、显卡、媒体解码器或 macOS 权限组合都已经人工验收。
 

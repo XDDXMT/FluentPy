@@ -4201,7 +4201,7 @@ data = {
     "api": api,
     "icons": icons,
     "iconCategories": icon_categories,
-    "sourceDate": "2026-10-31",
+    "sourceDate": "2026-11-25",
     "version": VERSION,
     "previewVersion": preview_version,
     "animatedPreviews": ANIMATED_PREVIEWS,
