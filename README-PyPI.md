@@ -41,7 +41,7 @@ sys.exit(app.exec())
 
 ## 组件
 
-0.8.1 改进 Linux、macOS 适配：按系统选择字体、窗口边框和用户数据目录，保留 C 扩展自动回退。详见[跨平台使用](https://github.com/XDDXMT/FluentPy/blob/main/docs/platforms.md)。
+0.8.1 改进 Linux、macOS 适配：按系统选择字体、窗口边框和用户数据目录，保留 C 扩展自动回退。详见[跨平台使用](https://github.com/XDDXMT/FluentPy/blob/1e6def59a92688051856a5c7d0d0bf9ad7031df3/docs/platforms.md)。
 
 0.8.0 新增树形数据列表、多语言代码高亮、图像与头像控件及音视频播放器。控件可独立导入使用，原有公开接口及导入方式保持兼容。
 
