@@ -302,6 +302,13 @@ h1 span {
   font-size: 13px;
   line-height: 1.85;
 }
+.platform-section {
+  margin-bottom: clamp(54px, 7vw, 90px);
+}
+.platform-section .section-heading p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
 .section-heading {
   display: flex;
   align-items: end;

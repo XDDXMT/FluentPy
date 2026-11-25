@@ -3246,6 +3246,13 @@ intro["sections"] = [
         ],
     ),
     section(
+        "platforms",
+        "跨平台运行",
+        "使用同一套 FluentPy 控件构建桌面应用。下图展示组件库与桌面平台的关系，展开各平台可查看实际运行截图。",
+        platformShowcase=True,
+        links=[{"label": "跨平台安装与打包", "page": "platforms"}],
+    ),
+    section(
         "c-backend",
         "可选 C 加速的工作流程",
         "跟随数据从 Python 调用进入 C 后端，再交由 Qt 呈现。可切换 JSON 与日期示例；扩展不可用时，相同组件自动使用 Python 兼容实现。",
@@ -4331,6 +4338,8 @@ site_assets = (
     "data.js",
     "native-flow.js",
     "migration.js",
+    "platform-showcase.js",
+    "platform-showcase.css",
     "app.js",
     "icon-catalog.js",
     "icon-catalog.css",
@@ -4343,12 +4352,12 @@ asset_version = hashlib.sha256(
     b"".join((SITE / "dist" / name).read_bytes() for name in site_assets)
 ).hexdigest()[:10]
 index = re.sub(
-    r'src="(data|native-flow|migration|icon-catalog|app)\.js(?:\?v=[a-z0-9]+)?"',
+    r'src="(data|native-flow|migration|icon-catalog|platform-showcase|app)\.js(?:\?v=[a-z0-9]+)?"',
     lambda m: f'src="{m.group(1)}.js?v={asset_version}"',
     index,
 )
 index = re.sub(
-    r'href="(styles|native-flow|migration|icon-catalog|workbench-home)\.css(?:\?v=[a-z0-9]+)?"',
+    r'href="(styles|native-flow|migration|icon-catalog|platform-showcase|workbench-home)\.css(?:\?v=[a-z0-9]+)?"',
     lambda m: f'href="{m.group(1)}.css?v={asset_version}"',
     index,
 )
