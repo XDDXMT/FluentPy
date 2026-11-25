@@ -64,6 +64,10 @@ class ThemeSubscriptionTests(unittest.TestCase):
         self.root.show()
         self.app.processEvents()
         self.assertEqual(self.owner.applied, [("dark", "#123456")])
+        # Native compositors schedule the first window paint independently.
+        # Render once if it has not arrived, so the test checks the paint order.
+        if not self.owner.painted:
+            self.owner.grab()
         self.assertTrue(self.owner.painted)
         self.assertTrue(all(mode == "dark" for mode in self.owner.painted))
 
