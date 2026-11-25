@@ -732,6 +732,7 @@ class FluentWindow(QtWidgets.QMainWindow):
 
     @staticmethod
     def _set_widget_theme_palette(widget, palette):
+        widget.ensurePolished()
         widget.setPalette(palette)
         if isinstance(widget, QtWidgets.QLabel) and widget.objectName() == "muted":
             widget.setForegroundRole(QtGui.QPalette.ColorRole.PlaceholderText)
@@ -760,9 +761,6 @@ class FluentWindow(QtWidgets.QMainWindow):
         # Qt stylesheets stop normal palette inheritance even when their only
         # rules concern fonts/layout. Propagate colors explicitly without
         # replacing the ancestor sheet and repolishing its whole subtree.
-        for widget in self.findChildren(QtWidgets.QWidget):
-            if self.property("fluentLazyThemeRefresh") is not True or widget.isVisible():
-                self._set_widget_theme_palette(widget, palette)
         stylesheet = f"""
 QWidget {{
     font-family: {font_family_css()};
@@ -775,6 +773,13 @@ QLabel {{
 """
         if self.styleSheet() != stylesheet:
             self.setStyleSheet(stylesheet)
+        # Cocoa and stylesheet polishing can restore the system palette.
+        # Publish explicit surface colors after polish, including on child pages.
+        self.setPalette(palette)
+        self._root.setPalette(palette)
+        for widget in self.findChildren(QtWidgets.QWidget):
+            if self.property("fluentLazyThemeRefresh") is not True or widget.isVisible():
+                self._set_widget_theme_palette(widget, palette)
         if self._title_bar is not None and hasattr(self._title_bar, "refresh_theme"):
             self._title_bar.refresh_theme()
         if self.isVisible():

@@ -80,3 +80,6 @@ Remove-Item Env:FLUENTPY_ZIG -ErrorAction SilentlyContinue
 源码包包含 C 文件、构建脚本、测试与基准复现资料，不包含已编译二进制、下载工具链或构建缓存。Python 包元数据、MIT 许可证、第三方许可证和图标来源说明均随构建保留。
 
 扩展机制与 wheel 的工作方式参见 [setuptools 扩展模块文档](https://setuptools.pypa.io/en/latest/userguide/ext_modules.html) 与 [CPython 扩展构建文档](https://docs.python.org/3/extending/building.html)。
+## 三平台构建
+
+Linux、macOS 的依赖、窗口差异及便携打包见[跨平台使用](platforms.md)。原生扩展使用目标平台的系统编译器；Windows Zig 工具只用于 Windows x64。

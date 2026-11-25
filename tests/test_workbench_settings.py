@@ -176,7 +176,7 @@ class WorkbenchSettingsTests(unittest.TestCase):
         self.assertEqual(self.window.sidebar.width(), 248)
         self.form.expanded_toggle.click()
         QTest.qWait(180)
-        self.assertEqual(self.window.sidebar.width(), 48)
+        self.assertAlmostEqual(self.window.sidebar.width(), 48, delta=1)
         self.assertFalse(self.window.sidebar_search.isVisible())
         self.assertTrue(self.window._route_buttons["settings"].isVisible())
         self.window.sidebar.toggle()

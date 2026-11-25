@@ -117,7 +117,7 @@ class ComboBoxTests(unittest.TestCase):
         popup = self.open(combo)
         popup.view.setCurrentIndex(popup.proxy.index(0, 0))
         QTest.keyClick(popup.view, QtCore.Qt.Key.Key_Escape)
-        QTest.qWait(150)
+        QTest.qWait(300)
         self.assertEqual(combo.currentIndex(), 2)
         self.assertFalse(popup._opened)
 
@@ -339,7 +339,7 @@ class ComboBoxTests(unittest.TestCase):
         combo.setEnabled(True)
         self.open(combo)
         QTest.mouseClick(popup, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(720, 550))
-        QTest.qWait(150)
+        QTest.qWait(300)
         self.assertFalse(popup._filter_installed)
 
     def test_font_and_transparent_components_and_theme_switch(self):

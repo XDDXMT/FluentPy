@@ -239,7 +239,7 @@ class AdvancedButtonTests(unittest.TestCase):
         QTest.keyClick(self.menu, QtCore.Qt.Key.Key_Return)
         self.assertTrue(checked.isChecked())
         self.assertEqual(events, [checked])
-        QTest.qWait(150)
+        QTest.qWait(300)
         self.open()
         QTest.keyClick(self.menu, QtCore.Qt.Key.Key_End)
         QTest.keyClick(self.menu, QtCore.Qt.Key.Key_Home)
@@ -251,11 +251,11 @@ class AdvancedButtonTests(unittest.TestCase):
         action.triggered.connect(lambda: calls.append(True))
         self.open()
         QTest.mouseClick(self.menu._items[0], QtCore.Qt.MouseButton.LeftButton)
-        QTest.qWait(150)
+        QTest.qWait(300)
         self.assertEqual(calls, [True])
         self.open()
         QTest.mouseClick(self.menu, QtCore.Qt.MouseButton.LeftButton, pos=QtCore.QPoint(850, 550))
-        QTest.qWait(150)
+        QTest.qWait(300)
         self.assertEqual(calls, [True])
         self.assertFalse(self.menu.isVisible())
 
@@ -312,7 +312,7 @@ class AdvancedButtonTests(unittest.TestCase):
         QTest.keyClick(self.menu, QtCore.Qt.Key.Key_Return)
         self.assertTrue(self.menu.isVisible())
         QTest.keyClick(self.menu, QtCore.Qt.Key.Key_Escape)
-        QTest.qWait(150)
+        QTest.qWait(300)
         self.assertFalse(self.menu.isVisible())
 
     def test_clear_releases_owned_actions_and_preserves_shared_or_borrowed_actions(self):

@@ -1169,7 +1169,7 @@ sys.exit(app.exec())""",
                     ],
                 },
                 paragraphs=[
-                    "当前主要验证环境为 Windows x64、CPython 3.13、PySide6 / Qt 6.11.1；从 PyPI 安装的包另已在 Qt 6.12.0 完成安装与主要控件冒烟。其他平台尚未作同等桌面验证。"
+                    "0.8.1 增加 Linux、macOS 的系统字体、原生边框和用户数据目录适配，CI 分别编译 C 扩展、检查 Python 回退和独立安装包。macOS / Wayland 默认保留系统窗口装饰；云母、屏幕取色、媒体格式与窗口管理仍以系统能力为准。"
                 ],
                 links=[{"label": "后端诊断与源码编译", "page": "performance"}],
             ),

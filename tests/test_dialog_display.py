@@ -1,6 +1,7 @@
 """Dialogs must open once at their destination, without hidden warm-up shows."""
 
 import os
+import sys
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -71,7 +72,8 @@ class DialogDisplayTests(unittest.TestCase):
         self.assertEqual(len(shows), 1)
         self.assertEqual(shows[0][2], dialog.pos())
         self.assertEqual(shows[0][3], 1.0)
-        self.assertTrue(dialog.windowFlags() & QtCore.Qt.WindowType.NoDropShadowWindowHint)
+        if sys.platform != "darwin":
+            self.assertTrue(dialog.windowFlags() & QtCore.Qt.WindowType.NoDropShadowWindowHint)
         expected = self.parent.frameGeometry().center() - QtCore.QPoint(
             dialog.width() // 2, dialog.height() // 2
         )

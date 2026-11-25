@@ -6,7 +6,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from fluentpy import RangeSlider, Slider, ToolTipSlider, theme
-from fluentpy.qt import QT_API, QtCore, QtWidgets
+from fluentpy.qt import QT_API, QtCore, QtGui, QtWidgets
 
 if QT_API == "PySide6":
     from PySide6.QtTest import QTest
@@ -262,7 +262,18 @@ class SliderTests(unittest.TestCase):
 
     def test_hover_press_reverse_smoothly_and_hidden_or_disabled_sliders_stop_motion(self):
         widget = self.slider()
-        QTest.mouseMove(widget, widget._point_for_value(0).toPoint())
+        position = widget._point_for_value(0)
+        self.app.sendEvent(
+            widget,
+            QtGui.QMouseEvent(
+                QtCore.QEvent.Type.MouseMove,
+                position,
+                position,
+                QtCore.Qt.MouseButton.NoButton,
+                QtCore.Qt.MouseButton.NoButton,
+                QtCore.Qt.KeyboardModifier.NoModifier,
+            ),
+        )
         widget._center_animation.setCurrentTime(70)
         self.assertGreater(widget._center_progress, 0)
         QTest.mousePress(

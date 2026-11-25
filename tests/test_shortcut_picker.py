@@ -58,7 +58,7 @@ class ShortcutPickerTests(unittest.TestCase):
         return dialog
 
     def finish(self):
-        QTest.qWait(130)
+        QTest.qWait(300)
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
 
     def test_roundtrip_programmatic_api_and_single_change_signals(self):

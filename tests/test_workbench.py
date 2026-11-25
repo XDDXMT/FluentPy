@@ -146,8 +146,10 @@ class WorkbenchTests(unittest.TestCase):
         self.assertTrue(
             any(
                 action.isEnabled()
-                and action.shortcut().matches(QtGui.QKeySequence.StandardKey.Copy)
-                == QtGui.QKeySequence.SequenceMatch.ExactMatch
+                and any(
+                    sequence in QtGui.QKeySequence.keyBindings(QtGui.QKeySequence.StandardKey.Copy)
+                    for sequence in action.shortcuts()
+                )
                 for action in menu.actions()
             )
         )
