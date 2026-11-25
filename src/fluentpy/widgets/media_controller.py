@@ -95,7 +95,8 @@ class MediaController(QtCore.QObject):
 
     def clear(self):
         if self._player is not None:
-            self._player.stop()
+            # setSource already stops playback. PySide releases the GIL for
+            # setSource, allowing any in-flight Python video callback to finish.
             self._player.setSource(QtCore.QUrl())
 
     @Slot()
@@ -110,7 +111,11 @@ class MediaController(QtCore.QObject):
     @Slot()
     def stop(self):
         if self._player is not None:
-            self._player.stop()
+            # Invoke the native slot synchronously without holding Python's lock
+            # while the decoder finishes delivering its pending video frames.
+            QtCore.QMetaObject.invokeMethod(
+                self._player, "stop", QtCore.Qt.ConnectionType.DirectConnection
+            )
 
     @Slot()
     def toggle_playback(self):
