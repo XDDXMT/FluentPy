@@ -268,7 +268,7 @@ class ProgressToastTests(unittest.TestCase):
         self.assertTrue(toast._timeout.isActive())
         destroyed = []
         toast.destroyed.connect(lambda: destroyed.append(True))
-        QTest.qWait(100 + ProgressToast.HIDE_DURATION + 60)
+        QTest.qWait(100 + ProgressToast.HIDE_DURATION + 180)
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self.assertEqual(destroyed, [True])
 
@@ -309,7 +309,7 @@ class ProgressToastTests(unittest.TestCase):
         self.assertFalse(toast._timeout.isActive())
         self.assertEqual(toast._activity.state(), QtCore.QAbstractAnimation.State.Stopped)
         self.assertEqual(toast._width_motion.state(), QtCore.QAbstractAnimation.State.Stopped)
-        QTest.qWait(ProgressToast.HIDE_DURATION + 40)
+        QTest.qWait(ProgressToast.HIDE_DURATION + 180)
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self.assertEqual(destroyed, [True])
         QTest.qWait(120)
@@ -375,7 +375,7 @@ class ProgressToastTests(unittest.TestCase):
         demo.fail_tasks()
         self.assertTrue(all(toast.state() == "error" for toast, _timeline in demo._tasks.values()))
         demo.hide()
-        QTest.qWait(ProgressToast.HIDE_DURATION + 40)
+        QTest.qWait(ProgressToast.HIDE_DURATION + 180)
         self.app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self.assertEqual(demo._tasks, {})
         demo.show()

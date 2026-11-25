@@ -17,7 +17,7 @@ def font_families(*, monospace: bool = False) -> list[str]:
     """Prefer the platform's own fonts and retain explicit CJK fallbacks."""
     if monospace:
         preferred = {
-            "win32": ("Cascadia Code", "Consolas"),
+            "win32": ("Consolas", "Cascadia Code"),
             "darwin": ("SF Mono", "Menlo", "Monaco"),
         }.get(sys.platform, ("DejaVu Sans Mono", "Liberation Mono"))
         role = QtGui.QFontDatabase.SystemFont.FixedFont

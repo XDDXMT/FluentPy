@@ -58,7 +58,10 @@ def main(destination: Path) -> int:
 
     sys.excepthook = exception
     window = Showcase(restore_preferences=False)
-    window.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+    window.setAttribute(
+        QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen,
+        os.environ.get("FLUENTPY_SMOKE_VISIBLE") != "1",
+    )
     window.startup_splash.firstFramePainted.connect(
         lambda: frames.append(
             {
