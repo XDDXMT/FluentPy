@@ -22,7 +22,7 @@ from source_project import repository_root
 
 ROOT = repository_root()
 STATIC = SITE / "dist"
-PUBLIC_EXTENSIONS = {".html", ".css", ".js", ".svg", ".png", ".gif", ".txt"}
+PUBLIC_EXTENSIONS = {".html", ".css", ".js", ".svg", ".png", ".gif", ".txt", ".json"}
 CHINA_TIME = timezone(timedelta(hours=8))
 
 
@@ -53,6 +53,12 @@ def required_assets(data, index):
         if page.get("cover"):
             required.add(f"assets/previews/{page['cover']['image']}-light.png")
         for section in page["sections"]:
+            if section.get("platformShowcase"):
+                required.update(
+                    f"assets/previews/platform-{platform}-{theme}.png"
+                    for platform in ("windows", "linux", "macos")
+                    for theme in ("light", "dark")
+                )
             if section.get("migration"):
                 required.update(
                     "assets/previews/" + section["migration"][key]
@@ -85,6 +91,8 @@ def main():
         / f"FluentPy-docs-complete-{datetime.now(CHINA_TIME):%Y%m%d}.zip",
     )
     args = parser.parse_args()
+    if args.output.exists():
+        parser.error(f"preserving existing deployment archive: {args.output}")
     payload = {}
     for file in sorted(STATIC.rglob("*")):
         relative = file.relative_to(STATIC)
@@ -109,24 +117,11 @@ def main():
     payload["data.js"] = (
         "window.DOCS_DATA = " + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + ";\n"
     ).encode("utf-8")
-    cache_version = hashlib.sha256(
-        b"".join(
-            payload[name]
-            for name in (
-                "data.js",
-                "app.js",
-                "styles.css",
-                "native-flow.js",
-                "native-flow.css",
-                "migration.js",
-                "migration.css",
-            )
-        )
-    ).hexdigest()[:16]
     index = payload["index.html"].decode("utf-8")
+    index = index.replace('href="../"', 'href="https://fluentpy.mcxmcl.cn/"')
     index = re.sub(
-        r'((?:styles\.css|native-flow\.css|migration\.css|data\.js|native-flow\.js|migration\.js|app\.js)\?v=)[^"\s]+',
-        lambda match: match[1] + cache_version,
+        r'((?:href|src)="[a-z0-9-]+\.(?:css|js)\?v=)[^"\s]+',
+        lambda match: match[1] + digest,
         index,
     )
     payload["index.html"] = index.encode("utf-8")
@@ -151,7 +146,8 @@ def main():
     counts = Counter(PurePosixPath(name).suffix for name in payload)
     marker = {
         "project": "FluentPy docs",
-        "public_url": "https://fluentpy.mcxmcl.cn/",
+        "version": data["version"],
+        "public_url": "https://fluentpy.mcxmcl.cn/docs/",
         "packaged_at": datetime.now(CHINA_TIME).isoformat(),
         "source_commit": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
@@ -166,22 +162,13 @@ def main():
     payload["deployment.json"] = (json.dumps(marker, ensure_ascii=False, indent=2) + "\n").encode(
         "utf-8"
     )
-    instructions = """FluentPy 完整静态文档部署包
+    instructions = f"""FluentPy {data["version"]} 独立文档部署包
 
-1. 在宝塔中，将本压缩包上传并解压覆盖到：
-   /www/wwwroot/fluentpy.mcxmcl.cn/
-2. 解压后应有：
-   /www/wwwroot/fluentpy.mcxmcl.cn/dist/index.html
-   /www/wwwroot/fluentpy.mcxmcl.cn/dist/assets/previews/buttons-light.png
-3. 宝塔站点的网站根目录设置为：
-   /www/wwwroot/fluentpy.mcxmcl.cn/dist
-4. 打开 https://fluentpy.mcxmcl.cn/#/introduction。
-   覆盖后使用 Ctrl+F5 刷新；使用CDN时刷新首页及data.js的缓存。
+将 dist/ 中的内容部署到文档目录，或将独立站点指向 dist/。
+若更新官网的展示主页与 /docs/，请使用同版本的完整网站部署包。
 
-本包包含完整图片、SVG图标、GIF动画、JS、CSS与许可证。
-网页为纯静态文件，无需在服务器安装Python、Qt或Node.js。
-包内文件使用dist/相对路径，解压时保持此目录结构。
-deployment.json记录部署版本，SHA256SUMS.txt记录全部静态文件校验值。
+静态文件包含界面截图、图标、示例动画、CSS、JavaScript 与许可证。
+deployment.json 记录部署版本，SHA256SUMS.txt 记录文件校验值。
 """
     checksums = "".join(
         f"{hashlib.sha256(value).hexdigest()}  dist/{name}\n"
