@@ -4,7 +4,7 @@
 
 FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小馒头** 独立开发，采用 [MIT 许可证](LICENSE)。从输入框、卡片和日期滚轮，到带动画的导航、代码编辑器和消息浮层，可以逐个使用，也可以组合成完整工作台。
 
-界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前版本为 **0.8.1**，仍处于早期开发阶段。
+界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前源码版本为 **0.8.1**，仍处于早期开发阶段。
 
 0.8.1 加入 Linux、macOS 的窗口策略、系统字体和用户数据目录适配，并提供三平台原生构建与安装检查。macOS 和 Wayland 默认保留系统窗口边框，Windows 继续使用集成标题栏。系统材质、屏幕取色和媒体格式支持取决于操作系统能力；安装与打包见[跨平台使用](docs/platforms.md)。
 
@@ -106,7 +106,7 @@ Windows x64 没有安装 MSVC，也可以使用仓库提供的独立 Zig 工具�
 
 下载器从 Zig 官方站点获取固定版本并校验 SHA-256，约 82 MB，文件与缓存留在项目目录。原生扩展必须匹配当前 Python 小版本、系统和架构。更多选项见 [C 后端构建与打包](docs/native-build.md)。
 
-当前主要验证环境是 **Windows x64、CPython 3.13、PySide6 / Qt 6.11.1**；PyPI 包的安装冒烟还覆盖 Qt 6.12.0。其他环境需要自行验证。Windows 系统材质不可用时，窗口使用普通背景。维护者发布流程见[发布说明](docs/publishing.md)。
+自动检查涵盖 Windows x64、Linux x64、Intel Mac 与 Apple Silicon Mac。各平台的 C 编译、Python 回退、独立安装和工作台验证结果见 [GitHub Actions](https://github.com/XDDXMT/FluentPy/actions/workflows/platforms.yml)。Windows 系统材质不可用时，窗口使用实色背景。维护者发布流程见[发布说明](docs/publishing.md)。
 
 ### 写下第一个窗口
 

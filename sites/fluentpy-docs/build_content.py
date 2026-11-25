@@ -1102,7 +1102,7 @@ edit.textChanged.connect(lambda text: print(text))""",
             section(
                 "install",
                 "通过 pip 安装",
-                f"需要 Python 3.10+。{VERSION} 已在 PyPI 发布，使用 fluentpy-qt 安装；PySide6 随依赖一同安装，基本运行不需要 C 编译器。",
+                "需要 Python 3.10+。使用 fluentpy-qt 安装 PyPI 上的发行版，PySide6 随依赖一同安装。使用通用 wheel 无需 C 编译器。",
                 "python -m pip install fluentpy-qt",
                 language="PowerShell",
                 links=[
@@ -1111,7 +1111,7 @@ edit.textChanged.connect(lambda text: print(text))""",
                         "href": "https://pypi.org/project/fluentpy-qt/",
                     }
                 ],
-                note="安装名是 fluentpy-qt，代码导入仍是 from fluentpy import ...。PyPI 上的 fluentpy 属于其他项目，两者不要装在同一环境。",
+                note=f"本文档对应源码 {VERSION}，PyPI 版本以发布页为准。安装名是 fluentpy-qt，导入名是 fluentpy。PyPI 上同名的 fluentpy 属于另一个项目，请分开安装。",
             ),
             section(
                 "venv-windows",
@@ -1124,10 +1124,11 @@ edit.textChanged.connect(lambda text: print(text))""",
             section(
                 "venv-unix",
                 "macOS / Linux：在虚拟环境中安装",
-                "以下命令创建环境并安装组件库。具体桌面表现与系统 Qt 支持需在目标平台验证。",
+                "以下命令创建独立环境并安装组件库。如果遇到 Qt 图形插件、中文字体或音频库缺失，可按跨平台指南检查。",
                 """python3 -m venv .venv
 .venv/bin/python -m pip install fluentpy-qt""",
                 language="Shell",
+                links=[{"label": "跨平台安装与排错", "page": "platforms"}],
             ),
             section(
                 "first-window",
@@ -1153,16 +1154,16 @@ sys.exit(app.exec())""",
                 "C 加速包与通用包",
                 "pip 会根据当前解释器和平台选择兼容的 wheel。默认 auto 模式优先使用 C；扩展不可用时自动回退 Python，组件使用方式不变。",
                 table={
-                    "caption": f"PyPI {VERSION} 发布包与运行路径",
+                    "caption": "wheel 与默认后端",
                     "headers": ["环境", "发布文件", "默认运行路径"],
                     "rows": [
                         [
-                            "Windows x64 / 普通 CPython 3.13",
-                            "cp313-cp313-win_amd64.whl",
+                            "有匹配的原生 wheel",
+                            "例如 cp313-cp313-win_amd64.whl",
                             "内含 C 扩展，优先使用 C",
                         ],
                         [
-                            "其他满足 Python / Qt 依赖的环境",
+                            "使用通用 wheel",
                             "py3-none-any.whl",
                             "Python 兼容实现，无需本机编译",
                         ],
@@ -1171,7 +1172,10 @@ sys.exit(app.exec())""",
                 paragraphs=[
                     "0.8.1 增加 Linux、macOS 的系统字体、原生边框和用户数据目录适配，CI 分别编译 C 扩展、检查 Python 回退和独立安装包。macOS / Wayland 默认保留系统窗口装饰；云母、屏幕取色、媒体格式与窗口管理仍以系统能力为准。"
                 ],
-                links=[{"label": "后端诊断与源码编译", "page": "performance"}],
+                links=[
+                    {"label": "后端诊断与源码编译", "page": "performance"},
+                    {"label": "各平台的构建方式", "page": "platforms", "anchor": "native"},
+                ],
             ),
             section(
                 "source-install",
@@ -1195,7 +1199,108 @@ python -m venv .venv
                     {"label": "日历与日程 →", "page": "calendar-picker"},
                     {"label": "在简介了解C加速 →", "page": "introduction"},
                 ],
-                note=f"在源码仓库中使用对应虚拟环境运行。当前 PyPI 版本为 {VERSION}；文档随源码更新，开发中的接口可能领先于已发布版本。",
+                note="示例随源码提供。在源码目录内使用项目的虚拟环境运行工作台。",
+            ),
+        ],
+    ),
+    page(
+        "platforms",
+        "跨平台使用",
+        "Windows, Linux and macOS",
+        "快速入门",
+        "在 Linux 或 macOS 上安装组件库、运行工作台，并了解各系统的窗口装饰、取色和媒体差异。此页对应 FluentPy 0.8.1 的源码与构建。",
+        [],
+        [
+            section(
+                "install",
+                "Linux 与 macOS 安装",
+                "使用 Python 3.10 或更高版本。安装前确认 PySide6 提供与你的系统版本、CPU 架构及 Python 匹配的包。Apple Silicon Mac 可使用原生 arm64 Python。",
+                """python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install fluentpy-qt""",
+                language="Shell",
+                links=[
+                    {
+                        "label": "Windows 安装步骤",
+                        "page": "getting-started",
+                        "anchor": "venv-windows",
+                    },
+                    {"label": "Qt 的 Linux 支持范围", "href": "https://doc.qt.io/qt-6/linux.html"},
+                    {"label": "Qt 的 macOS 支持范围", "href": "https://doc.qt.io/qt-6/macos.html"},
+                ],
+            ),
+            section(
+                "linux-runtime",
+                "Linux 运行库与中文字体",
+                "若 Debian 或 Ubuntu 提示找不到 xcb、OpenGL 或 PulseAudio，可安装缺失的运行库。fonts-noto-cjk 提供中文字体。",
+                """sudo apt-get install libegl1 libopengl0 libxkbcommon-x11-0 libxcb-cursor0 \\
+  libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 \\
+  libxcb-render-util0 libpulse0 fonts-noto-cjk""",
+                language="Shell",
+                note="音频还需要发行版对应的 ALSA 运行库，例如 Ubuntu 22.04 的 libasound2，或较新版本的 libasound2t64。其他发行版使用自己的包名。",
+                links=[
+                    {
+                        "label": "Qt 的 X11 依赖清单",
+                        "href": "https://doc.qt.io/qt-6/linux-requirements.html",
+                    }
+                ],
+            ),
+            section(
+                "windows-and-input",
+                "窗口边框与系统交互",
+                "启用 Fluent 工具栏时，macOS 和 Wayland 默认采用系统边框，Windows 和 X11 默认采用 Fluent 标题栏。可用 native_frame 显式选择。",
+                """from fluentpy import FluentWindow
+
+window = FluentWindow("我的应用")
+window.set_title_bar_enabled(True, native_frame=True)""",
+                table={
+                    "caption": "桌面功能随平台提供",
+                    "headers": ["功能", "平台差异"],
+                    "rows": [
+                        ["窗口", "macOS 和 Wayland 由系统或合成器管理移动、缩放和窗口装饰。"],
+                        [
+                            "字体与剪贴板",
+                            "界面使用系统字体和中文回退。标准编辑操作使用 Ctrl 或 Command。",
+                        ],
+                        ["云母", "可用时由 Windows 11 提供。其他环境显示实色背景。"],
+                        [
+                            "屏幕取色",
+                            "macOS 可能需要屏幕录制权限，Wayland 可能限制捕获。两者均可使用应用内颜色面板。",
+                        ],
+                        ["音频与视频", "格式、解码和音频输出取决于 Qt 后端及系统运行库。"],
+                    ],
+                },
+                links=[{"label": "FluentWindow 接口", "page": "fluent-window"}],
+            ),
+            section(
+                "native",
+                "从源码运行工作台和启用 C 加速",
+                "在目标平台检出源码。Linux 可使用 GCC 或 Clang 和 Python 开发头文件，macOS 可使用 Xcode Command Line Tools。只体验工作台时，可以直接运行源码示例并使用 Python 回退。",
+                """python -m pip install -e .
+python examples/showcase.py
+
+# 可选：编译 C 加速并验证
+python -m pip install 'setuptools>=77'
+python scripts/build_native.py
+FLUENTPY_BACKEND=native python examples/showcase.py""",
+                language="Shell",
+                note="命令在已激活虚拟环境的源码目录内运行。默认模式会在扩展不可用时回退 Python。原生包须匹配系统、CPU 架构及 Python 版本。",
+                links=[{"label": "后端诊断", "page": "performance"}],
+            ),
+            section(
+                "workbench",
+                "在目标平台打包工作台",
+                "Windows 生成 ZIP，Linux 生成可直接解压运行的 tar.gz，macOS 生成带 .app 的 tar.gz。归档保留 Unix 可执行权限和 macOS 框架链接。公开分发 macOS 应用时，由维护者完成签名和公证。",
+                """python -m pip install pyinstaller Pillow
+python scripts/build_workbench.py --output dist/workbench/local""",
+                language="Shell",
+                note="工作台使用 Qt 的用户目录写入日志与报告。在目标系统上构建，使用 GitHub Actions 可查看平台自检及便携产物。",
+                links=[
+                    {
+                        "label": "跨平台自动检查及构建记录",
+                        "href": "https://github.com/XDDXMT/FluentPy/actions/workflows/platforms.yml",
+                    },
+                ],
             ),
         ],
     ),
@@ -1234,11 +1339,14 @@ python -m venv .venv
             section(
                 "requirements",
                 "开始使用需要什么环境？",
-                "需要 Python 3.10+。使用 pip install fluentpy-qt 时会安装默认依赖 PySide6。保留 PyQt6 适配入口；当前主要验证环境为 Windows x64、CPython 3.13、PySide6／Qt 6.11.1，PyPI 包另通过 Qt 6.12.0 的安装冒烟。其他环境需对应验证。",
+                "需要 Python 3.10+ 和与系统匹配的 PySide6。使用 pip install fluentpy-qt 时会安装默认 Qt 依赖。0.8.1 的自动检查涵盖 Windows、Linux、Intel Mac 和 Apple Silicon Mac。",
                 paragraphs=[
-                    f"建议安装到独立虚拟环境。PyPI 当前已发布 {VERSION}，项目仍处于早期阶段，开发文档可能领先于已发布包。",
+                    f"建议安装到独立虚拟环境。文档对应源码 {VERSION}，可在 PyPI 发布页核对实际可安装的发行版。",
                 ],
-                links=[{"label": "安装与第一个窗口 →", "page": "getting-started"}],
+                links=[
+                    {"label": "安装与第一个窗口 →", "page": "getting-started"},
+                    {"label": "跨平台使用", "page": "platforms"},
+                ],
             ),
             section(
                 "package-name",
@@ -1418,14 +1526,15 @@ print(editor.acceleration_backend())  # native：C 后端；python：兼容实�
                 "先获取源码并安装构建依赖，再在项目根目录执行。已有兼容当前 Python 的系统 C 编译器时可使用以下命令；完成后重启 Python，再检查实际后端。",
                 "python -B scripts/build_native.py",
                 paragraphs=[
-                    "当前已实际验证 Windows x64、CPython 3.13.1、PySide6 / Qt 6.11.1。二进制需要匹配 Python 小版本、操作系统和架构，其他环境需要对应的构建产物。",
+                    "自动检查在 Windows、Linux 和 macOS 上使用本机编译器。二进制需要匹配 Python 小版本、操作系统和架构。",
                 ],
                 links=[
                     {
                         "label": "获取源码与安装环境",
                         "page": "getting-started",
                         "anchor": "source-install",
-                    }
+                    },
+                    {"label": "Linux 与 macOS 编译", "page": "platforms", "anchor": "native"},
                 ],
             ),
             section(
@@ -3129,10 +3238,11 @@ intro["sections"] = [
     section(
         "about",
         "项目说明",
-        f"FluentPy 提供常用输入、日期、导航、卡片与反馈组件，可逐步接入现有 Qt 应用。默认使用 PySide6；当前 {VERSION} 为已发布的早期版本，接口仍可能调整。",
+        f"FluentPy 提供常用输入、日期、导航、卡片与反馈组件，可逐步接入现有 Qt 应用。默认使用 PySide6。本文档对应源码 {VERSION}，接口仍可能调整。",
         links=[
             {"label": "组件目录", "page": "components"},
             {"label": "后端与性能", "page": "performance"},
+            {"label": "跨平台使用", "page": "platforms"},
         ],
     ),
     section(
@@ -3213,7 +3323,7 @@ for item in pages:
             if example["id"] == "gallery":
                 example["title"] = "运行组件示例"
                 example["text"] = (
-                    "0.7.0 工作台主页使用欢迎横幅、半透明快捷入口和紧凑分类卡片。14 个组件分类均可整卡点击，支持按名称或 API 搜索、空结果清空和随内容宽度换列；宽屏内容居中显示。原有 FluentWindow 侧栏、返回历史、右键菜单、主题、云母与设置保存继续可用。Windows 可双击 examples/run_showcase.bat。"
+                    "工作台在概览页集中展示 17 个组件分类，支持按名称或 API 搜索。Windows 可双击 examples/run_showcase.bat。Linux 和 macOS 可在源码虚拟环境中运行下方命令。"
                 )
     for example in item["sections"]:
         for field in ("text", "note"):
@@ -4128,7 +4238,10 @@ editor.set_token_provider(None)  # 返回内置语言扫描器""",
 pages.extend(build_media_image_pages(page, section))
 
 groups = [
-    {"name": "开始使用", "pages": ["introduction", "getting-started", "components", "faq"]},
+    {
+        "name": "开始使用",
+        "pages": ["introduction", "getting-started", "platforms", "components", "faq"],
+    },
     {
         "name": "基础控件",
         "pages": [

@@ -82,8 +82,7 @@ Qt 负责界面和动画；C 扩展加速文本、日期、时间、日历、拖
 其他 Python 版本和平台使用通用 wheel，运行兼容后端；也可从源码编译对应扩展。
 `FLUENTPY_BACKEND=python` 可强制回退，`native` 要求对应 C 接口可用。
 
-当前实际验证环境为 Windows x64、CPython 3.13、PySide6 / Qt 6.11.1。
-其他平台的桌面表现需另行验证。Windows 11 云母效果在系统不支持时回退普通背景。
+自动检查涵盖 Windows x64、Linux x64、Intel Mac 与 Apple Silicon Mac。具体版本和结果见 [GitHub Actions](https://github.com/XDDXMT/FluentPy/actions/workflows/platforms.yml)。Windows 11 云母效果在系统不支持时回退实色背景。
 
 项目处于早期开发阶段。组件接口、用法及 C 构建说明见[官方文档](https://fluentpy.mcxmcl.cn/)。
 
