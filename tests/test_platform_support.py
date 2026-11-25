@@ -48,6 +48,16 @@ class PlatformSupportTests(unittest.TestCase):
             window.close()
             window.deleteLater()
 
+    def test_wayland_uses_compositor_frame_without_entering_windows_native_code(self):
+        with patch.object(self.app, "platformName", return_value="wayland"):
+            window = FluentWindow()
+            window.set_title_bar_enabled(True)
+            self.assertTrue(window.uses_native_caption_buttons())
+            self.assertFalse(window._integrated_windows_frame)
+            self.assertTrue(window.title_bar().close_button.isHidden())
+            window.close()
+            window.deleteLater()
+
     def test_fonts_follow_platform_and_code_remains_monospace(self):
         for platform, expected in (
             ("win32", "Segoe UI"),

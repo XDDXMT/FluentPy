@@ -79,14 +79,14 @@ def main():
     notice_dir = staging / "licenses"
     notice_dir.mkdir(exist_ok=True)
     for name in ("LGPL-3.0-only.txt", "GPL-3.0-only.txt", "GPL-2.0-only.txt"):
-        target = notice_dir / name
-        if not target.exists():
+        license_path = notice_dir / name
+        if not license_path.exists():
             with urlopen(
                 f"https://raw.githubusercontent.com/qt/qtbase/v{QtCore.qVersion()}/LICENSES/"
                 + name,
                 timeout=30,
             ) as response:
-                target.write_bytes(response.read())
+                license_path.write_bytes(response.read())
     hooks = staging / "hooks"
     hooks.mkdir(exist_ok=True)
     (hooks / "hook-tables.py").write_text(
