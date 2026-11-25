@@ -61,6 +61,22 @@ class PlatformSupportTests(unittest.TestCase):
             window.close()
             window.deleteLater()
 
+    def test_native_caption_keeps_theme_refresh_for_lazily_shown_children(self):
+        window = FluentWindow()
+        window.setProperty("fluentLazyThemeRefresh", True)
+        window.set_title_bar_enabled(True, native_frame=True)
+        window.show()
+        self.app.processEvents()
+        child = QtWidgets.QWidget(window)
+        with patch.object(
+            window, "_set_widget_theme_palette", wraps=window._set_widget_theme_palette
+        ) as refresh:
+            child.show()
+            self.app.processEvents()
+            self.assertTrue(any(call.args[0] is child for call in refresh.call_args_list))
+        window.close()
+        window.deleteLater()
+
     def test_fonts_follow_platform_and_code_remains_monospace(self):
         for platform, expected in (
             ("win32", "Segoe UI"),

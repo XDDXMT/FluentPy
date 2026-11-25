@@ -223,9 +223,9 @@ class Showcase(FluentWindow):
         # show. A first late stylesheet repolishes the visible page and resets
         # its explicit palette to the operating system's colors.
         self._install_showcase_styles()
+        self.setProperty("fluentLazyThemeRefresh", True)
         self.set_title_bar_enabled(True)
         self.set_theme_transition_enabled(True)
-        self.setProperty("fluentLazyThemeRefresh", True)
         self.set_backdrop_enabled(state["mica_enabled"])
         title_bar = self.title_bar()
         self.brand_mark = title_bar.icon_label

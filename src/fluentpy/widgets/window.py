@@ -456,9 +456,12 @@ class FluentWindow(QtWidgets.QMainWindow):
                 self._title_bar._set_native_caption(self._native_caption)
         application = QtWidgets.QApplication.instance()
         if application is not None:
-            if enabled and not self._native_caption:
+            # Native caption windows still need the lazy child-theme filter.
+            if enabled or self.property("fluentLazyThemeRefresh") is True:
                 application.installEventFilter(self)
-                self.setMouseTracking(True)
+                self.setMouseTracking(not self._native_caption)
+                if self._native_caption:
+                    self.unsetCursor()
             else:
                 application.removeEventFilter(self)
                 self.unsetCursor()
@@ -733,36 +736,6 @@ class FluentWindow(QtWidgets.QMainWindow):
     def _set_widget_theme_palette(self, widget, palette):
         if isinstance(widget, QtWidgets.QLabel) and widget.objectName() == "muted":
             widget.setForegroundRole(QtGui.QPalette.ColorRole.PlaceholderText)
-        # Cocoa supplies dynamic system colors to unstyled QWidget surfaces.
-        # Style only explicit opaque containers, preserving caller-owned QSS
-        # and QApplication's native style. No shared QStyle lifetime is involved.
-        if sys.platform == "darwin":
-            previous = widget.property("_fluentSurfaceStyle")
-            owned = not widget.styleSheet() or widget.styleSheet() == previous
-            if (
-                owned
-                and type(widget) is QtWidgets.QWidget
-                and (widget.autoFillBackground() or previous)
-            ):
-                widget.setProperty("fluentOpaqueSurface", True)
-                sheet = (
-                    'QWidget[fluentOpaqueSurface="true"] { background-color: '
-                    + palette.color(widget.backgroundRole()).name()
-                    + "; }"
-                )
-                if widget.styleSheet() != sheet:
-                    widget.setStyleSheet(sheet)
-                widget.setProperty("_fluentSurfaceStyle", sheet)
-            elif owned and isinstance(widget, QtWidgets.QLabel):
-                widget.setProperty("fluentPaletteLabel", True)
-                sheet = (
-                    'QLabel[fluentPaletteLabel="true"] { color: '
-                    + palette.color(widget.foregroundRole()).name()
-                    + "; }"
-                )
-                if widget.styleSheet() != sheet:
-                    widget.setStyleSheet(sheet)
-                widget.setProperty("_fluentSurfaceStyle", sheet)
         widget.ensurePolished()
         widget.setPalette(palette)
 
