@@ -2,7 +2,7 @@ name: Desktop platforms
 
 on:
   push:
-    branches: [main, 'codex/cross-platform-*']
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -107,7 +107,7 @@ jobs:
           if-no-files-found: warn
 
   portable:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[portable]')
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'codex/cross-platform-')
     strategy:
       fail-fast: false
       matrix:

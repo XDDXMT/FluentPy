@@ -10,6 +10,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import sysconfig
 import tarfile
 import zipfile
 from importlib import metadata
@@ -154,14 +155,32 @@ def main():
         (ROOT / "src/fluentpy/backends/text.py", "src/fluentpy/backends"),
         (ROOT / "native/text_accel.c", "native"),
     ]
-    data_files.append((Path(sys.base_prefix) / "LICENSE.txt", "licenses/Python"))
+    python_license = next(
+        (
+            path
+            for path in (
+                Path(sys.base_prefix) / "LICENSE.txt",
+                Path(sysconfig.get_path("stdlib")) / "LICENSE.txt",
+            )
+            if path.is_file()
+        ),
+        None,
+    )
+    if python_license is None:
+        python_license = notice_dir / "Python-LICENSE.txt"
+        release = ".".join(map(str, sys.version_info[:3]))
+        with urlopen(
+            f"https://raw.githubusercontent.com/python/cpython/v{release}/LICENSE", timeout=30
+        ) as response:
+            python_license.write_bytes(response.read())
+    data_files.append((python_license, "licenses/Python"))
     installer = metadata.distribution("pyinstaller")
     installer_license = next(
         path for path in installer.files if str(path).endswith("licenses/COPYING.txt")
     )
     data_files.append((Path(installer.locate_file(installer_license)), "licenses/PyInstaller"))
-    for path, target in data_files:
-        args.extend(["--add-data", str(path) + os.pathsep + target])
+    for path, destination in data_files:
+        args.extend(["--add-data", str(path) + os.pathsep + destination])
     args.append(str(ROOT / "scripts/workbench_launcher.py"))
     environment = os.environ.copy()
     if target == "windows":
