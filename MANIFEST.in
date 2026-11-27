@@ -9,9 +9,7 @@ recursive-include tests *.py
 include benchmarks/baseline-original-source.json
 include benchmarks/baseline-original.json
 include benchmarks/text-performance*.json
-recursive-include docs *.md *.png
 recursive-include licenses *.txt
 exclude AGENTS.md QA_CHECKLIST.md UPDATE_LOG.md 上传到PyPI.bat
 exclude scripts/publish_pypi.py scripts/publish_workbench.py tests/test_pypi_release.py
-exclude docs/context.md docs/visual-research.md docs/winui-resource-notes.md
 global-exclude *.pyd *.dll *.so *.pyc *.pyo

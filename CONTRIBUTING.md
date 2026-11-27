@@ -31,7 +31,6 @@ python scripts/check_quality.py --fix
 | `examples/` | 可独立运行的示例和工作台，业务演示不进入组件实现 |
 | `tests/` | 参数、交互、生命周期和安装行为验证 |
 | `scripts/` | 可复用的构建、检查与基准工具 |
-| `sites/fluentpy-docs/` | 文档内容、生成器和配图录制工具 |
 
 组件按职责组织。普通按钮和外观变体在 `button.py`，切换、下拉、分体和加载按钮分别在对应模块。`advanced_button.py` 保留旧模块的导出；新增代码从公开入口或具体组件模块导入。窗口内菜单使用 `ActionMenu`，系统托盘使用 `SystemTrayMenu`，两者的定位和关闭方式不同。
 
@@ -49,13 +48,8 @@ python scripts/check_quality.py --fix
 
 行为变化应覆盖有效输入、边界条件和实际交互。Qt 组件还需检查键盘、禁用、隐藏与销毁；涉及主题时查看明暗效果。纯格式调整不新增重复测试，沿用现有测试验证行为。
 
-修改后端时分别验证 Python 和 C 路径；C 扩展不可用时应维持自动回退，显式 `native` 模式仍需明确报错。构建方式见[原生扩展说明](docs/native-build.md)。
+修改后端时分别验证 Python 和 C 路径；C 扩展不可用时应维持自动回退，显式 `native` 模式仍需明确报错。构建方式见[原生扩展说明](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/native-build.md)。
 
-文档中的源码位置和接口签名由生成器提取。组件文件移动或接口变化后运行：
+文档由 [FluentPy-Docs](https://github.com/XDDXMT/FluentPy-Docs) 维护。组件文件移动或接口变化后，在文档仓库根目录运行 `python build_content.py` 和 `python validate_site.py`。源码位置和接口签名由生成器提取。
 
-```console
-python sites/fluentpy-docs/build_content.py
-python sites/fluentpy-docs/validate_site.py
-```
-
-发布前还需验证独立环境安装、许可证和发布文件清单，具体流程见[构建与发布](docs/publishing.md)。已发布版本的文件与标签保持原样，后续改动进入下一版本。
+发布前还需验证独立环境安装、许可证和发布文件清单，具体流程见[构建与发布](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/publishing.md)。已发布版本的文件与标签保持原样，后续改动进入下一版本。

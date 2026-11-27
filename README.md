@@ -2,70 +2,105 @@
 
 **面向 Qt for Python 的 Fluent 风格桌面组件库。**
 
+[![PyPI 版本](https://img.shields.io/pypi/v/fluentpy-qt?logo=pypi&logoColor=white&color=008d9c)](https://pypi.org/project/fluentpy-qt/)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white)](#快速开始)
+[![MIT 许可证](https://img.shields.io/github/license/XDDXMT/FluentPy)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/XDDXMT/FluentPy?logo=github)](https://github.com/XDDXMT/FluentPy/stargazers)
+
 FluentPy 是面向 Qt for Python 的 Fluent 风格组件库，由 **性邓的小馒头** 独立开发，采用 [MIT 许可证](LICENSE)。从输入框、卡片和日期滚轮，到带动画的导航、代码编辑器和消息浮层，可以逐个使用，也可以组合成完整工作台。
 
 界面由 Qt 控件、绘制与动画实现；计算密集的后端逐步交给 C 扩展。默认使用 PySide6，保留 PyQt6 适配入口。当前源码版本为 **0.8.1**，仍处于早期开发阶段。
 
-0.8.1 加入 Linux、macOS 的窗口策略、系统字体和用户数据目录适配，并提供三平台原生构建与安装检查。macOS 和 Wayland 默认保留系统窗口边框，Windows 继续使用集成标题栏。系统材质、屏幕取色和媒体格式支持取决于操作系统能力；安装与打包见[跨平台使用](docs/platforms.md)。
+0.8.1 加入 Linux、macOS 的窗口策略、系统字体和用户数据目录适配，并提供三平台原生构建与安装检查。macOS 和 Wayland 默认保留系统窗口边框，Windows 继续使用集成标题栏。系统材质、屏幕取色和媒体格式支持取决于操作系统能力；安装与打包见[跨平台使用](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/platforms.md)。
 
-[项目主页](https://fluentpy.mcxmcl.cn/) · [官方文档](https://fluentpy.mcxmcl.cn/docs/) · [文档源码](https://github.com/XDDXMT/FluentPy-Docs) · [快速开始](#快速开始) · [组件与示例](#组件与示例) · [C 后端与性能](#c-后端与性能) · [问题反馈](https://github.com/XDDXMT/FluentPy/issues)
+[项目主页](https://fluentpy.mcxmcl.cn/) · [官方文档](https://fluentpy.mcxmcl.cn/docs/) · [下载工作台](https://github.com/XDDXMT/FluentPy/releases/latest) · [快速开始](#快速开始) · [组件与示例](#组件与示例) · [Stars 趋势](#stars-趋势)
 
 ## 界面展示
 
-组件示例程序包含组件概览、17个组件页面和底部固定的设置页，直接使用 FluentWindow 的导航、标题栏与页面历史。组件页面涵盖按钮与右键菜单、输入、表格、树形列表、滑块、日期时间、日历、拖放、颜色与取色、快捷键、卡片、导航、消息、代码编辑、图像与头像、音视频播放和音符。搜索和概览固定，中间导航列表独立滚动，底部设置随时可用。
+FluentPy 工作台使用库内组件构建。以下为 0.8.1 在三个平台上的实际运行界面。
 
-0.7.0 的主页将欢迎横幅、半透明快捷入口与紧凑组件分类组合在一起。分类支持整卡点击、键盘操作与名称／API 搜索，宽屏居中、窄窗口自动换列；文档简介页保留原有布局与说明，展示新版工作台截图。
+**Windows x64**
 
-![FluentPy 新版示例工作台，浅色主题](docs/assets/gallery-preview-light.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/XDDXMT/FluentPy-Docs/v0.8.1/dist/assets/previews/platform-windows-dark.png">
+  <img src="https://raw.githubusercontent.com/XDDXMT/FluentPy-Docs/v0.8.1/dist/assets/previews/platform-windows-light.png" alt="FluentPy 0.8.1 工作台在 Windows x64 上运行" width="840">
+</picture>
 
 <details>
-<summary>查看深色主题</summary>
+<summary>查看 Linux x64（X11）运行截图</summary>
 
-![FluentPy 新版示例工作台，深色主题](docs/assets/gallery-preview.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/XDDXMT/FluentPy-Docs/v0.8.1/dist/assets/previews/platform-linux-dark.png">
+  <img src="https://raw.githubusercontent.com/XDDXMT/FluentPy-Docs/v0.8.1/dist/assets/previews/platform-linux-light.png" alt="FluentPy 0.8.1 工作台在 Ubuntu x64 X11 上运行" width="840">
+</picture>
 
 </details>
 
+<details>
+<summary>查看 macOS（Apple Silicon）运行截图</summary>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/XDDXMT/FluentPy-Docs/v0.8.1/dist/assets/previews/platform-macos-dark.png">
+  <img src="https://raw.githubusercontent.com/XDDXMT/FluentPy-Docs/v0.8.1/dist/assets/previews/platform-macos-light.png" alt="FluentPy 0.8.1 工作台在 Apple Silicon Mac 上运行" width="840">
+</picture>
+
+</details>
+
+[工作台发布页](https://github.com/XDDXMT/FluentPy/releases/latest) · [跨平台使用](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/platforms.md) · [0.8.1 构建与截图记录](https://github.com/XDDXMT/FluentPy/actions/runs/45631276069)
+
+<details>
+<summary>工作台布局与交互</summary>
+
+组件示例程序包含组件概览、17 个组件页面和底部固定的设置页，直接使用 FluentWindow 的导航、标题栏与页面历史。组件页面涵盖按钮与右键菜单、输入、表格、树形列表、滑块、日期时间、日历、拖放、颜色与取色、快捷键、卡片、导航、消息、代码编辑、图像与头像、音视频播放和音符。搜索和概览固定，中间导航列表独立滚动，底部设置随时可用。
+
+0.7.0 的主页将欢迎横幅、半透明快捷入口与紧凑组件分类组合在一起。分类支持整卡点击、键盘操作与名称／API 搜索，宽屏居中、窄窗口自动换列；文档简介页保留原有布局与说明，展示新版工作台截图。
+
 工作台直接使用库内的 `NavigationView`、`NavigationSidebar` 和 `AnimatedStackedWidget`：侧栏展开与收起、选中指示条和页面切换都有动画。Pivot 与文档标签连接实际内容，支持编辑、新建、关闭和保留各页输入。
 
-底部“设置”直接组合已有的 `ComboBox`、`Slider`、`ToggleSwitch`、`Button` 和 `GroupHeaderCardWidget`。主题、强调色、云母效果、侧栏宽度与展开状态、页面动画和后端状态显示均即时生效，使用 Qt 的 `QSettings` 自动保存；恢复默认设置保留文档输入。侧栏分区与自定义插槽见[导航说明](docs/navigation.md)。
+底部“设置”直接组合已有的 `ComboBox`、`Slider`、`ToggleSwitch`、`Button` 和 `GroupHeaderCardWidget`。主题、强调色、云母效果、侧栏宽度与展开状态、页面动画和后端状态显示均即时生效，使用 Qt 的 `QSettings` 自动保存；恢复默认设置保留文档输入。侧栏分区与自定义插槽见[导航说明](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/navigation.md)。
 
 卡片保持常规桌面尺寸，主题统一管理颜色和字体；内容区的操作交给内部按钮，折叠卡片通过标题条展开与收起，并保留表单值。组件示例采用 Microsoft Fluent 图标和统一的标题、内容与参数区，主图标与文档站一致。
 
-下拉选择支持普通／可编辑、Qt 模型绑定、多选标签、树形单选与多选、透明样式和系统字体。工作台“文本与选择 → 下拉选择”集中预览与测试，也可运行 `python examples/combo_boxes.py`。详见[下拉选择](docs/combo-boxes.md)。
+下拉选择支持普通／可编辑、Qt 模型绑定、多选标签、树形单选与多选、透明样式和系统字体。工作台“文本与选择 → 下拉选择”集中预览与测试，也可运行 `python examples/combo_boxes.py`。详见[下拉选择](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/combo-boxes.md)。
 
-滑块有独立的侧栏入口，支持竖向、当前数值提示和双端区间；右键菜单支持多级子菜单、原生控件混排与鼠标点击定位，系统托盘使用真正的 QMenu。工作台采用可切换预览与参数区，详见[滑块](docs/sliders.md)和[菜单](docs/menus.md)。
+滑块有独立的侧栏入口，支持竖向、当前数值提示和双端区间；右键菜单支持多级子菜单、原生控件混排与鼠标点击定位，系统托盘使用真正的 QMenu。工作台采用可切换预览与参数区，详见[滑块](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/sliders.md)和[菜单](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/menus.md)。
 
-工作台“表格”提供 `TableView` 与 `TableWidget`，支持普通／圆角／细线行、搜索、原生排序、编辑、复选项、多选复制与高级右键菜单；外观设置默认收起。两种 Qt 数据接口各自保留编辑，详见[表格](docs/tables.md)。
+工作台“表格”提供 `TableView` 与 `TableWidget`，支持普通／圆角／细线行、搜索、原生排序、编辑、复选项、多选复制与高级右键菜单；外观设置默认收起。两种 Qt 数据接口各自保留编辑，详见[表格](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/tables.md)。
 
-0.8.0 新增 `TreeTableView` 与 `TreeTableWidget`，提供层级分组、列格式、数值热度、进度、状态与单元格操作。工作台“树形列表”包含应用资源、项目任务和外部 Qt 文件模型三个场景；支持局部更新、保留父路径的搜索与自定义代理。详见[树形数据列表](docs/tree-tables.md)，独立运行 `python examples/tree_tables.py`。
+0.8.0 新增 `TreeTableView` 与 `TreeTableWidget`，提供层级分组、列格式、数值热度、进度、状态与单元格操作。工作台“树形列表”包含应用资源、项目任务和外部 Qt 文件模型三个场景；支持局部更新、保留父路径的搜索与自定义代理。详见[树形数据列表](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/tree-tables.md)，独立运行 `python examples/tree_tables.py`。
 
 0.8.0 还提供以下独立控件与示例，均不依赖工作台内部实现：
 
-- [多语言代码高亮](docs/code-editor.md)：17 种语言模式、C 扫描与 Python 回退，可提供自己的分词器。`python examples/code_editor.py`。
-- [图像与头像](docs/images.md)：图片 / GIF、圆形头像、本地头像裁剪、独立裁剪画布与实时区域放大镜。`python examples/images.py`。
-- [音视频播放](docs/media.md)：紧凑与完整音频条、原生视频输出，共用控制器和可扩展左 / 中 / 右布局。`python examples/media.py`。
+- [多语言代码高亮](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/code-editor.md)：17 种语言模式、C 扫描与 Python 回退，可提供自己的分词器。`python examples/code_editor.py`。
+- [图像与头像](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/images.md)：图片 / GIF、圆形头像、本地头像裁剪、独立裁剪画布与实时区域放大镜。`python examples/images.py`。
+- [音视频播放](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/media.md)：紧凑与完整音频条、原生视频输出，共用控制器和可扩展左 / 中 / 右布局。`python examples/media.py`。
 
-图标目录收录 2624 个 MIT 许可的 Microsoft Fluent System Icons 和一个 FluentPy 叶子图标；文档支持按用途分类与中英文搜索。独立展示主页位于 `sites/fluentpy-home`，完整网站部署工具会将它与原有文档组合为 `/` 和 `/docs/`，保留原文档简介与作者说明。
+图标目录收录 2624 个 MIT 许可的 Microsoft Fluent System Icons 和一个 FluentPy 叶子图标；文档支持按用途分类与中英文搜索。展示主页、文档简介和站点部署工具位于 [FluentPy-Docs](https://github.com/XDDXMT/FluentPy-Docs)。
 
-`FluentWindow` 保留原生 Qt 主窗口与系统标题栏，可按需注册页面，使用响应式侧栏、顶部导航、前进／后退和底部设置。可选 `FluentTitleBar` 为搜索框、标签与额外操作提供普通 Qt 布局；页面与输入在切换布局时保留。运行 `python examples/fluent_window.py` 体验，详见[流畅窗口](docs/fluent-window.md)。
+`FluentWindow` 保留原生 Qt 主窗口与系统标题栏，可按需注册页面，使用响应式侧栏、顶部导航、前进／后退和底部设置。可选 `FluentTitleBar` 为搜索框、标签与额外操作提供普通 Qt 布局；页面与输入在切换布局时保留。运行 `python examples/fluent_window.py` 体验，详见[流畅窗口](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/fluent-window.md)。
 
-`SplashScreen` 提供居中图标、可选加载提示和完成渐隐。启动时顶部只保留三个窗口操作，结束后恢复完整标题栏。工作台“页面导航 → 启动页面”可调整并重播，也可运行 `python examples/splash_screen.py`。详见[启动页面](docs/splash-screen.md)。
+`SplashScreen` 提供居中图标、可选加载提示和完成渐隐。启动时顶部只保留三个窗口操作，结束后恢复完整标题栏。工作台“页面导航 → 启动页面”可调整并重播，也可运行 `python examples/splash_screen.py`。详见[启动页面](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/splash-screen.md)。
 
 工作台默认启用整窗深浅色渐变，48px 标题栏、侧栏、背景与控件同步变化。普通窗口可通过 `set_theme_transition_enabled(True)` 开启；使用 `theme.set_theme("dark", accent="#60cdff")` 可一次提交主题与强调色，避免重复刷新。
 
-标题栏与侧栏共用外壳表面，主内容使用独立的不透明背景。工作台默认启用 Windows 11 原生云母，可在“设置 → 外观”关闭；普通 `FluentWindow` 可用 `set_backdrop_enabled(True)` 开启。Windows 11 build 22621 起，在系统合成和透明效果允许时显示材质，否则回退普通背景；失焦后可能显示系统中性色。详见[云母效果与自定义页面背景](docs/fluent-window.md#明暗背景与云母效果)。
+标题栏与侧栏共用外壳表面，主内容使用独立的不透明背景。工作台默认启用 Windows 11 原生云母，可在“设置 → 外观”关闭；普通 `FluentWindow` 可用 `set_backdrop_enabled(True)` 开启。Windows 11 build 22621 起，在系统合成和透明效果允许时显示材质，否则回退普通背景；失焦后可能显示系统中性色。详见[云母效果与自定义页面背景](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/fluent-window.md#明暗背景与云母效果)。
+
+</details>
 
 ## 快速开始
 
 需要 **Python 3.10+**。PyPI 安装名为 **`fluentpy-qt`**，代码导入名仍是 **`fluentpy`**。PyPI 上的 `fluentpy` 属于其他项目，不要用它安装本组件库，也不要将两个项目装在同一环境。
 
-**0.8.0 新增树形数据列表、多语言代码高亮、图像与头像控件及音视频播放器，并扩充图标目录。** 原有公开导入方式保持兼容，继续保留双行分体按钮和窗口通知定位修复。已有虚拟环境时，以下命令安装或升级到最新发布版本：
-
 ```console
 python -m pip install --upgrade fluentpy-qt
 ```
 
-新建环境，以 Windows PowerShell 为例：
+PySide6 随依赖一同安装。Windows x64 / 普通 CPython 3.13 自动使用内含 C 扩展的 wheel；其他兼容环境使用通用 Python wheel，基本运行无需编译器。
+
+<details>
+<summary>在虚拟环境中安装</summary>
+
+在 Windows PowerShell 中创建并安装到虚拟环境。
 
 ```powershell
 python -m venv .venv
@@ -73,9 +108,47 @@ python -m venv .venv
 ```
 
 macOS / Linux 使用 `python3 -m venv .venv` 创建环境，再执行 `.venv/bin/python -m pip install fluentpy-qt`。
-PySide6 随依赖一同安装。Windows x64 / 普通 CPython 3.13 自动使用内含 C 扩展的 wheel；其他兼容环境使用通用 Python wheel，基本运行无需编译器。
+
+</details>
+
+### 写下第一个窗口
+
+在已安装 FluentPy 的 Python 环境中保存并运行下面的代码。
+
+```python
+import sys
+
+from fluentpy import AccentButton, FluentWindow, Toast
+from fluentpy.qt import QtWidgets
+
+app = QtWidgets.QApplication(sys.argv)
+window = FluentWindow("我的 FluentPy 应用")
+
+save = AccentButton("保存")
+save.clicked.connect(
+    lambda: Toast.success(
+        "已保存",
+        detail="可以继续下一步。",
+        target=save,
+        parent=window,
+    )
+)
+window.content_layout.addWidget(save)
+window.show()
+
+sys.exit(app.exec())
+```
+
+控件继续使用 Qt 的信号、布局和事件机制。`Toast` 可指向触发按钮，也可放在窗口四角；仅传标题时使用紧凑的单行提示，并带入场与退场动画。
+
+想组合成首页，可运行 `python examples/gallery_home.py`：半透明入口卡片叠加独立绘制的曲线背景，支持明暗主题、整卡点击与窄窗口换行。自定义内容见[首页示例说明](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/gallery-home.md)。
 
 ### 源码与工作台（按需）
+
+可从 [发布页](https://github.com/XDDXMT/FluentPy/releases/latest) 下载对应平台的便携工作台。
+
+<details>
+<summary>从源码运行工作台并构建 C 扩展</summary>
 
 wheel 安装组件库，不包含 `examples/` 工作台。需要运行示例或修改源码时，再从仓库安装；以下为 Windows PowerShell 命令：
 
@@ -104,41 +177,11 @@ Windows x64 没有安装 MSVC，也可以使用仓库提供的独立 Zig 工具�
 .\.venv\Scripts\python.exe examples/showcase.py
 ```
 
-下载器从 Zig 官方站点获取固定版本并校验 SHA-256，约 82 MB，文件与缓存留在项目目录。原生扩展必须匹配当前 Python 小版本、系统和架构。更多选项见 [C 后端构建与打包](docs/native-build.md)。
+下载器从 Zig 官方站点获取固定版本并校验 SHA-256，约 82 MB，文件与缓存留在项目目录。原生扩展必须匹配当前 Python 小版本、系统和架构。更多选项见 [C 后端构建与打包](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/native-build.md)。
 
-自动检查涵盖 Windows x64、Linux x64、Intel Mac 与 Apple Silicon Mac。各平台的 C 编译、Python 回退、独立安装和工作台验证结果见 [GitHub Actions](https://github.com/XDDXMT/FluentPy/actions/workflows/platforms.yml)。Windows 系统材质不可用时，窗口使用实色背景。维护者发布流程见[发布说明](docs/publishing.md)。
+自动检查涵盖 Windows x64、Linux x64、Intel Mac 与 Apple Silicon Mac。各平台的 C 编译、Python 回退、独立安装和工作台验证结果见 [GitHub Actions](https://github.com/XDDXMT/FluentPy/actions/workflows/platforms.yml)。Windows 系统材质不可用时，窗口使用实色背景。维护者发布流程见[发布说明](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/publishing.md)。
 
-### 写下第一个窗口
-
-在已安装 FluentPy 的 Python 环境中运行：
-
-```python
-import sys
-
-from fluentpy import AccentButton, FluentWindow, Toast
-from fluentpy.qt import QtWidgets
-
-app = QtWidgets.QApplication(sys.argv)
-window = FluentWindow("我的 FluentPy 应用")
-
-save = AccentButton("保存")
-save.clicked.connect(
-    lambda: Toast.success(
-        "已保存",
-        detail="可以继续下一步。",
-        target=save,
-        parent=window,
-    )
-)
-window.content_layout.addWidget(save)
-window.show()
-
-sys.exit(app.exec())
-```
-
-控件继续使用 Qt 的信号、布局和事件机制。`Toast` 可指向触发按钮，也可放在窗口四角；仅传标题时使用紧凑的单行提示，并带入场与退场动画。
-
-想组合成首页，可运行 `python examples/gallery_home.py`：半透明入口卡片叠加独立绘制的曲线背景，支持明暗主题、整卡点击与窄窗口换行。自定义内容见[首页示例说明](docs/gallery-home.md)。
+</details>
 
 ## 组件与示例
 
@@ -150,21 +193,30 @@ sys.exit(app.exec())
 | 拖放 | `FileDropWidget`、`FolderDropWidget`、`DropArea`：浏览与拖入本地路径、类型过滤、多选和后台校验 |
 | 快捷键 | `ShortcutPicker`、`ShortcutDialog`：组合键录制、键帽预览、保存／重置／取消与冲突提示 |
 | 颜色与取色 | `ColorPickerButton`、`ColorPaletteButton`、`ColorDialog`、`ColorPickerPanel`、`ColorSwatchGroup`、`EyeDropperButton`：主题色、Hex／RGB／HSV／Alpha、确认／取消与多屏取色 |
-| 代码编辑 | `CodeEdit`：JSON 高亮、行号、当前行、缩进引导、字体设置与 C 扫描后端 |
+| 代码编辑 | [`CodeEdit`](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/code-editor.md) 支持 17 种语言模式、行号、缩进引导、自定义分词器和 C 扫描后端 |
 | 卡片与设置 | `CardWidget`、`SimpleCardWidget`、`ElevatedCardWidget`、`HeaderCardWidget`、`GroupHeaderCardWidget`；`ExpandableCardWidget` 与 `AccordionWidget` 提供动画折叠及独立／互斥展开 |
 | 导航 | `NavigationView`、`NavigationSidebar`、`AnimatedStackedWidget`、`BreadcrumbBar`、`Pivot`、分段控件、`TabBar` |
 | 表格 | `TableView`、`TableWidget`、`TableItemDelegate`：Qt 模型／项目接口、三种行样式、原生排序和编辑、TSV 复制与高级菜单 |
+| 树形数据 | [`TreeTableView` 与 `TreeTableWidget`](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/tree-tables.md) 支持层级分组、列格式、热度、进度及外部 Qt 模型 |
+| 图像与头像 | [静态图、GIF、圆形头像、裁剪与放大镜](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/images.md) |
+| 音视频 | [视频播放器、紧凑与完整音频条](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/media.md)，支持共用控制器和自定义布局 |
 | 反馈与状态 | `InfoBar`、`ProgressInfoBar`：横纵消息条、嵌入布局与任务状态；`Toast`、`ColorToast`、`ProgressToast`：顶部色条、操作按钮、六种位置混合堆叠与单段进度；`ToggleSwitch`、`Slider`、`ProgressBar` |
 | 窗口与容器 | `FluentWindow`、无边框对话框、页内遮罩对话框、`FluentScrollBar`、`Card`、`ExamplePanel` |
 | 音符视图 | `NoteTimeline`、`NoteEvent`：单轨／多轨概览、配色、进度游标与时间定位 |
 | 主题与资源 | 浅色／深色主题、强调色、统一字体、2624 个 Microsoft Fluent System Icons 与自有 Leaf（均 MIT） |
 
+<details>
+<summary>独立示例与运行命令</summary>
+
 独立 Demo 适合只看一个组件。在已安装依赖的环境中，从仓库根目录运行：
 
 | 示例 | 运行命令 | 说明 |
 | --- | --- | --- |
-| 组件示例程序 | `python examples/showcase.py` | 概览、14个组件页面及底部设置；`--dark` 启动深色，`--page tables` 直接测试表格，`--page settings` 打开可保存的工作台设置 |
+| 组件示例程序 | `python examples/showcase.py` | 概览、组件页面及底部设置；`--dark` 启动深色，`--page tables` 直接测试表格，`--page settings` 打开可保存的工作台设置 |
 | 表格 | `python examples/tables.py` | 普通／圆角／细线、Qt 模型与项目、搜索、数值排序、编辑、多选复制与高级右键菜单 |
+| 树形数据列表 | `python examples/tree_tables.py` | 层级、列排序、状态和进度渲染 |
+| 图像与头像 | `python examples/images.py` | 显示、裁剪、头像和放大镜 |
+| 音视频 | `python examples/media.py` | 视频输出与两种音频条 |
 | 启动页面 | `python examples/splash_screen.py` | 居中图标、可选加载提示、完成渐隐和全窗口预览；工作台“页面导航”页 |
 | 颜色与取色 | `python examples/colors.py` | 色板、RGBA／HSV 编辑、颜色对话框、圆形色块与屏幕取色；工作台 `--page colors` |
 | 按钮与菜单 | `python examples/buttons.py` | 状态过渡、互斥筛选、页内菜单、拆分操作、加载保护与键盘操作 |
@@ -187,15 +239,17 @@ sys.exit(app.exec())
 
 Windows 也可使用 `examples/run_showcase.bat` 及对应组件的 `run_*.bat`。音符时间轴负责可视化，文件解析和声音播放由应用处理。
 
-新增输入接口用法见[前后缀与分格输入](docs/inputs.md)；角落提示支持底部向上、顶部向下堆叠和关闭后平滑补位。
+</details>
 
-[顶部色条通知](docs/color-toast.md)提供成功、失败、警告、注意、信息及自定义颜色，支持操作按钮与顶部／底部居中。
+新增输入接口用法见[前后缀与分格输入](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/inputs.md)；角落提示支持底部向上、顶部向下堆叠和关闭后平滑补位。
 
-[消息条](docs/info-bars.md)补充状态背景、横纵排列和布局内嵌；原有吐司及进度控件继续复用。
+[顶部色条通知](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/color-toast.md)提供成功、失败、警告、注意、信息及自定义颜色，支持操作按钮与顶部／底部居中。
+
+[消息条](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/info-bars.md)补充状态背景、横纵排列和布局内嵌；原有吐司及进度控件继续复用。
 
 工作台“消息与对话框”采用统一的自定义测试界面：左侧实时预览，右侧修改内容，状态和位置通过下拉选择，进度用滑块调整，更多设置默认收起。嵌入示例与对话框在顶部页签切换，独立组件示例仍保留完整用例。
 
-接口与用法：[颜色与取色](docs/colors.md) · [按钮与菜单](docs/buttons.md) · [快捷键选择器](docs/shortcut-picker.md) · [任务进度提示](docs/progress-toast.md) · [拖放组件](docs/drag-drop.md) · [卡片](docs/cards.md) · [日期选择器](docs/date-picker.md) · [时间选择器](docs/time-picker.md) · [日历与日程](docs/calendar-picker.md) · [代码编辑器](docs/code-editor.md) · [音符时间轴](docs/note-timeline.md)
+接口与用法：[颜色与取色](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/colors.md) · [按钮与菜单](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/buttons.md) · [快捷键选择器](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/shortcut-picker.md) · [任务进度提示](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/progress-toast.md) · [拖放组件](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/drag-drop.md) · [卡片](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/cards.md) · [日期选择器](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/date-picker.md) · [时间选择器](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/time-picker.md) · [日历与日程](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/calendar-picker.md) · [代码编辑器](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/code-editor.md) · [音符时间轴](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/note-timeline.md)
 
 ## C 后端与性能
 
@@ -222,7 +276,7 @@ editor.set_code('{"project": "FluentPy", "enabled": true}')
 print(editor.acceleration_backend())  # native 或 python
 ```
 
-`FLUENTPY_BACKEND=auto`默认优先C并自动回退；`python`强制使用Python兼容实现；`native`明确要求C，在对应接口不可用时给出构建提示。这三种模式统一作用于文本、日期、时间、拖放和快捷键。`native_available()`检查二进制是否具备相应能力，组件的`acceleration_backend()`返回实际选择的`native`或`python`。详见[后端选择与回退](docs/backends.md)。
+`FLUENTPY_BACKEND=auto`默认优先C并自动回退；`python`强制使用Python兼容实现；`native`明确要求C，在对应接口不可用时给出构建提示。这三种模式统一作用于文本、日期、时间、拖放和快捷键。`native_available()`检查二进制是否具备相应能力，组件的`acceleration_backend()`返回实际选择的`native`或`python`。详见[后端选择与回退](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/backends.md)。
 
 以下为同一台 Windows x64 电脑、AMD Ryzen 9 9950X3D、CPython 3.13.1、Qt 6.11.1 的历史实测。10,000 行取五轮、50,000 行取三轮独立进程中位数，均处理完整输入。
 
@@ -235,21 +289,13 @@ print(editor.acceleration_backend())  # native 或 python
 
 扫描的加速比只适用于扫描路径。文档创建、排版、绘制和交互仍有各自开销，整库不会因此获得相同倍数的提升。万行 JSON 应放入多行的 `CodeEdit`，而不是单行 `LineEdit`。
 
-[完整结果与测量方法](docs/performance.md) · [10k 原始报告](benchmarks/text-performance-10000.json) · [50k 原始报告](benchmarks/text-performance-50000.json) · [构建说明](docs/native-build.md)
+[完整结果与测量方法](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/performance.md) · [10k 原始报告](benchmarks/text-performance-10000.json) · [50k 原始报告](benchmarks/text-performance-50000.json) · [构建说明](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/native-build.md)
 
 ## 本地文档
 
-仓库附带中文文档站，提供分类组件目录、名称筛选、接口搜索与图标搜索。简介先展示实际组件示例程序，再用 JS 动画演示 Qt → FluentPy 输入框过渡以及 Python → C → Qt 的处理流程；支持暂停和重播。组件页将“示例与用法”和“API 参考”分开，代码与 GIF 按需展开，常见问题逐项阅读。网页跟随系统主题，组件媒体保持亮色。
+[FluentPy-Docs](https://github.com/XDDXMT/FluentPy-Docs) 集中维护 [Markdown 指南](https://github.com/XDDXMT/FluentPy-Docs/tree/main/docs)、网站源码、配图录制和部署工具。
 
-从仓库根目录启动静态服务：
-
-```powershell
-python -m http.server 8767 --bind 0.0.0.0 --directory sites/fluentpy-docs/dist
-```
-
-浏览器打开 [本地文档](http://127.0.0.1:8767/#/introduction)。也可双击 `sites/fluentpy-docs/启动本地文档.bat`；局域网设备使用服务器实际 IP 访问。重新生成接口和截图的方法见 [文档站说明](sites/fluentpy-docs/README.md)。
-
-文档网站的源码、完整静态页面和控件媒体也在独立的 [FluentPy-Docs](https://github.com/XDDXMT/FluentPy-Docs) 仓库以 MIT 许可公开。只预览或部署网站无需安装 Qt；重新提取 API 或录制控件时，通过 `FLUENTPY_SOURCE_ROOT` 指向本组件库源码。
+在文档仓库根目录运行 `python preview_site.py` 可以预览完整网站。浏览 [中文文档](https://fluentpy.mcxmcl.cn/docs/) 了解常用组件和 API，或从 [文档 Releases](https://github.com/XDDXMT/FluentPy-Docs/releases/latest) 下载完整网站与独立文档部署包。
 
 ## 开发与验证
 
@@ -258,22 +304,32 @@ python -m pip install -e ".[dev]"
 python -m pytest
 ```
 
-常规行为测试可在无C环境运行；完整C／Python差分测试需要当前解释器对应的C扩展。测试包含日期边界、缺失／不兼容／旧扩展的独立进程、实际录制与拖放、组件生命周期、快速导航和动画中断。构建原生／纯Python wheel和源码包的方法见[打包说明](docs/native-build.md)。
+常规行为测试可在无C环境运行；完整C／Python差分测试需要当前解释器对应的C扩展。测试包含日期边界、缺失／不兼容／旧扩展的独立进程、实际录制与拖放、组件生命周期、快速导航和动画中断。构建原生／纯Python wheel和源码包的方法见[打包说明](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/native-build.md)。
 
 | 目录 | 内容 |
 | --- | --- |
 | `src/fluentpy/` | Python 接口、Qt 控件、主题与 SVG 资源 |
 | `native/` | C文本、日期、时间、拖放与快捷键策略 |
 | `examples/` | 工作台与独立 Demo |
-| `docs/`、`sites/fluentpy-docs/` | Markdown 文档、图片与本地文档站 |
 | `tests/` | 正确性、生命周期与交互测试 |
 | `scripts/`、`benchmarks/` | 构建工具、性能复现脚本与报告 |
 
-后续后端运算以C作为首选加速实现，并维护可用的Python兼容路径；Python同时保持公开接口、绑定和Qt界面逻辑。扩展缺失不能导致组件不可用，详见[后端选择与兼容回退](docs/backends.md)。
+后续后端运算以C作为首选加速实现，并维护可用的Python兼容路径；Python同时保持公开接口、绑定和Qt界面逻辑。扩展缺失不能导致组件不可用，详见[后端选择与兼容回退](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/backends.md)。
 
 目录职责、代码风格、注释和提交前检查见[开发与贡献](CONTRIBUTING.md)。
 
 欢迎通过 [Issues](https://github.com/XDDXMT/FluentPy/issues) 提交问题与建议。使用场景可参考 [FluentMelody](https://github.com/XDDXMT/FluentMelody)。
+
+## Stars 趋势
+
+<a href="https://www.star-history.com/#XDDXMT/FluentPy&amp;Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=XDDXMT/FluentPy&amp;type=Date&amp;theme=dark">
+    <img src="https://api.star-history.com/svg?repos=XDDXMT/FluentPy&amp;type=Date" alt="FluentPy 的 GitHub Stars 随时间变化的曲线" width="760">
+  </picture>
+</a>
+
+曲线由 [Star History](https://www.star-history.com/blog/how-to-use-github-star-history/#how-to-embed-the-chart-in-your-readme) 根据 GitHub 星标记录生成。也可以 [查看点亮 Star 的用户](https://github.com/XDDXMT/FluentPy/stargazers)。
 
 ## 许可证与资源来源
 
@@ -281,4 +337,4 @@ FluentPy 自身源码采用 **MIT**：允许使用、修改、分发和商用，
 
 组件在本仓库独立实现。微软图标来自 [Microsoft Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons)，保留其 MIT 许可证与来源记录。Qt、PySide6 和可选 PyQt6 适配依赖分别遵循各自许可证。
 
-[第三方声明](THIRD_PARTY_NOTICES.md) · [图标许可证](licenses/Microsoft-Fluent-System-Icons-LICENSE.txt) · [图标来源](src/fluentpy/assets/icons/SOURCE.md) · [实现与许可边界](docs/licensing-boundaries.md)
+[第三方声明](THIRD_PARTY_NOTICES.md) · [图标许可证](licenses/Microsoft-Fluent-System-Icons-LICENSE.txt) · [图标来源](src/fluentpy/assets/icons/SOURCE.md) · [实现与许可边界](https://github.com/XDDXMT/FluentPy-Docs/blob/main/docs/licensing-boundaries.md)

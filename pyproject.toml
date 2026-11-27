@@ -55,7 +55,6 @@ pythonpath = ["src"]
 target-version = "py310"
 line-length = 100
 src = ["src"]
-extend-exclude = ["sites/fluentpy-docs/dist"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I"]
@@ -64,7 +63,6 @@ select = ["E4", "E7", "E9", "F", "I"]
 # Standalone entry points locate the checkout before importing FluentPy.
 "examples/*.py" = ["E402"]
 "scripts/benchmark_text.py" = ["E402"]
-"sites/fluentpy-docs/*.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -6,7 +6,7 @@ __pycache__/
 .venv/
 venv/
 build/
-# The root dist contains packages; sites/fluentpy-docs/dist is the static site source.
+# Local release packages and build outputs.
 /dist/
 .idea/
 .vscode/
@@ -34,9 +34,9 @@ zig-out/
 # Local third-party reference application; not part of FluentPy.
 /PyQt-Fluent-Widgets-Gallery/
 
-# Unused showcase recording contains transition capture artifacts.
-/docs/assets/showcase-light.gif
-/sites/fluentpy-docs/dist/assets/previews/showcase-light.gif
+# Local documentation workspace files. Public documentation lives in FluentPy-Docs.
+/docs/
+/sites/
 
 # Local maintainer tools and working notes are not public project sources.
 /AGENTS.md
@@ -46,6 +46,3 @@ zig-out/
 /scripts/publish_pypi.py
 /scripts/publish_workbench.py
 /tests/test_pypi_release.py
-/docs/context.md
-/docs/visual-research.md
-/docs/winui-resource-notes.md
